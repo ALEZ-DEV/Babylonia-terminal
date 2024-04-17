@@ -1,0 +1,27 @@
+[package]
+name = "babylonia-terminal-sdk"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0.81"
+dirs = "5.0.1"
+dotenv = "0.15.0"
+downloader = { git = "https://github.com/ALEZ-DEV/downloader" } # version = "0.2.7",
+flate2 = "1.0.28"
+log = "0.4.21"
+reqwest = "0.12.2"
+serde = { version = "1.0.197", features = ["derive"] }
+serde_json = "1.0.115"
+tar = "0.4.40"
+tokio = { version = "1.37.0", features = ["fs"] }
+wincompatlib = { version = "0.7.4", features = [
+    "dxvk",
+    "wine-bundles",
+    "wine-proton",
+    "wine-fonts",
+    "winetricks",
+] }
+xz = "0.1.0"

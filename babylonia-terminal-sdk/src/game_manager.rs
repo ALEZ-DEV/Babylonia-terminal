@@ -14,7 +14,11 @@ use wincompatlib::{prelude::*, wine::bundle::proton};
 use xz::read::XzDecoder;
 
 use crate::{
-    components::{component_downloader::ComponentDownloader, wine_component::WineComponent},
+    components::{
+        component_downloader::ComponentDownloader,
+        dxvk_component::{self, DXVKComponent},
+        wine_component::WineComponent,
+    },
     components_downloader::ComponentsDownloader,
     game_state::GameState,
 };
@@ -55,30 +59,8 @@ impl GameManager {
     where
         P: Reporter + 'static,
     {
-        let file_output = ComponentsDownloader::download_latest_dxvk(&config_dir, progress)
-            .await
-            .expect("failed to download dxvk");
-
-        let file_to_uncompress = file_output.clone();
-        tokio::task::spawn_blocking(move || {
-            let tar_gz = File::open(file_to_uncompress.clone()).unwrap();
-            let tar = GzDecoder::new(tar_gz);
-            let mut archive = Archive::new(tar);
-            archive.unpack(config_dir).unwrap();
-            remove_file(file_to_uncompress.clone()).unwrap();
-        })
-        .await
-        .unwrap();
-
-        wine.install_dxvk(
-            file_output
-                .to_str()
-                .unwrap()
-                .strip_suffix(".tar.gz")
-                .unwrap(),
-            InstallParams::default(),
-        )
-        .expect("failed to installed DXVK");
+        let dxvk_component = DXVKComponent::from_wine(wine, config_dir.join("dxvk"));
+        dxvk_component.install(progress).await?;
 
         let mut config = GameState::get_config().await?;
         config.is_dxvk_installed = true;

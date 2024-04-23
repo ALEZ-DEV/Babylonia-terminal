@@ -9,7 +9,7 @@ use downloader::progress::Reporter;
 use flate2::read::GzDecoder;
 use log::info;
 use tar::Archive;
-use tokio::{join, time::sleep};
+use tokio::time::sleep;
 use wincompatlib::{prelude::*, wine::bundle::proton};
 use xz::read::XzDecoder;
 
@@ -17,6 +17,7 @@ use crate::{
     components::{
         component_downloader::ComponentDownloader,
         dxvk_component::{self, DXVKComponent},
+        game_component::GameComponent,
         wine_component::WineComponent,
     },
     components_downloader::ComponentsDownloader,
@@ -125,20 +126,19 @@ impl GameManager {
         Ok(())
     }
 
-    pub fn init_wine() -> Wine {
-        let wine_path = GameState::get_config_directory().join("wine/bin/wine");
-        let wine_prefix = GameState::get_config_directory().join("data");
-        if !wine_prefix.exists() {
-            create_dir(wine_prefix.clone()).unwrap()
-        }
+    pub async fn install_game<P>(config_dir: PathBuf, progress: Arc<P>) -> anyhow::Result<()>
+    where
+        P: Reporter + 'static,
+    {
+        let game_component = GameComponent::new(config_dir);
+        game_component.install(Some(progress)).await?;
 
-        let wine = Wine::from_binary(wine_path);
-        wine.update_prefix(Some(wine_prefix)).unwrap();
+        let mut config = GameState::get_config().await?;
+        config.is_game_installed = true;
+        GameState::save_config(config).await?;
 
-        wine
+        Ok(())
     }
-
-    pub fn download_game() {}
 
     pub async fn start_game(wine: &Wine) {
         wine.run("/home/alez/.steam/steam/steamapps/compatdata/3841903579/pfx/drive_c/Punishing Gray Raven/launcher.exe").unwrap();

@@ -1,3 +1,4 @@
+use log::debug;
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -5,7 +6,7 @@ use serde::Serialize;
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Index {
+pub struct GameInfo {
     pub default: Default,
     pub hash_cache_check_acc_switch: i64,
 }
@@ -94,29 +95,40 @@ pub struct SampleHashInfo {
 
 // end data ---------------------------------------------------------------------
 
-static URL: &str = concat!(
-    "https://",
-    "prod",
-    "-alicdn",
-    "-gamestarter",
-    ".kur",
-    "ogame",
-    ".com/pcst",
-    "arter/pro",
-    "d/game/G1",
-    "43/4/index.json"
-);
+static URL: &str =
+    concat!("https://prod-alicdn-gamestarter.k", "uro", "gam", "e.com/pcstarter/prod/game/G143/4/index.json");
 
-pub async fn fetch_resources() -> anyhow::Result<Resources> {
+pub async fn fetch_game_info() -> anyhow::Result<GameInfo> {
     let response = reqwest::get(URL).await?;
+    debug!("{:?}", response.headers());
+    response.headers_mut().
     let body = response.text().await?;
-    let index: Index = serde_json::from_str(&body)?;
+    debug!("{}", &body);
+    Ok(serde_json::from_str(&body)?)
+}
 
-    let resources_base_url = index.default.cdn_list.first().unwrap().url.clone();
-    let resources_path_url = index.default.resources;
-    let resources_url = format!("{}{}", resources_base_url, resources_path_url);
+impl GameInfo {
+    pub fn get_first_cdn(&self) -> String {
+        self.default.cdn_list.first().unwrap().url.clone()
+    }
 
-    let response = reqwest::get(&resources_url).await?;
-    let body = response.text().await?;
-    Ok(serde_json::from_str::<Resources>(&body)?)
+    pub fn get_resource_base_path(&self) -> String {
+        self.default.resources_base_path.clone()
+    }
+
+    pub async fn fetch_resources(&self) -> anyhow::Result<Resources> {
+        let resources_base_url = self.get_first_cdn();
+        let resources_path_url = &self.default.resources;
+        let resources_url = format!("{}{}", resources_base_url, resources_path_url);
+
+        let response = reqwest::get(&resources_url).await?;
+        let body = response.text().await?;
+        Ok(serde_json::from_str::<Resources>(&body)?)
+    }
+}
+
+impl Resource {
+    pub fn build_download_url(&self, base_url: &str, zip_uri: &str) -> String {
+        format!("{}{}{}", base_url, zip_uri, self.dest)
+    }
 }

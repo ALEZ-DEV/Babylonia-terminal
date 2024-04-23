@@ -4,18 +4,21 @@ use std::fmt::Write;
 struct DownloadReporterPrivate {
     last_update: std::time::Instant,
     max_progress: Option<u64>,
+    last_current: u64,
     message: String,
     pb: ProgressBar,
 }
 
 pub struct DownloadReporter {
     private: std::sync::Mutex<Option<DownloadReporterPrivate>>,
+    relative: bool,
 }
 
 impl DownloadReporter {
-    pub fn create() -> std::sync::Arc<Self> {
+    pub fn create(relative: bool) -> std::sync::Arc<Self> {
         std::sync::Arc::new(Self {
             private: std::sync::Mutex::new(None),
+            relative,
         })
     }
 }
@@ -31,6 +34,7 @@ impl downloader::progress::Reporter for DownloadReporter {
         let private = DownloadReporterPrivate {
             last_update: std::time::Instant::now(),
             max_progress,
+            last_current: 0,
             message: message.to_owned(),
             pb: pb,
         };
@@ -43,7 +47,13 @@ impl downloader::progress::Reporter for DownloadReporter {
     fn progress(&self, current: u64) {
         if let Some(p) = self.private.lock().unwrap().as_mut() {
             if p.last_update.elapsed().as_millis() >= 1000 {
-                p.pb.set_position(current);
+                if self.relative {
+                    let new_current = current - p.last_current;
+                    p.pb.set_position(new_current);
+                    p.last_current = new_current;
+                } else {
+                    p.pb.set_position(current);
+                }
                 p.last_update = std::time::Instant::now();
             } else if current == p.max_progress.unwrap() {
                 p.pb.set_position(current);

@@ -29,6 +29,7 @@ pub struct GameConfig {
     pub is_dxvk_installed: bool,
     pub is_font_installed: bool,
     pub is_dependecies_installed: bool,
+    pub is_game_installed: bool, // will be remove, just for test purpose
 }
 
 impl Default for GameConfig {
@@ -40,6 +41,7 @@ impl Default for GameConfig {
             is_dxvk_installed: false,
             is_font_installed: false,
             is_dependecies_installed: false,
+            is_game_installed: false,
         }
     }
 }
@@ -96,6 +98,10 @@ impl GameState {
 
         if !config.is_dependecies_installed {
             return GameState::DependecieNotInstalled;
+        }
+
+        if !config.is_game_installed {
+            return GameState::GameNotInstalled;
         }
 
         GameState::GameInstalled

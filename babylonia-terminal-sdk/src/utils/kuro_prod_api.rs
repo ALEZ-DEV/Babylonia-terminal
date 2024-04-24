@@ -1,4 +1,5 @@
 use log::debug;
+use reqwest::header::USER_AGENT;
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -95,15 +96,16 @@ pub struct SampleHashInfo {
 
 // end data ---------------------------------------------------------------------
 
-static URL: &str =
-    concat!("https://prod-alicdn-gamestarter.k", "uro", "gam", "e.com/pcstarter/prod/game/G143/4/index.json");
+static URL: &str = concat!(
+    "https://prod-alicdn-gamestarter.k",
+    "uro",
+    "gam",
+    "e.com/pcstarter/prod/game/G143/4/index.json"
+);
 
 pub async fn fetch_game_info() -> anyhow::Result<GameInfo> {
     let response = reqwest::get(URL).await?;
-    debug!("{:?}", response.headers());
-    response.headers_mut().
     let body = response.text().await?;
-    debug!("{}", &body);
     Ok(serde_json::from_str(&body)?)
 }
 

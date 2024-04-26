@@ -17,6 +17,7 @@ async fn main() {
         .with_module_level("tracing", LevelFilter::Off)
         .with_module_level("rustls", LevelFilter::Off)
         .with_module_level("minreq", LevelFilter::Off)
+        .with_module_level("tokio_utils", LevelFilter::Off)
         .init()
         .unwrap();
 

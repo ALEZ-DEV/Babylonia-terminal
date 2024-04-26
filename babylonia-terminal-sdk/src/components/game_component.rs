@@ -5,6 +5,7 @@ use log::debug;
 use log::info;
 use serde::Deserialize;
 use serde::Serialize;
+use std::collections::TryReserveError;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -49,7 +50,20 @@ impl ComponentDownloader for GameComponent {
             .parallel_requests(5)
             .build()?;
 
+        if let Some(ref p) = progress {
+            let mut size: u64 = 0;
+
+            resources
+                .resource
+                .iter()
+                .for_each(|r| size += r.size as u64);
+
+            p.setup(Some(size), "download has started");
+        }
+
         for chunk_resource in resources.resource.chunks(5) {
+            let mut output_path: Vec<PathBuf> = vec![];
+
             for path in chunk_resource
                 .iter()
                 .map(|r| {
@@ -61,18 +75,27 @@ impl ComponentDownloader for GameComponent {
                 })
                 .collect::<Vec<_>>()
             {
-                create_dir_all(path).await?;
+                let _ = create_dir_all(&path).await; // unecessary to check
+                output_path.push(path)
             }
 
             let to_download = chunk_resource
                 .iter()
-                .map(|r| {
+                .enumerate()
+                .map(|(i, r)| {
                     let url = r.build_download_url(
                         &game_info.get_first_cdn(),
                         &game_info.get_resource_base_path(),
                     );
                     debug!("starting download for {}", url);
-                    let mut dl = downloader::Download::new(&url);
+                    let mut dl = downloader::Download::new_with_output(
+                        &url,
+                        output_path
+                            .get(i)
+                            .expect("Failed to get the write path of the concerned file")
+                            .to_owned(),
+                    );
+                    dl.check_file_name = false;
 
                     if let Some(p) = progress.clone() {
                         dl = dl.progress(FileDownloadReporter::create(p));

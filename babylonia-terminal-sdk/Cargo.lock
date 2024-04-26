@@ -207,7 +207,7 @@ checksum = "77c90badedccf4105eca100756a0b1289e191f6fcbdadd3cee1d2f614f97da8f"
 [[package]]
 name = "downloader"
 version = "0.2.7"
-source = "git+https://github.com/ALEZ-DEV/downloader#fddaffbfc3c5c22b44033fbd5a5915fdf590a0cb"
+source = "git+https://github.com/ALEZ-DEV/downloader#5572a0875ec4f04b0514342f9acff21252beb579"
 dependencies = [
  "futures",
  "rand",

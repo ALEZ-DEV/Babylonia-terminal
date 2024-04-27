@@ -6,16 +6,20 @@ use log::info;
 use serde::Deserialize;
 use serde::Serialize;
 use std::collections::TryReserveError;
+use std::fs as std_fs;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::time::Instant;
 use std::vec;
-use tokio::fs::create_dir_all;
+use tokio::fs::File;
+use tokio::fs::{create_dir_all, remove_file};
 
 use super::component_downloader::ComponentDownloader;
 use crate::utils::github_requester::GithubRequester;
 use crate::utils::kuro_prod_api;
+use crate::utils::kuro_prod_api::Resource;
+use crate::utils::kuro_prod_api::Resources;
 
 pub struct GameComponent {
     game_dir: PathBuf,
@@ -24,6 +28,43 @@ pub struct GameComponent {
 impl GameComponent {
     pub fn new(game_dir: PathBuf) -> Self {
         Self { game_dir }
+    }
+
+    async fn check_and_get_resources_to_download(
+        game_dir: &std::path::PathBuf,
+        resources: &Resources,
+    ) -> anyhow::Result<Vec<Resource>> {
+        info!("checking all files...");
+        let mut to_download: Vec<Resource> = vec![];
+
+        for r in &resources.resource {
+            let file_path = game_dir.join(r.dest.clone().strip_prefix("/").unwrap());
+
+            if file_path.try_exists()? {
+                let blocking_file_path = file_path.clone();
+                let file =
+                    tokio::task::spawn_blocking(move || std_fs::File::open(blocking_file_path))
+                        .await??; // only the std::File is supported by chksum_md5, that's why I block
+                let digest = chksum_md5::chksum(file)?;
+
+                debug!(
+                    "{} = {} -> {}",
+                    digest.to_hex_lowercase(),
+                    r.md5,
+                    digest.to_hex_lowercase() == r.md5
+                );
+
+                if digest.to_hex_lowercase() != r.md5 {
+                    to_download.push(r.clone());
+                    remove_file(file_path).await?;
+                }
+            } else {
+                debug!("{:?} don't exist", file_path);
+                to_download.push(r.clone());
+            }
+        }
+
+        Ok(to_download)
     }
 }
 
@@ -50,18 +91,21 @@ impl ComponentDownloader for GameComponent {
             .parallel_requests(5)
             .build()?;
 
-        if let Some(ref p) = progress {
-            let mut size: u64 = 0;
+        //if let Some(ref p) = progress {
+        //    let mut size: u64 = 0;
 
-            resources
-                .resource
-                .iter()
-                .for_each(|r| size += r.size as u64);
+        //    resources
+        //        .resource
+        //        .iter()
+        //        .for_each(|r| size += r.size as u64);
 
-            p.setup(Some(size), "download has started");
-        }
+        //    p.setup(Some(size), "download has started");
+        //}
 
-        for chunk_resource in resources.resource.chunks(5) {
+        let checked_resources =
+            GameComponent::check_and_get_resources_to_download(output_dir, &resources).await?;
+
+        for chunk_resource in checked_resources.chunks(5) {
             let mut output_path: Vec<PathBuf> = vec![];
 
             for path in chunk_resource

@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.81"
+chksum-md5 = { version = "0.0.0", features = ["reader"] }
 dirs = "5.0.1"
 dotenv = "0.15.0"
 downloader = { git = "https://github.com/ALEZ-DEV/downloader" } # version = "0.2.7",

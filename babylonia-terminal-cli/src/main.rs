@@ -75,8 +75,8 @@ async fn main() {
             GameState::GameNotInstalled => {
                 info!("Game not installed, installing it...");
                 GameManager::install_game(
-                    GameState::get_config_directory(),
-                    DownloadReporter::create(true),
+                    GameState::get_config_directory().join("PGR"),
+                    DownloadReporter::create(false),
                 )
                 .await
                 .expect("Failed to install the game");
@@ -90,5 +90,9 @@ async fn main() {
     }
 
     info!("Starting game...");
-    GameManager::start_game(&wine.unwrap()).await;
+    GameManager::start_game(
+        &wine.unwrap(),
+        GameState::get_config_directory().join("PGR"),
+    )
+    .await;
 }

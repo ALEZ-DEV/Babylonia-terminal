@@ -7,8 +7,9 @@ use std::{
 
 use downloader::progress::Reporter;
 use flate2::read::GzDecoder;
-use log::info;
+use log::{debug, info};
 use tar::Archive;
+use tokio::fs::create_dir_all;
 use tokio::time::sleep;
 use wincompatlib::{prelude::*, wine::bundle::proton};
 use xz::read::XzDecoder;
@@ -126,11 +127,13 @@ impl GameManager {
         Ok(())
     }
 
-    pub async fn install_game<P>(config_dir: PathBuf, progress: Arc<P>) -> anyhow::Result<()>
+    pub async fn install_game<P>(game_dir: PathBuf, progress: Arc<P>) -> anyhow::Result<()>
     where
         P: Reporter + 'static,
     {
-        let game_component = GameComponent::new(config_dir);
+        let _ = create_dir_all(game_dir.clone()).await;
+
+        let game_component = GameComponent::new(game_dir);
         game_component.install(Some(progress)).await?;
 
         let mut config = GameState::get_config().await?;
@@ -140,8 +143,9 @@ impl GameManager {
         Ok(())
     }
 
-    pub async fn start_game(wine: &Wine) {
-        wine.run("/home/alez/.steam/steam/steamapps/compatdata/3841903579/pfx/drive_c/Punishing Gray Raven/launcher.exe").unwrap();
+    pub async fn start_game(wine: &Wine, game_dir: PathBuf) {
+        debug!("Wine version : {:?}", wine.version().unwrap());
+        wine.run(game_dir.join("PGR.exe")).unwrap();
 
         loop {
             sleep(Duration::from_millis(10000)).await;

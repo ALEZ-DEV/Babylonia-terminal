@@ -129,6 +129,16 @@ impl GameInfo {
     }
 }
 
+impl Resources {
+    pub fn get_max_size_resources(&self) -> u64 {
+        let mut max_size: u64 = 0;
+
+        self.resource.iter().for_each(|r| max_size += r.size as u64);
+
+        max_size
+    }
+}
+
 impl Resource {
     pub fn build_download_url(&self, base_url: &str, zip_uri: &str) -> String {
         format!("{}{}{}", base_url, zip_uri, self.dest)

@@ -10,10 +10,15 @@ use std::fs as std_fs;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::Mutex;
+use std::time::Duration;
 use std::time::Instant;
 use std::vec;
 use tokio::fs::File;
 use tokio::fs::{create_dir_all, remove_file};
+use tokio::sync::mpsc;
+use tokio::sync::mpsc::Receiver;
+use tokio::sync::mpsc::Sender;
+use tokio::time::timeout;
 
 use super::component_downloader::ComponentDownloader;
 use crate::utils::github_requester::GithubRequester;
@@ -47,24 +52,45 @@ impl GameComponent {
                         .await??; // only the std::File is supported by chksum_md5, that's why I block
                 let digest = chksum_md5::chksum(file)?;
 
-                debug!(
-                    "{} = {} -> {}",
-                    digest.to_hex_lowercase(),
-                    r.md5,
-                    digest.to_hex_lowercase() == r.md5
-                );
-
                 if digest.to_hex_lowercase() != r.md5 {
                     to_download.push(r.clone());
                     remove_file(file_path).await?;
                 }
             } else {
-                debug!("{:?} don't exist", file_path);
                 to_download.push(r.clone());
             }
         }
 
         Ok(to_download)
+    }
+
+    fn update_progress<P: downloader::progress::Reporter + 'static>(
+        progress: Arc<P>,
+        max_size: u64,
+        game_dir: PathBuf,
+        mut rx: Receiver<&'static str>,
+    ) {
+        tokio::spawn(async move {
+            progress.setup(Some(max_size.to_owned()), "");
+
+            loop {
+                let current_size = fs_extra::dir::get_size(game_dir.clone());
+                if let Ok(size) = current_size {
+                    progress.progress(size);
+                }
+
+                if let Ok(v) = timeout(Duration::from_millis(250), rx.recv()).await {
+                    match v {
+                        Some(str) => {
+                            if str == "done" {
+                                break;
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+            }
+        });
     }
 }
 
@@ -91,19 +117,18 @@ impl ComponentDownloader for GameComponent {
             .parallel_requests(5)
             .build()?;
 
-        //if let Some(ref p) = progress {
-        //    let mut size: u64 = 0;
-
-        //    resources
-        //        .resource
-        //        .iter()
-        //        .for_each(|r| size += r.size as u64);
-
-        //    p.setup(Some(size), "download has started");
-        //}
-
         let checked_resources =
             GameComponent::check_and_get_resources_to_download(output_dir, &resources).await?;
+        let (tx, rx): (Sender<&str>, Receiver<&str>) = mpsc::channel(100);
+
+        if let Some(p) = progress {
+            GameComponent::update_progress(
+                p,
+                resources.get_max_size_resources(),
+                output_dir.clone(),
+                rx,
+            );
+        }
 
         for chunk_resource in checked_resources.chunks(5) {
             let mut output_path: Vec<PathBuf> = vec![];
@@ -141,15 +166,14 @@ impl ComponentDownloader for GameComponent {
                     );
                     dl.check_file_name = false;
 
-                    if let Some(p) = progress.clone() {
-                        dl = dl.progress(FileDownloadReporter::create(p));
-                    }
                     dl
                 })
                 .collect::<Vec<downloader::Download>>();
 
             downloader.async_download(&to_download).await?;
         }
+
+        let _ = tx.send("done").await;
 
         Ok(output_dir.clone())
     }

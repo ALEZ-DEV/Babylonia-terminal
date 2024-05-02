@@ -22,7 +22,6 @@ use crate::{
         game_component::GameComponent,
         proton_component::ProtonComponent,
     },
-    components_downloader::ComponentsDownloader,
     game_state::GameState,
 };
 
@@ -76,37 +75,42 @@ impl GameManager {
     where
         P: Reporter + 'static,
     {
+        let wine_with_proton_prefix = proton // wine take the data/wine/pfx prefix, but we want the data/wine prefix
+            .wine()
+            .clone()
+            .with_prefix(proton.wine().prefix.parent().unwrap());
+
         progress.setup(Some(10), "");
         progress.progress(0);
 
-        proton.install_font(Font::Arial)?;
+        wine_with_proton_prefix.install_font(Font::Arial)?;
         progress.progress(1);
 
-        proton.install_font(Font::Andale)?;
+        wine_with_proton_prefix.install_font(Font::Andale)?;
         progress.progress(2);
 
-        proton.install_font(Font::Courier)?;
+        wine_with_proton_prefix.install_font(Font::Courier)?;
         progress.progress(3);
 
-        proton.install_font(Font::ComicSans)?;
+        wine_with_proton_prefix.install_font(Font::ComicSans)?;
         progress.progress(4);
 
-        proton.install_font(Font::Georgia)?;
+        wine_with_proton_prefix.install_font(Font::Georgia)?;
         progress.progress(5);
 
-        proton.install_font(Font::Impact)?;
+        wine_with_proton_prefix.install_font(Font::Impact)?;
         progress.progress(6);
 
-        proton.install_font(Font::Times)?;
+        wine_with_proton_prefix.install_font(Font::Times)?;
         progress.progress(7);
 
-        proton.install_font(Font::Trebuchet)?;
+        wine_with_proton_prefix.install_font(Font::Trebuchet)?;
         progress.progress(8);
 
-        proton.install_font(Font::Verdana)?;
+        wine_with_proton_prefix.install_font(Font::Verdana)?;
         progress.progress(9);
 
-        proton.install_font(Font::Webdings)?;
+        wine_with_proton_prefix.install_font(Font::Webdings)?;
         progress.progress(10);
 
         let mut config = GameState::get_config().await?;
@@ -117,8 +121,13 @@ impl GameManager {
     }
 
     pub async fn install_dependecies(proton: &Proton) -> anyhow::Result<()> {
-        let winetricks = Winetricks::from_wine("winetricks", proton.wine());
-        winetricks.install("corefonts")?;
+        let wine_with_proton_prefix = proton // wine take the data/wine/pfx prefix, but we want the data/wine prefix
+            .wine()
+            .clone()
+            .with_prefix(proton.wine().prefix.parent().unwrap());
+
+        let winetricks = Winetricks::from_wine("/bin/winetricks", wine_with_proton_prefix);
+        //winetricks.install("corefonts")?;
         winetricks.install("vcrun2022")?;
 
         let mut config = GameState::get_config().await?;
@@ -147,18 +156,6 @@ impl GameManager {
     pub async fn start_game(proton: &Proton, game_dir: PathBuf) {
         debug!("Wine version : {:?}", proton.wine().version().unwrap());
         let mut child = proton.run(game_dir.join("PGR.exe")).unwrap();
-
-        tokio::task::spawn_blocking(move || {
-            let mut stdout = BufReader::new(child.stdout.as_mut().unwrap());
-            let mut line = String::new();
-
-            loop {
-                stdout.read_line(&mut line);
-                if !line.is_empty() {
-                    debug!("{}", line);
-                }
-            }
-        })
-        .await;
+        child.wait().expect("The game failed to run");
     }
 }

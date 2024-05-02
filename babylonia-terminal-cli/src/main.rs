@@ -11,15 +11,19 @@ use crate::reporter::DownloadReporter;
 
 #[tokio::main]
 async fn main() {
-    SimpleLogger::new()
+    let simple_logger = SimpleLogger::new()
         .with_module_level("hyper", LevelFilter::Off)
         .with_module_level("hyper_util", LevelFilter::Off)
         .with_module_level("tracing", LevelFilter::Off)
         .with_module_level("rustls", LevelFilter::Off)
         .with_module_level("minreq", LevelFilter::Off)
-        .with_module_level("tokio_utils", LevelFilter::Off)
-        .init()
-        .unwrap();
+        .with_module_level("tokio_utils", LevelFilter::Off);
+
+    if cfg!(debug_assertions) {
+        simple_logger.init().unwrap();
+    } else {
+        simple_logger.with_level(LevelFilter::Info).init().unwrap();
+    }
 
     let mut proton_component: Option<ProtonComponent> = None;
     let mut proton: Option<Proton> = None;
@@ -27,9 +31,7 @@ async fn main() {
     loop {
         let state = GameState::get_current_state().await;
 
-        if GameState::get_current_state().await != GameState::WineNotInstalled
-            && proton_component == None
-        {
+        if state != GameState::WineNotInstalled && proton == None {
             let proton_component =
                 ProtonComponent::new(GameState::get_config_directory().join("wine"));
             match proton_component.init_proton() {
@@ -53,6 +55,7 @@ async fn main() {
             }
             GameState::DXVKNotInstalled => {
                 info!("DXVK not installed, installing it...");
+                debug!("{:?}", proton_component);
                 GameManager::install_dxvk(
                     &proton.clone().unwrap(),
                     GameState::get_config_directory(),

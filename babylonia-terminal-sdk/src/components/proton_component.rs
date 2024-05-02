@@ -95,14 +95,6 @@ impl ProtonComponent {
     }
 
     pub fn init_proton(&self) -> Result<wincompatlib::prelude::Proton, String> {
-        //let wine_path = self.path.join("files/bin/wine64");
-        //let wine_prefix = self.path.parent().unwrap().join("data");
-        //if !wine_prefix.exists() {
-        //    create_dir(wine_prefix.clone()).unwrap()
-        //}
-
-        //let wine = wincompatlib::prelude::Wine::from_binary(wine_path);
-        //wine.update_prefix(Some(wine_prefix)).unwrap();
         let prefix = self.path.parent().unwrap().join("data");
         let steam_location = dirs::home_dir().unwrap().join(".steam/steam");
         if !steam_location.exists() {

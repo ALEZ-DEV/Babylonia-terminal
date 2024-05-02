@@ -7,7 +7,10 @@ use downloader::{Download, Downloader};
 use flate2::read::GzDecoder;
 use tar::Archive;
 use tokio::fs::remove_dir_all;
-use wincompatlib::{dxvk::InstallParams, wine::Wine};
+use wincompatlib::{
+    dxvk::InstallParams,
+    wine::{ext::WineWithExt, Wine},
+};
 
 use crate::utils::github_requester::GithubRequester;
 
@@ -40,7 +43,12 @@ impl<'a> ComponentDownloader for DXVKComponent<'a> {
 
         Self::uncompress(file_output.clone(), self.path.clone()).await?;
 
-        self.wine
+        let wine_with_proton_prefix = self // wine take the data/wine/pfx prefix, but we want the data/wine prefix
+            .wine
+            .clone()
+            .with_prefix(self.wine.prefix.parent().unwrap());
+
+        wine_with_proton_prefix
             .install_dxvk(self.path.clone(), InstallParams::default())
             .expect("Failed to installed DXVK");
 

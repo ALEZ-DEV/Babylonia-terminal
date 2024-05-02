@@ -93,7 +93,7 @@ impl WineComponent {
     }
 
     pub fn init_wine(&self) -> wincompatlib::prelude::Wine {
-        let wine_path = self.path.join("bin/wine");
+        let wine_path = self.path.join("files/bin/wine64");
         let wine_prefix = self.path.parent().unwrap().join("data");
         if !wine_prefix.exists() {
             create_dir(wine_prefix.clone()).unwrap()

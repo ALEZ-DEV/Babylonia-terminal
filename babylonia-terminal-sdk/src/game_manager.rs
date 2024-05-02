@@ -1,5 +1,6 @@
 use std::{
     fs::{create_dir, remove_file, rename, File},
+    io::{BufRead, BufReader},
     path::PathBuf,
     sync::Arc,
     time::Duration,
@@ -145,10 +146,19 @@ impl GameManager {
 
     pub async fn start_game(wine: &Wine, game_dir: PathBuf) {
         debug!("Wine version : {:?}", wine.version().unwrap());
-        wine.run(game_dir.join("PGR.exe")).unwrap();
+        let mut child = wine.run(game_dir.join("PGR.exe")).unwrap();
 
-        loop {
-            sleep(Duration::from_millis(10000)).await;
-        }
+        tokio::task::spawn_blocking(move || {
+            let mut stdout = BufReader::new(child.stdout.as_mut().unwrap());
+            let mut line = String::new();
+
+            loop {
+                stdout.read_line(&mut line);
+                if !line.is_empty() {
+                    debug!("{}", line);
+                }
+            }
+        })
+        .await;
     }
 }

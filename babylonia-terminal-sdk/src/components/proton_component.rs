@@ -1,24 +1,29 @@
 use std::{
+    env::home_dir,
     fs::{create_dir, remove_file, rename, File},
     path::PathBuf,
+    str::FromStr,
     sync::Arc,
 };
 
 use downloader::{progress::Reporter, Downloader};
+use flate2::read::GzDecoder;
+use log::debug;
 use tar::Archive;
-use wincompatlib::wine::ext::WineBootExt;
+use wincompatlib::wine::{bundle::proton::Proton, ext::WineBootExt};
 use xz::read::XzDecoder;
 
 use super::component_downloader::ComponentDownloader;
 use crate::{game_state::GameState, utils::github_requester::GithubRequester};
 
-pub struct WineComponent {
+#[derive(Debug, PartialEq, Eq)]
+pub struct ProtonComponent {
     path: PathBuf,
 }
 
-impl GithubRequester for WineComponent {}
+impl GithubRequester for ProtonComponent {}
 
-impl ComponentDownloader for WineComponent {
+impl ComponentDownloader for ProtonComponent {
     async fn install<P: Reporter + 'static>(&self, progress: Option<Arc<P>>) -> anyhow::Result<()> {
         let file_output = Self::download(
             &self
@@ -38,7 +43,8 @@ impl ComponentDownloader for WineComponent {
         output_dir: &PathBuf,
         progress: Option<Arc<P>>,
     ) -> anyhow::Result<PathBuf> {
-        let release = Self::get_latest_github_release("GloriousEggroll", "wine-ge-custom").await?;
+        let release =
+            Self::get_latest_github_release("GloriousEggroll", "proton-ge-custom").await?;
 
         let asset = release[0]
             .assets
@@ -64,18 +70,14 @@ impl ComponentDownloader for WineComponent {
     async fn uncompress(file: PathBuf, new_directory_name: PathBuf) -> anyhow::Result<()> {
         tokio::task::spawn_blocking(move || {
             let tar_xz = File::open(file.clone()).unwrap();
-            let tar = XzDecoder::new(tar_xz);
+            let tar = GzDecoder::new(tar_xz);
             let mut archive = Archive::new(tar);
             archive
                 .unpack(new_directory_name.parent().unwrap())
                 .unwrap();
             remove_file(file.clone()).unwrap();
             rename(
-                file.to_str()
-                    .unwrap()
-                    .replace("wine-", "")
-                    .strip_suffix(".tar.xz")
-                    .unwrap(),
+                file.to_str().unwrap().strip_suffix(".tar.gz").unwrap(),
                 new_directory_name,
             )
             .unwrap();
@@ -87,21 +89,31 @@ impl ComponentDownloader for WineComponent {
     }
 }
 
-impl WineComponent {
+impl ProtonComponent {
     pub fn new(path: PathBuf) -> Self {
-        WineComponent { path }
+        ProtonComponent { path }
     }
 
-    pub fn init_wine(&self) -> wincompatlib::prelude::Wine {
-        let wine_path = self.path.join("files/bin/wine64");
-        let wine_prefix = self.path.parent().unwrap().join("data");
-        if !wine_prefix.exists() {
-            create_dir(wine_prefix.clone()).unwrap()
+    pub fn init_proton(&self) -> Result<wincompatlib::prelude::Proton, String> {
+        //let wine_path = self.path.join("files/bin/wine64");
+        //let wine_prefix = self.path.parent().unwrap().join("data");
+        //if !wine_prefix.exists() {
+        //    create_dir(wine_prefix.clone()).unwrap()
+        //}
+
+        //let wine = wincompatlib::prelude::Wine::from_binary(wine_path);
+        //wine.update_prefix(Some(wine_prefix)).unwrap();
+        let prefix = self.path.parent().unwrap().join("data");
+        let steam_location = dirs::home_dir().unwrap().join(".steam/steam");
+        if !steam_location.exists() {
+            debug!("Can't find steam installation");
+            return Err(String::from_str("We can't find your steam installation, please install steam in '~/.steam/steam' or specify your steam installation").unwrap());
         }
+        let mut proton =
+            wincompatlib::prelude::Proton::new(self.path.clone(), Some(prefix.clone()));
+        proton.steam_client_path = Some(steam_location);
+        proton.init_prefix(Some(prefix)).unwrap();
 
-        let wine = wincompatlib::prelude::Wine::from_binary(wine_path);
-        wine.update_prefix(Some(wine_prefix)).unwrap();
-
-        wine
+        Ok(proton)
     }
 }

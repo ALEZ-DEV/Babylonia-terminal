@@ -20,7 +20,7 @@ use crate::{
         component_downloader::ComponentDownloader,
         dxvk_component::{self, DXVKComponent},
         game_component::GameComponent,
-        wine_component::WineComponent,
+        proton_component::ProtonComponent,
     },
     components_downloader::ComponentsDownloader,
     game_state::GameState,
@@ -32,11 +32,11 @@ impl GameManager {
     pub async fn install_wine<P>(
         config_dir: PathBuf,
         progress: Option<Arc<P>>,
-    ) -> anyhow::Result<WineComponent>
+    ) -> anyhow::Result<ProtonComponent>
     where
         P: Reporter + 'static,
     {
-        let wine_component = WineComponent::new(config_dir.join("wine"));
+        let wine_component = ProtonComponent::new(config_dir.join("wine"));
 
         wine_component.install(progress).await?;
 
@@ -55,14 +55,14 @@ impl GameManager {
     }
 
     pub async fn install_dxvk<P>(
-        wine: &Wine,
+        proton: &Proton,
         config_dir: PathBuf,
         progress: Option<Arc<P>>,
     ) -> anyhow::Result<()>
     where
         P: Reporter + 'static,
     {
-        let dxvk_component = DXVKComponent::from_wine(wine, config_dir.join("dxvk"));
+        let dxvk_component = DXVKComponent::from_wine(proton.wine(), config_dir.join("dxvk"));
         dxvk_component.install(progress).await?;
 
         let mut config = GameState::get_config().await?;
@@ -72,41 +72,41 @@ impl GameManager {
         Ok(())
     }
 
-    pub async fn install_font<P>(wine: &Wine, progress: Arc<P>) -> anyhow::Result<()>
+    pub async fn install_font<P>(proton: &Proton, progress: Arc<P>) -> anyhow::Result<()>
     where
         P: Reporter + 'static,
     {
         progress.setup(Some(10), "");
         progress.progress(0);
 
-        wine.install_font(Font::Arial)?;
+        proton.install_font(Font::Arial)?;
         progress.progress(1);
 
-        wine.install_font(Font::Andale)?;
+        proton.install_font(Font::Andale)?;
         progress.progress(2);
 
-        wine.install_font(Font::Courier)?;
+        proton.install_font(Font::Courier)?;
         progress.progress(3);
 
-        wine.install_font(Font::ComicSans)?;
+        proton.install_font(Font::ComicSans)?;
         progress.progress(4);
 
-        wine.install_font(Font::Georgia)?;
+        proton.install_font(Font::Georgia)?;
         progress.progress(5);
 
-        wine.install_font(Font::Impact)?;
+        proton.install_font(Font::Impact)?;
         progress.progress(6);
 
-        wine.install_font(Font::Times)?;
+        proton.install_font(Font::Times)?;
         progress.progress(7);
 
-        wine.install_font(Font::Trebuchet)?;
+        proton.install_font(Font::Trebuchet)?;
         progress.progress(8);
 
-        wine.install_font(Font::Verdana)?;
+        proton.install_font(Font::Verdana)?;
         progress.progress(9);
 
-        wine.install_font(Font::Webdings)?;
+        proton.install_font(Font::Webdings)?;
         progress.progress(10);
 
         let mut config = GameState::get_config().await?;
@@ -116,8 +116,8 @@ impl GameManager {
         Ok(())
     }
 
-    pub async fn install_dependecies(wine: &Wine) -> anyhow::Result<()> {
-        let winetricks = Winetricks::from_wine("winetricks", wine);
+    pub async fn install_dependecies(proton: &Proton) -> anyhow::Result<()> {
+        let winetricks = Winetricks::from_wine("winetricks", proton.wine());
         winetricks.install("corefonts")?;
         winetricks.install("vcrun2022")?;
 
@@ -144,9 +144,9 @@ impl GameManager {
         Ok(())
     }
 
-    pub async fn start_game(wine: &Wine, game_dir: PathBuf) {
-        debug!("Wine version : {:?}", wine.version().unwrap());
-        let mut child = wine.run(game_dir.join("PGR.exe")).unwrap();
+    pub async fn start_game(proton: &Proton, game_dir: PathBuf) {
+        debug!("Wine version : {:?}", proton.wine().version().unwrap());
+        let mut child = proton.run(game_dir.join("PGR.exe")).unwrap();
 
         tokio::task::spawn_blocking(move || {
             let mut stdout = BufReader::new(child.stdout.as_mut().unwrap());

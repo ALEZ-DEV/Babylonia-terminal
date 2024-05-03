@@ -1,3 +1,4 @@
+use dirs::home_dir;
 use serde::{Deserialize, Serialize};
 use std::{
     io::{Read, Write},
@@ -7,40 +8,42 @@ use tokio::{
     fs::{read_to_string, File},
     io::{AsyncReadExt, AsyncWriteExt},
 };
-//use wincompatlib::prelude::*;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum GameState {
     WineNotInstalled,
     DXVKNotInstalled,
     FontNotInstalled,
-    DependecieNotInstalled, // that's just the missing dll to install
-    LauncherNotInstalled,
+    DependecieNotInstalled,
     GameNotInstalled,
-    InstallingGame,
     GameInstalled,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GameConfig {
-    pub dedicated_wine: bool,
+    pub config_dir: PathBuf,
     pub is_wine_installed: bool,
-    pub wine_path: Option<String>,
     pub is_dxvk_installed: bool,
     pub is_font_installed: bool,
     pub is_dependecies_installed: bool,
-    pub is_game_installed: bool, // will be remove, just for test purpose
+    pub game_dir: Option<PathBuf>,
+    pub is_game_installed: bool,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GameConfigPath {
+    path: PathBuf,
 }
 
 impl Default for GameConfig {
     fn default() -> Self {
         GameConfig {
-            dedicated_wine: true,
+            config_dir: dirs::home_dir().unwrap().join(".babylonia-terminal"),
             is_wine_installed: false,
-            wine_path: None,
             is_dxvk_installed: false,
             is_font_installed: false,
             is_dependecies_installed: false,
+            game_dir: None,
             is_game_installed: false,
         }
     }
@@ -48,11 +51,22 @@ impl Default for GameConfig {
 
 impl GameState {
     pub fn get_config_directory() -> PathBuf {
-        dirs::home_dir().unwrap().join(".babylonia-terminal")
+        home_dir().unwrap().join(".babylonia-terminal") // I will try to change that to a dynamic one if people want to change the config dir
     }
 
     fn get_config_file_path() -> PathBuf {
         GameState::get_config_directory().join("babylonia-terminal-config")
+    }
+
+    pub async fn set_game_dir(path: Option<PathBuf>) -> anyhow::Result<()> {
+        let mut config = GameState::get_config().await;
+        config.game_dir = path;
+        GameState::save_config(config).await?;
+        Ok(())
+    }
+
+    pub async fn get_game_dir() -> Option<PathBuf> {
+        GameState::get_config().await.game_dir
     }
 
     async fn try_get_config_file() -> anyhow::Result<File> {
@@ -69,20 +83,19 @@ impl GameState {
         Ok(())
     }
 
-    pub async fn get_config() -> anyhow::Result<GameConfig> {
+    pub async fn get_config() -> GameConfig {
         let content = match read_to_string(GameState::get_config_file_path()).await {
-            Err(_) => return Ok(GameConfig::default()),
+            Err(_) => return GameConfig::default(),
             Ok(c) => c,
         };
-        if let Ok(config) = serde_json::from_str::<GameConfig>(&content) {
-            Ok(config)
-        } else {
-            Ok(GameConfig::default())
+        match serde_json::from_str::<GameConfig>(&content) {
+            Ok(config) => return config,
+            Err(_) => return GameConfig::default(),
         }
     }
 
     pub async fn get_current_state() -> Self {
-        let config = GameState::get_config().await.unwrap();
+        let config = GameState::get_config().await;
 
         if !config.is_wine_installed {
             return GameState::WineNotInstalled;

@@ -39,7 +39,7 @@ impl GameComponent {
         game_dir: &std::path::PathBuf,
         resources: &Resources,
     ) -> anyhow::Result<Vec<Resource>> {
-        info!("checking all files...");
+        info!("checking all files, this can take a while...");
         let mut to_download: Vec<Resource> = vec![];
 
         for r in &resources.resource {

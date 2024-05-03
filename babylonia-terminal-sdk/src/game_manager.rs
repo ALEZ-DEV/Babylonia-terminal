@@ -35,19 +35,12 @@ impl GameManager {
     where
         P: Reporter + 'static,
     {
-        let wine_component = ProtonComponent::new(config_dir.join("wine"));
+        let wine_component = ProtonComponent::new(config_dir);
 
         wine_component.install(progress).await?;
 
-        let mut config = GameState::get_config().await?;
+        let mut config = GameState::get_config().await;
         config.is_wine_installed = true;
-        config.wine_path = Some(
-            GameState::get_config_directory()
-                .join("wine")
-                .to_str()
-                .unwrap()
-                .to_string(),
-        );
         GameState::save_config(config).await?;
 
         Ok(wine_component)
@@ -61,10 +54,10 @@ impl GameManager {
     where
         P: Reporter + 'static,
     {
-        let dxvk_component = DXVKComponent::from_wine(proton.wine(), config_dir.join("dxvk"));
+        let dxvk_component = DXVKComponent::from_wine(proton.wine(), config_dir);
         dxvk_component.install(progress).await?;
 
-        let mut config = GameState::get_config().await?;
+        let mut config = GameState::get_config().await;
         config.is_dxvk_installed = true;
         GameState::save_config(config).await?;
 
@@ -113,7 +106,7 @@ impl GameManager {
         wine_with_proton_prefix.install_font(Font::Webdings)?;
         progress.progress(10);
 
-        let mut config = GameState::get_config().await?;
+        let mut config = GameState::get_config().await;
         config.is_font_installed = true;
         GameState::save_config(config).await?;
 
@@ -130,7 +123,7 @@ impl GameManager {
         //winetricks.install("corefonts")?;
         winetricks.install("vcrun2022")?;
 
-        let mut config = GameState::get_config().await?;
+        let mut config = GameState::get_config().await;
         config.is_dependecies_installed = true;
         GameState::save_config(config).await?;
 
@@ -146,7 +139,7 @@ impl GameManager {
         let game_component = GameComponent::new(game_dir);
         game_component.install(Some(progress)).await?;
 
-        let mut config = GameState::get_config().await?;
+        let mut config = GameState::get_config().await;
         config.is_game_installed = true;
         GameState::save_config(config).await?;
 

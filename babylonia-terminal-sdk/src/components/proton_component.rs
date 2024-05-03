@@ -91,7 +91,9 @@ impl ComponentDownloader for ProtonComponent {
 
 impl ProtonComponent {
     pub fn new(path: PathBuf) -> Self {
-        ProtonComponent { path }
+        ProtonComponent {
+            path: path.join("proton"),
+        }
     }
 
     pub fn init_proton(&self) -> Result<wincompatlib::prelude::Proton, String> {

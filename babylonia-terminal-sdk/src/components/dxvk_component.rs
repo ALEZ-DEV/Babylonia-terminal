@@ -23,7 +23,10 @@ pub struct DXVKComponent<'a> {
 
 impl<'a> DXVKComponent<'a> {
     pub fn from_wine<'b: 'a>(wine: &'b Wine, path: PathBuf) -> Self {
-        DXVKComponent { wine, path }
+        DXVKComponent {
+            wine,
+            path: path.join("dxvk"),
+        }
     }
 }
 

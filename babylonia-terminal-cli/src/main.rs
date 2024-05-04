@@ -1,12 +1,11 @@
 use std::{path::PathBuf, str::FromStr};
 
 use babylonia_terminal_sdk::{
-    components::proton_component::ProtonComponent, game_manager::GameManager, game_patcher,
-    game_state::GameState,
+    components::proton_component::ProtonComponent, game_manager::GameManager, game_state::GameState,
 };
 use log::{debug, info, LevelFilter};
 use simple_logger::SimpleLogger;
-use tokio::io::{AsyncBufReadExt, AsyncReadExt, BufReader};
+use tokio::io::{AsyncBufReadExt, BufReader};
 use wincompatlib::prelude::*;
 
 pub mod reporter;
@@ -35,8 +34,8 @@ async fn main() {
     loop {
         let state = GameState::get_current_state().await;
 
-        if state != GameState::WineNotInstalled && proton == None {
-            let proton_component = ProtonComponent::new(GameState::get_config_directory());
+        if state != GameState::ProtonNotInstalled && proton == None {
+            let proton_component = ProtonComponent::new(GameState::get_config_directory().await);
             match proton_component.init_proton() {
                 Ok(p) => proton = Some(p),
                 Err(err) => panic!("{}", err),
@@ -44,24 +43,24 @@ async fn main() {
         }
 
         match state {
-            GameState::WineNotInstalled => {
-                info!("Wine not installed, installing it...");
+            GameState::ProtonNotInstalled => {
+                info!("Proton not installed, installing it...");
                 proton_component = Some(
                     GameManager::install_wine(
-                        GameState::get_config_directory(),
+                        GameState::get_config_directory().await,
                         Some(DownloadReporter::create(false)),
                     )
                     .await
                     .expect("Failed to install Wine"),
                 );
-                info!("Wine installed");
+                info!("Proton installed");
             }
             GameState::DXVKNotInstalled => {
                 info!("DXVK not installed, installing it...");
                 debug!("{:?}", proton_component);
                 GameManager::install_dxvk(
                     &proton.clone().unwrap(),
-                    GameState::get_config_directory(),
+                    GameState::get_config_directory().await,
                     Some(DownloadReporter::create(false)),
                 )
                 .await
@@ -87,7 +86,7 @@ async fn main() {
                 if GameState::get_game_dir().await.is_none() {
                     info!(
                         "You can choose where to put your game directory, (default '{}')",
-                        GameState::get_config_directory().to_str().unwrap(),
+                        GameState::get_config_directory().await.to_str().unwrap(),
                     );
                     info!("Please enter your wanted game directory : ");
                     let mut input = BufReader::new(tokio::io::stdin())
@@ -99,12 +98,12 @@ async fn main() {
                     let dir;
                     if let Some(i) = &mut input {
                         if i.is_empty() {
-                            dir = GameState::get_config_directory();
+                            dir = GameState::get_config_directory().await;
                         } else {
                             dir = PathBuf::from_str(i).expect("This is not a valid directory!\n Please restart the launcher and put a valid path.");
                         }
                     } else {
-                        dir = GameState::get_config_directory();
+                        dir = GameState::get_config_directory().await;
                     }
 
                     GameState::set_game_dir(Some(dir)).await.expect(

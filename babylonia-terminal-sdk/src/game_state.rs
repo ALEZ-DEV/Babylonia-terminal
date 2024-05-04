@@ -5,13 +5,13 @@ use std::{
     path::PathBuf,
 };
 use tokio::{
-    fs::{read_to_string, File},
+    fs::{create_dir_all, read_to_string, File},
     io::{AsyncReadExt, AsyncWriteExt},
 };
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum GameState {
-    WineNotInstalled,
+    ProtonNotInstalled,
     DXVKNotInstalled,
     FontNotInstalled,
     DependecieNotInstalled,
@@ -53,12 +53,18 @@ impl Default for GameConfig {
 }
 
 impl GameState {
-    pub fn get_config_directory() -> PathBuf {
-        home_dir().unwrap().join(".babylonia-terminal") // I will try to change that to a dynamic one if people want to change the config dir
+    pub async fn get_config_directory() -> PathBuf {
+        let path = home_dir().unwrap().join(".babylonia-terminal"); // I will try to change that to a dynamic one if people want to change the config dir
+
+        let _ = create_dir_all(path.clone()).await;
+
+        path
     }
 
-    fn get_config_file_path() -> PathBuf {
-        GameState::get_config_directory().join("babylonia-terminal-config")
+    async fn get_config_file_path() -> PathBuf {
+        GameState::get_config_directory()
+            .await
+            .join("babylonia-terminal-config")
     }
 
     pub async fn set_game_dir(path: Option<PathBuf>) -> anyhow::Result<()> {
@@ -73,9 +79,9 @@ impl GameState {
     }
 
     async fn try_get_config_file() -> anyhow::Result<File> {
-        let _ = tokio::fs::create_dir(GameState::get_config_directory()).await;
+        let _ = tokio::fs::create_dir(GameState::get_config_directory().await).await;
 
-        Ok(tokio::fs::File::create(GameState::get_config_file_path()).await?)
+        Ok(tokio::fs::File::create(GameState::get_config_file_path().await).await?)
     }
 
     pub async fn save_config(config: GameConfig) -> anyhow::Result<()> {
@@ -87,7 +93,7 @@ impl GameState {
     }
 
     pub async fn get_config() -> GameConfig {
-        let content = match read_to_string(GameState::get_config_file_path()).await {
+        let content = match read_to_string(GameState::get_config_file_path().await).await {
             Err(_) => return GameConfig::default(),
             Ok(c) => c,
         };
@@ -101,7 +107,7 @@ impl GameState {
         let config = GameState::get_config().await;
 
         if !config.is_wine_installed {
-            return GameState::WineNotInstalled;
+            return GameState::ProtonNotInstalled;
         }
 
         if !config.is_dxvk_installed {

@@ -4,7 +4,7 @@ use std::sync::Arc;
 use std::time::Duration;
 use std::vec;
 
-use downloader::Downloader;
+use downloader_for_babylonia_terminal::Downloader;
 use log::debug;
 use log::info;
 use tokio::fs::{create_dir_all, remove_file};
@@ -60,7 +60,7 @@ impl GameComponent {
         Ok(to_download)
     }
 
-    fn update_progress<P: downloader::progress::Reporter + 'static>(
+    fn update_progress<P: downloader_for_babylonia_terminal::progress::Reporter + 'static>(
         progress: Arc<P>,
         max_size: u64,
         game_dir: PathBuf,
@@ -93,7 +93,7 @@ impl GameComponent {
 impl GithubRequester for GameComponent {}
 
 impl ComponentDownloader for GameComponent {
-    async fn install<P: downloader::progress::Reporter + 'static>(
+    async fn install<P: downloader_for_babylonia_terminal::progress::Reporter + 'static>(
         &self,
         progress: Option<std::sync::Arc<P>>,
     ) -> anyhow::Result<()> {
@@ -103,7 +103,7 @@ impl ComponentDownloader for GameComponent {
         Ok(())
     }
 
-    async fn download<P: downloader::progress::Reporter + 'static>(
+    async fn download<P: downloader_for_babylonia_terminal::progress::Reporter + 'static>(
         output_dir: &std::path::PathBuf,
         progress: Option<std::sync::Arc<P>>,
     ) -> anyhow::Result<std::path::PathBuf> {
@@ -154,7 +154,7 @@ impl ComponentDownloader for GameComponent {
                         &game_info.get_resource_base_path(),
                     );
                     debug!("starting download for {}", url);
-                    let mut dl = downloader::Download::new_with_output(
+                    let mut dl = downloader_for_babylonia_terminal::Download::new_with_output(
                         &url,
                         output_path
                             .get(i)
@@ -165,7 +165,7 @@ impl ComponentDownloader for GameComponent {
 
                     dl
                 })
-                .collect::<Vec<downloader::Download>>();
+                .collect::<Vec<downloader_for_babylonia_terminal::Download>>();
 
             downloader.async_download(&to_download).await?;
         }

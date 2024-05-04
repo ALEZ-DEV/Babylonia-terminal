@@ -65,7 +65,7 @@ dependencies = [
  "chksum-md5",
  "dirs",
  "dotenv",
- "downloader",
+ "downloader-for-babylonia-terminal",
  "flate2",
  "fs_extra",
  "log",
@@ -292,9 +292,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "77c90badedccf4105eca100756a0b1289e191f6fcbdadd3cee1d2f614f97da8f"
 
 [[package]]
-name = "downloader"
-version = "0.2.7"
-source = "git+https://github.com/ALEZ-DEV/downloader#5572a0875ec4f04b0514342f9acff21252beb579"
+name = "downloader-for-babylonia-terminal"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "075dd494fe6741db4ecbd43fde70a104bebd4592dbe8a9efce1d7072e20b9da5"
 dependencies = [
  "futures",
  "rand",

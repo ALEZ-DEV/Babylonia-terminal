@@ -2,6 +2,11 @@
 name = "babylonia-terminal-cli"
 version = "0.1.0"
 edition = "2021"
+authors = ["ALEZ-DEV <raidersfocus@gmail.com>"]
+description = "A launcher for a certain anime game "
+repository = "https://github.com/ALEZ-DEV/Babylonia-terminal"
+license = "LGPL-3.0-or-later"
+keywords = ["launcher", "game"]
 
 [[bin]]
 name = "babylonia-terminal-cli"

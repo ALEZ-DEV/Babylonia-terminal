@@ -1,19 +1,12 @@
-use downloader::progress;
-use downloader::progress::Reporter;
-use downloader::Downloader;
-use log::debug;
-use log::info;
-use serde::Deserialize;
-use serde::Serialize;
-use std::collections::TryReserveError;
 use std::fs as std_fs;
 use std::path::PathBuf;
 use std::sync::Arc;
-use std::sync::Mutex;
 use std::time::Duration;
-use std::time::Instant;
 use std::vec;
-use tokio::fs::File;
+
+use downloader::Downloader;
+use log::debug;
+use log::info;
 use tokio::fs::{create_dir_all, remove_file};
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::Receiver;
@@ -183,8 +176,8 @@ impl ComponentDownloader for GameComponent {
     }
 
     async fn uncompress(
-        file: std::path::PathBuf,
-        new_filename: std::path::PathBuf,
+        _file: std::path::PathBuf,
+        _new_filename: std::path::PathBuf,
     ) -> anyhow::Result<()> {
         panic!("How did you run this function??!!")
     }

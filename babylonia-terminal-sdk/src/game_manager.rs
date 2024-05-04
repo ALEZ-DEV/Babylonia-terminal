@@ -1,27 +1,14 @@
-use std::{
-    fs::{create_dir, remove_file, rename, File},
-    io::{BufRead, BufReader},
-    path::PathBuf,
-    str::FromStr,
-    sync::Arc,
-    time::Duration,
-};
+use std::{path::PathBuf, sync::Arc};
 
 use downloader::progress::Reporter;
-use flate2::read::GzDecoder;
 use log::{debug, info};
-use tar::Archive;
 use tokio::fs::create_dir_all;
-use tokio::time::sleep;
-use wincompatlib::{prelude::*, wine::bundle::proton};
-use xz::read::XzDecoder;
+use wincompatlib::prelude::*;
 
 use crate::{
     components::{
-        component_downloader::ComponentDownloader,
-        dxvk_component::{self, DXVKComponent},
-        game_component::GameComponent,
-        proton_component::ProtonComponent,
+        component_downloader::ComponentDownloader, dxvk_component::DXVKComponent,
+        game_component::GameComponent, proton_component::ProtonComponent,
     },
     game_patcher,
     game_state::GameState,

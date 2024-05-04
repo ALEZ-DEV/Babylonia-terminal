@@ -1,9 +1,9 @@
 use std::{
-    fs::{remove_dir, remove_file, rename, File},
+    fs::{remove_file, rename, File},
     path::PathBuf,
 };
 
-use downloader::{Download, Downloader};
+use downloader::Downloader;
 use flate2::read::GzDecoder;
 use tar::Archive;
 use tokio::fs::remove_dir_all;

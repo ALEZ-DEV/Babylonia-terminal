@@ -1,9 +1,5 @@
-use std::{
-    io::Read,
-    path::{Path, PathBuf},
-};
+use std::{io::Read, path::PathBuf};
 
-use dirs::executable_dir;
 use log::debug;
 use rust_embed::RustEmbed;
 use tokio::{

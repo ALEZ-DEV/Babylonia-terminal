@@ -1,5 +1,3 @@
-use std::borrow::{Borrow, BorrowMut};
-
 use reqwest::header::{self, USER_AGENT};
 use serde::{Deserialize, Serialize};
 
@@ -65,6 +63,7 @@ pub trait GithubRequester {
             .expect("Failed to build https client")
     }
 
+    #[allow(async_fn_in_trait)]
     async fn get_latest_github_release(
         user: &str,
         repo_name: &str,

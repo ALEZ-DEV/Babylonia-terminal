@@ -1,6 +1,5 @@
 use std::{
-    env::home_dir,
-    fs::{create_dir, remove_file, rename, File},
+    fs::{remove_file, rename, File},
     path::PathBuf,
     str::FromStr,
     sync::Arc,
@@ -10,11 +9,10 @@ use downloader::{progress::Reporter, Downloader};
 use flate2::read::GzDecoder;
 use log::debug;
 use tar::Archive;
-use wincompatlib::wine::{bundle::proton::Proton, ext::WineBootExt};
-use xz::read::XzDecoder;
+use wincompatlib::wine::ext::WineBootExt;
 
 use super::component_downloader::ComponentDownloader;
-use crate::{game_state::GameState, utils::github_requester::GithubRequester};
+use crate::utils::github_requester::GithubRequester;
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct ProtonComponent {

@@ -1,12 +1,9 @@
 use dirs::home_dir;
 use serde::{Deserialize, Serialize};
-use std::{
-    io::{Read, Write},
-    path::PathBuf,
-};
+use std::path::PathBuf;
 use tokio::{
     fs::{create_dir_all, read_to_string, File},
-    io::{AsyncReadExt, AsyncWriteExt},
+    io::AsyncWriteExt,
 };
 
 #[derive(Debug, PartialEq, Eq)]

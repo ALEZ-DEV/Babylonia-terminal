@@ -1,5 +1,3 @@
-use log::debug;
-use reqwest::header::USER_AGENT;
 use serde::Deserialize;
 use serde::Serialize;
 

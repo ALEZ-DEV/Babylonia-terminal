@@ -16,6 +16,7 @@ pub enum GameState {
     FontNotInstalled,
     DependecieNotInstalled,
     GameNotInstalled,
+    GameNotPatched,
     GameInstalled,
 }
 
@@ -28,6 +29,7 @@ pub struct GameConfig {
     pub is_dependecies_installed: bool,
     pub game_dir: Option<PathBuf>,
     pub is_game_installed: bool,
+    pub is_game_patched: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -45,6 +47,7 @@ impl Default for GameConfig {
             is_dependecies_installed: false,
             game_dir: None,
             is_game_installed: false,
+            is_game_patched: false,
         }
     }
 }
@@ -115,6 +118,10 @@ impl GameState {
 
         if !config.is_game_installed {
             return GameState::GameNotInstalled;
+        }
+
+        if !config.is_game_patched {
+            return GameState::GameNotPatched;
         }
 
         GameState::GameInstalled

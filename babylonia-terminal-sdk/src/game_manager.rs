@@ -2,6 +2,7 @@ use std::{
     fs::{create_dir, remove_file, rename, File},
     io::{BufRead, BufReader},
     path::PathBuf,
+    str::FromStr,
     sync::Arc,
     time::Duration,
 };
@@ -22,7 +23,9 @@ use crate::{
         game_component::GameComponent,
         proton_component::ProtonComponent,
     },
+    game_patcher,
     game_state::GameState,
+    utils::{get_game_name, get_game_name_with_executable},
 };
 
 pub struct GameManager;
@@ -146,9 +149,21 @@ impl GameManager {
         Ok(())
     }
 
+    pub async fn patch_game(game_dir: PathBuf) -> anyhow::Result<()> {
+        game_patcher::patch_game(game_dir).await?;
+
+        Ok(())
+    }
+
     pub async fn start_game(proton: &Proton, game_dir: PathBuf) {
         debug!("Wine version : {:?}", proton.wine().version().unwrap());
-        let mut child = proton.run(game_dir.join("PGR.exe")).unwrap();
+        let mut child = proton
+            .run(
+                game_dir
+                    .join(get_game_name())
+                    .join(get_game_name_with_executable()),
+            )
+            .unwrap();
         child.wait().expect("The game failed to run");
     }
 }

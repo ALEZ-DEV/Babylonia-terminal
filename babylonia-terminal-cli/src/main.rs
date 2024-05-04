@@ -99,7 +99,7 @@ async fn main() {
                         .await
                         .unwrap();
 
-                    let mut dir = PathBuf::new();
+                    let dir;
                     if let Some(i) = &mut input {
                         if i.is_empty() {
                             dir = GameState::get_config_directory();
@@ -116,11 +116,18 @@ async fn main() {
                 }
 
                 GameManager::install_game(
-                    GameState::get_config_directory().join("PGR"),
+                    GameState::get_game_dir().await.unwrap(),
                     DownloadReporter::create(false),
                 )
                 .await
                 .expect("Failed to install the game");
+            }
+            GameState::GameNotPatched => {
+                info!("Patching game...");
+                GameManager::patch_game(GameState::get_game_dir().await.unwrap())
+                    .await
+                    .expect("Failed to patch the game");
+                info!("Game patched!");
             }
             _ => {}
         }
@@ -134,7 +141,9 @@ async fn main() {
     debug!("{:?}", proton);
     GameManager::start_game(
         &proton.unwrap(),
-        GameState::get_config_directory().join("PGR"),
+        GameState::get_game_dir()
+            .await
+            .expect("Failed to start game, the game directory was not found"),
     )
     .await;
 }

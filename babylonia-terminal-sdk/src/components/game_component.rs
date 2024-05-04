@@ -21,6 +21,7 @@ use tokio::sync::mpsc::Sender;
 use tokio::time::timeout;
 
 use super::component_downloader::ComponentDownloader;
+use crate::utils::get_game_name;
 use crate::utils::github_requester::GithubRequester;
 use crate::utils::kuro_prod_api;
 use crate::utils::kuro_prod_api::Resource;
@@ -32,7 +33,9 @@ pub struct GameComponent {
 
 impl GameComponent {
     pub fn new(game_dir: PathBuf) -> Self {
-        Self { game_dir }
+        Self {
+            game_dir: game_dir.join(get_game_name()),
+        }
     }
 
     async fn check_and_get_resources_to_download(
@@ -101,6 +104,7 @@ impl ComponentDownloader for GameComponent {
         &self,
         progress: Option<std::sync::Arc<P>>,
     ) -> anyhow::Result<()> {
+        let _ = create_dir_all(&self.game_dir).await;
         Self::download(&self.game_dir, progress).await?;
 
         Ok(())

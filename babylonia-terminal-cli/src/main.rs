@@ -70,12 +70,9 @@ async fn main() {
             }
             GameState::FontNotInstalled => {
                 info!("Fonts not installed, installing it...");
-                GameManager::install_font(
-                    &proton.clone().unwrap(),
-                    DownloadReporter::create(false),
-                )
-                .await
-                .expect("Failed to install fonts");
+                GameManager::install_font(&proton.clone().unwrap())
+                    .await
+                    .expect("Failed to install fonts");
                 info!("Fonts installed");
             }
             GameState::DependecieNotInstalled => {

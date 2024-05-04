@@ -67,47 +67,43 @@ impl GameManager {
         Ok(())
     }
 
-    pub async fn install_font<P>(proton: &Proton, progress: Arc<P>) -> anyhow::Result<()>
-    where
-        P: Reporter + 'static,
-    {
+    pub async fn install_font(proton: &Proton) -> anyhow::Result<()> {
         let wine_with_proton_prefix = proton // wine take the data/wine/pfx prefix, but we want the data/wine prefix
             .wine()
             .clone()
             .with_prefix(proton.wine().prefix.parent().unwrap());
 
-        progress.setup(Some(10), "");
-        progress.progress(0);
+        info!("0/10 font installed");
 
         wine_with_proton_prefix.install_font(Font::Arial)?;
-        progress.progress(1);
+        info!("1/10 font installed");
 
         wine_with_proton_prefix.install_font(Font::Andale)?;
-        progress.progress(2);
+        info!("2/10 font installed");
 
         wine_with_proton_prefix.install_font(Font::Courier)?;
-        progress.progress(3);
+        info!("3/10 font installed");
 
         wine_with_proton_prefix.install_font(Font::ComicSans)?;
-        progress.progress(4);
+        info!("4/10 font installed");
 
         wine_with_proton_prefix.install_font(Font::Georgia)?;
-        progress.progress(5);
+        info!("5/10 font installed");
 
         wine_with_proton_prefix.install_font(Font::Impact)?;
-        progress.progress(6);
+        info!("6/10 font installed");
 
         wine_with_proton_prefix.install_font(Font::Times)?;
-        progress.progress(7);
+        info!("7/10 font installed");
 
         wine_with_proton_prefix.install_font(Font::Trebuchet)?;
-        progress.progress(8);
+        info!("8/10 font installed");
 
         wine_with_proton_prefix.install_font(Font::Verdana)?;
-        progress.progress(9);
+        info!("9/10 font installed");
 
         wine_with_proton_prefix.install_font(Font::Webdings)?;
-        progress.progress(10);
+        info!("10/10 font installed");
 
         let mut config = GameState::get_config().await;
         config.is_font_installed = true;

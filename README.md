@@ -13,7 +13,9 @@ Please install Rust from the [official website](https://www.rust-lang.org/fr/too
 
 To install the cli version of the launcher, just start this command
 
-`cargo install babylonia-terminal-cli`
+```
+cargo install babylonia-terminal-cli
+```
 
 ## Special thank
 

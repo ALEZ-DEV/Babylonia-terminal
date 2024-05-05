@@ -8,9 +8,9 @@ If you have any issue with the launcher, don't hesitate to open an issue!
 
 ## Requirement
 
-Please install Rust from the [official website](https://www.rust-lang.org/fr/tools/install)
-You need [python3](https://www.python.org/downloads/) installed on your system, but all major system have it installed by default
-You need Steam to be installed to run the game
+Please install Rust from the [official website](https://www.rust-lang.org/fr/tools/install)  
+You need [python3](https://www.python.org/downloads/) installed on your system, but all major distro have it installed by default  
+You need Steam to be installed to run the game  
 
 ## Installation
 

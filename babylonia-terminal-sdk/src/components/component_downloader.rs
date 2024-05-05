@@ -1,6 +1,6 @@
 use std::{path::PathBuf, sync::Arc};
 
-use downloader_for_babylonia_terminal::progress::Reporter;
+use downloader::progress::Reporter;
 
 pub trait ComponentDownloader {
     #[allow(async_fn_in_trait)]

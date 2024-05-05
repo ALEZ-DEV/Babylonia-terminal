@@ -3,7 +3,7 @@ use std::{
     path::PathBuf,
 };
 
-use downloader_for_babylonia_terminal::Downloader;
+use downloader::Downloader;
 use flate2::read::GzDecoder;
 use tar::Archive;
 use tokio::fs::remove_dir_all;
@@ -33,7 +33,7 @@ impl<'a> DXVKComponent<'a> {
 impl<'a> GithubRequester for DXVKComponent<'a> {}
 
 impl<'a> ComponentDownloader for DXVKComponent<'a> {
-    async fn install<P: downloader_for_babylonia_terminal::progress::Reporter + 'static>(
+    async fn install<P: downloader::progress::Reporter + 'static>(
         &self,
         progress: Option<std::sync::Arc<P>>,
     ) -> anyhow::Result<()> {
@@ -63,7 +63,7 @@ impl<'a> ComponentDownloader for DXVKComponent<'a> {
         Ok(())
     }
 
-    async fn download<P: downloader_for_babylonia_terminal::progress::Reporter + 'static>(
+    async fn download<P: downloader::progress::Reporter + 'static>(
         output_dir: &std::path::PathBuf,
         progress: Option<std::sync::Arc<P>>,
     ) -> anyhow::Result<std::path::PathBuf> {
@@ -78,7 +78,7 @@ impl<'a> ComponentDownloader for DXVKComponent<'a> {
             .download_folder(output_dir)
             .parallel_requests(1)
             .build()?;
-        let mut dl = downloader_for_babylonia_terminal::Download::new(&asset.browser_download_url);
+        let mut dl = downloader::Download::new(&asset.browser_download_url);
         if let Some(p) = progress {
             dl = dl.progress(p);
         }

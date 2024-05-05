@@ -5,7 +5,7 @@ use std::{
     sync::Arc,
 };
 
-use downloader_for_babylonia_terminal::{progress::Reporter, Downloader};
+use downloader::{progress::Reporter, Downloader};
 use flate2::read::GzDecoder;
 use log::debug;
 use tar::Archive;
@@ -54,7 +54,7 @@ impl ComponentDownloader for ProtonComponent {
             .parallel_requests(1)
             .build()?;
 
-        let mut dl = downloader_for_babylonia_terminal::Download::new(&asset.browser_download_url);
+        let mut dl = downloader::Download::new(&asset.browser_download_url);
         if let Some(p) = progress {
             dl = dl.progress(p);
         }

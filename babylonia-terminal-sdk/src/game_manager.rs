@@ -1,6 +1,6 @@
 use std::{path::PathBuf, sync::Arc};
 
-use downloader_for_babylonia_terminal::progress::Reporter;
+use downloader::progress::Reporter;
 use log::{debug, info};
 use tokio::fs::create_dir_all;
 use wincompatlib::prelude::*;

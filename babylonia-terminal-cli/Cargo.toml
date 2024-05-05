@@ -14,9 +14,8 @@ name = "babylonia-terminal-cli"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-babylonia-terminal-sdk = "0.1.0" # { path = "./../babylonia-terminal-sdk" }
-# downloader = { git = "https://github.com/ALEZ-DEV/downloader" } # version = "0.2.7",
-downloader-for-babylonia-terminal = "0.1.0"
+babylonia-terminal-sdk = { path = "./../babylonia-terminal-sdk" }
+downloader = { git = "https://github.com/ALEZ-DEV/downloader" }   # version = "0.2.7",
 indicatif = "0.17.8"
 log = "0.4.21"
 simple_logger = "4.3.3"

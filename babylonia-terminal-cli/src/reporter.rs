@@ -23,7 +23,7 @@ impl DownloadReporter {
     }
 }
 
-impl downloader_for_babylonia_terminal::progress::Reporter for DownloadReporter {
+impl downloader::progress::Reporter for DownloadReporter {
     fn setup(&self, max_progress: Option<u64>, message: &str) {
         let pb = ProgressBar::new(max_progress.unwrap());
         pb.set_style(ProgressStyle::with_template("{spinner:.green} [{elapsed_precise}] [{wide_bar:.white}] {bytes}/{total_bytes} ({eta})")

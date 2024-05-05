@@ -9,13 +9,15 @@ If you have any issue with the launcher, don't hesitate to open an issue!
 ## Requirement
 
 Please install Rust from the [official website](https://www.rust-lang.org/fr/tools/install)
+You need [python3](https://www.python.org/downloads/) installed on your system, but all major system have it installed by default
+You need Steam to be installed to run the game
 
 ## Installation
 
 To install the cli version of the launcher, just start this command :
 
 ```
-cargo install babylonia-terminal-cli
+cargo install --git https://github.com/ALEZ-DEV/Babylonia-terminal --bin
 ```
 
 and you can just run it by doing :

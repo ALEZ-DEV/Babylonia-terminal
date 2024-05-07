@@ -107,7 +107,7 @@ impl ComponentDownloader for GameComponent {
         output_dir: &std::path::PathBuf,
         progress: Option<std::sync::Arc<P>>,
     ) -> anyhow::Result<std::path::PathBuf> {
-        let game_info = kuro_prod_api::fetch_game_info().await?;
+        let game_info = kuro_prod_api::GameInfo::get_info().await?;
         let resources = game_info.fetch_resources().await?;
         let mut downloader = Downloader::builder()
             .download_folder(output_dir)

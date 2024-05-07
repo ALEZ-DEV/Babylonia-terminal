@@ -32,4 +32,3 @@ wincompatlib = { version = "0.7.4", features = [
     "wine-fonts",
     "winetricks",
 ] }
-xz = "0.1.0"

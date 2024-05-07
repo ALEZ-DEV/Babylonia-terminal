@@ -132,6 +132,17 @@ impl GameManager {
         Ok(())
     }
 
+    // this function just pass is_game_installed and is_game_patched to false,
+    // so the launcher on the next iteration download the new file and delete the old one with the check process in the installation process
+    pub async fn update_game() -> anyhow::Result<()> {
+        let mut config = GameState::get_config().await;
+        config.is_game_installed = false;
+        config.is_game_patched = false;
+        GameState::save_config(config).await?;
+
+        Ok(())
+    }
+
     pub async fn patch_game(game_dir: PathBuf) -> anyhow::Result<()> {
         game_patcher::patch_game(game_dir).await?;
 

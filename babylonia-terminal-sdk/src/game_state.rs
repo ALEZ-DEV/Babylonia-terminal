@@ -6,6 +6,8 @@ use tokio::{
     io::AsyncWriteExt,
 };
 
+use crate::utils::kuro_prod_api::GameInfo;
+
 #[derive(Debug, PartialEq, Eq)]
 pub enum GameState {
     ProtonNotInstalled,
@@ -13,6 +15,7 @@ pub enum GameState {
     FontNotInstalled,
     DependecieNotInstalled,
     GameNotInstalled,
+    GameNeedUpdate,
     GameNotPatched,
     GameInstalled,
 }
@@ -100,33 +103,37 @@ impl GameState {
         }
     }
 
-    pub async fn get_current_state() -> Self {
+    pub async fn get_current_state() -> anyhow::Result<Self> {
         let config = GameState::get_config().await;
 
         if !config.is_wine_installed {
-            return GameState::ProtonNotInstalled;
+            return Ok(GameState::ProtonNotInstalled);
         }
 
         if !config.is_dxvk_installed {
-            return GameState::DXVKNotInstalled;
+            return Ok(GameState::DXVKNotInstalled);
         }
 
         if !config.is_font_installed {
-            return GameState::FontNotInstalled;
+            return Ok(GameState::FontNotInstalled);
         }
 
         if !config.is_dependecies_installed {
-            return GameState::DependecieNotInstalled;
+            return Ok(GameState::DependecieNotInstalled);
         }
 
         if !config.is_game_installed {
-            return GameState::GameNotInstalled;
+            return Ok(GameState::GameNotInstalled);
+        }
+
+        if GameInfo::get_info().await?.need_update().await? {
+            return Ok(GameState::GameNeedUpdate);
         }
 
         if !config.is_game_patched {
-            return GameState::GameNotPatched;
+            return Ok(GameState::GameNotPatched);
         }
 
-        GameState::GameInstalled
+        Ok(GameState::GameInstalled)
     }
 }

@@ -1,5 +1,11 @@
+use std::path::PathBuf;
+
 use serde::Deserialize;
 use serde::Serialize;
+use tokio::fs::read_to_string;
+use tokio::io::AsyncWriteExt;
+
+use crate::game_state::GameState;
 
 // start data ---------------------------------------------------------------------
 
@@ -101,13 +107,25 @@ static URL: &str = concat!(
     "e.com/pcstarter/prod/game/G143/4/index.json"
 );
 
-pub async fn fetch_game_info() -> anyhow::Result<GameInfo> {
-    let response = reqwest::get(URL).await?;
-    let body = response.text().await?;
-    Ok(serde_json::from_str(&body)?)
-}
-
 impl GameInfo {
+    pub async fn get_info() -> anyhow::Result<GameInfo> {
+        let info = match GameInfo::try_load_from_cache().await {
+            Ok(i) => i,
+            Err(_) => {
+                let i = GameInfo::fetch_game_info().await?;
+                i.save_in_cache().await?;
+                i
+            }
+        };
+
+        Ok(info)
+    }
+
+    pub async fn need_update(&self) -> anyhow::Result<bool> {
+        let info = GameInfo::fetch_game_info().await?;
+        Ok(self.default.version != info.default.version)
+    }
+
     pub fn get_first_cdn(&self) -> String {
         self.default.cdn_list.first().unwrap().url.clone()
     }
@@ -124,6 +142,34 @@ impl GameInfo {
         let response = reqwest::get(&resources_url).await?;
         let body = response.text().await?;
         Ok(serde_json::from_str::<Resources>(&body)?)
+    }
+
+    async fn fetch_game_info() -> anyhow::Result<GameInfo> {
+        let response = reqwest::get(URL).await?;
+        let body = response.text().await?;
+        Ok(serde_json::from_str(&body)?)
+    }
+
+    async fn get_cache_file_path() -> PathBuf {
+        GameState::get_config_directory()
+            .await
+            .join("version-cache")
+    }
+
+    async fn save_in_cache(&self) -> anyhow::Result<()> {
+        let _ = tokio::fs::create_dir(GameState::get_config_directory().await).await;
+        let mut file = tokio::fs::File::create(GameInfo::get_cache_file_path().await).await?;
+
+        let content = serde_json::to_string(self)?;
+
+        file.write_all(content.as_bytes()).await?;
+
+        Ok(())
+    }
+
+    async fn try_load_from_cache() -> anyhow::Result<Self> {
+        let content = read_to_string(GameInfo::get_cache_file_path().await).await?;
+        Ok(serde_json::from_str::<GameInfo>(&content)?)
     }
 }
 

@@ -32,7 +32,12 @@ async fn main() {
     let mut proton: Option<Proton> = None;
 
     loop {
-        let state = GameState::get_current_state().await;
+        let state_result = GameState::get_current_state().await;
+        if let Err(error) = state_result {
+            info!("Something goes wrong : {:?}", error);
+            break;
+        }
+        let state = state_result.unwrap();
 
         if state != GameState::ProtonNotInstalled && proton == None {
             let proton_component = ProtonComponent::new(GameState::get_config_directory().await);
@@ -118,6 +123,13 @@ async fn main() {
                 .await
                 .expect("Failed to install the game");
             }
+            GameState::GameNeedUpdate => {
+                info!("Game need an update, updating it");
+                info!("This will restart the installation process...");
+                GameManager::update_game()
+                    .await
+                    .expect("Failed to start the installation process");
+            }
             GameState::GameNotPatched => {
                 info!("Patching game...");
                 GameManager::patch_game(GameState::get_game_dir().await.unwrap())
@@ -125,11 +137,9 @@ async fn main() {
                     .expect("Failed to patch the game");
                 info!("Game patched!");
             }
-            _ => {}
-        }
-
-        if GameState::get_current_state().await == GameState::GameInstalled {
-            break;
+            GameState::GameInstalled => {
+                break;
+            }
         }
     }
 

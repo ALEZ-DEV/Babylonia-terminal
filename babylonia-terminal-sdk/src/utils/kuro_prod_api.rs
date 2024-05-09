@@ -123,7 +123,13 @@ impl GameInfo {
 
     pub async fn need_update(&self) -> anyhow::Result<bool> {
         let info = GameInfo::fetch_game_info().await?;
-        Ok(self.default.version != info.default.version)
+        // I don't really like this if statement, but I will try to change it in the future, this is just for a quick fix
+        if self.default.version != info.default.version {
+            info.save_in_cache().await?;
+            Ok(true)
+        } else {
+            Ok(false)
+        }
     }
 
     pub fn get_first_cdn(&self) -> String {

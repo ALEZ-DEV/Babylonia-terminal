@@ -36,6 +36,36 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.6
   yaru: ^4.1.0
+  # media_kit: ^1.1.10+1
+  # media_kit_video: ^1.2.4
+  # media_kit_libs_video: ^1.0.4
+  media_kit: any
+  media_kit_video: any
+  media_kit_libs_video: any
+  media_kit_native_event_loop: any
+
+dependency_overrides:
+  media_kit:
+    git:
+      url: https://github.com/media-kit/media-kit
+      path: media_kit
+      ref: main
+  media_kit_video:
+    git:
+      url: https://github.com/media-kit/media-kit
+      path: media_kit_video
+      ref: main
+  media_kit_libs_video:
+    git:
+      url: https://github.com/media-kit/media-kit
+      path: libs/universal/media_kit_libs_video
+      ref: main
+
+  media_kit_native_event_loop:
+    git:
+      url: https://github.com/media-kit/media-kit
+      path: media_kit_native_event_loop
+      ref: main
 
 dev_dependencies:
   flutter_test:

@@ -1,11 +1,14 @@
 import 'package:babylonia_terminal_launcher/screens/screens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:media_kit/media_kit.dart';
 import 'package:yaru/theme.dart';
 
 import './screens/screens.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  MediaKit.ensureInitialized();
   runApp(const BabyloniaLauncher());
 }
 

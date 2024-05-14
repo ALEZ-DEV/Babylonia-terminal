@@ -12,10 +12,13 @@ class HomeScreen extends StatelessWidget {
         const Background(),
         SizedBox(
           child: Align(
-            alignment: Alignment.bottomCenter,
+            alignment: Alignment.bottomRight,
             child: Padding(
-              padding: const EdgeInsets.only(bottom: 50),
-              child: FilledButton(
+              padding: const EdgeInsets.only(right: 50, bottom: 50),
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue[500],
+                ),
                 onPressed: () {},
                 child: const SizedBox(
                   width: 300,

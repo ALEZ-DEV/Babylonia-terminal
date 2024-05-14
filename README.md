@@ -1,4 +1,10 @@
-# Babylonia terminal
+<p align="center">
+    <img src="./docs/Lee6.png" title="Babylonia terminal" alt="babylonia terminal" width="350" height="350"/><br>
+</p>
+
+<div align="center">
+    <h1>Babylonia Terminal</h1>
+</div>
 
 ### This launcher download, install your favorite anime game and dependecies for you!
 
@@ -8,9 +14,9 @@ If you have any issue with the launcher, don't hesitate to open an issue!
 
 ## Requirement
 
-Please install Rust from the [official website](https://www.rust-lang.org/fr/tools/install)  
-You need [python3](https://www.python.org/downloads/) installed on your system, but all major distro have it installed by default  
-You need Steam to be installed to run the game  
+Please install Rust from the [official website](https://www.rust-lang.org/fr/tools/install)
+You need [python3](https://www.python.org/downloads/) installed on your system, but all major distro have it installed by default
+You need Steam to be installed to run the game
 
 ## Installation
 

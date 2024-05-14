@@ -16,9 +16,13 @@ use crate::utils::github_requester::GithubRequester;
 
 use super::component_downloader::ComponentDownloader;
 
+pub static DXVK_DEV: &str = "doitsujin";
+pub static DXVK_REPO: &str = "dxvk";
+
 pub struct DXVKComponent<'a> {
     wine: &'a Wine,
     path: PathBuf,
+    github_release_index: usize,
 }
 
 impl<'a> DXVKComponent<'a> {
@@ -26,11 +30,16 @@ impl<'a> DXVKComponent<'a> {
         DXVKComponent {
             wine,
             path: path.join("dxvk"),
+            github_release_index: 0,
         }
     }
 }
 
-impl<'a> GithubRequester for DXVKComponent<'a> {}
+impl<'a> GithubRequester for DXVKComponent<'a> {
+    fn set_github_release_index(&mut self, new_release_index: usize) {
+        self.github_release_index = new_release_index;
+    }
+}
 
 impl<'a> ComponentDownloader for DXVKComponent<'a> {
     async fn install<P: downloader::progress::Reporter + 'static>(
@@ -42,7 +51,7 @@ impl<'a> ComponentDownloader for DXVKComponent<'a> {
             .parent()
             .expect("Failed to get parent folder for DXVK")
             .to_path_buf();
-        let file_output = Self::download(&dir, progress).await?;
+        let file_output = self.download(&dir, progress).await?;
 
         Self::uncompress(file_output.clone(), self.path.clone()).await?;
 
@@ -64,12 +73,15 @@ impl<'a> ComponentDownloader for DXVKComponent<'a> {
     }
 
     async fn download<P: downloader::progress::Reporter + 'static>(
+        &self,
         output_dir: &std::path::PathBuf,
         progress: Option<std::sync::Arc<P>>,
     ) -> anyhow::Result<std::path::PathBuf> {
-        let releases = Self::get_latest_github_release("doitsujin", "dxvk").await?;
+        let releases =
+            Self::get_github_release_version(DXVK_DEV, DXVK_REPO, self.github_release_index)
+                .await?;
 
-        let asset = releases[0]
+        let asset = releases
             .assets
             .first()
             .expect("Asset not found in the github release");

@@ -12,7 +12,7 @@ use crate::{
     },
     game_patcher,
     game_state::GameState,
-    utils::{get_game_name, get_game_name_with_executable},
+    utils::{get_game_name, get_game_name_with_executable, github_requester::GithubRequester},
 };
 
 pub struct GameManager;
@@ -20,12 +20,14 @@ pub struct GameManager;
 impl GameManager {
     pub async fn install_wine<P>(
         config_dir: PathBuf,
+        release_index: usize,
         progress: Option<Arc<P>>,
     ) -> anyhow::Result<ProtonComponent>
     where
         P: Reporter + 'static,
     {
-        let wine_component = ProtonComponent::new(config_dir);
+        let mut wine_component = ProtonComponent::new(config_dir);
+        wine_component.set_github_release_index(release_index);
 
         wine_component.install(progress).await?;
 
@@ -39,12 +41,15 @@ impl GameManager {
     pub async fn install_dxvk<P>(
         proton: &Proton,
         config_dir: PathBuf,
+        release_index: usize,
         progress: Option<Arc<P>>,
     ) -> anyhow::Result<()>
     where
         P: Reporter + 'static,
     {
-        let dxvk_component = DXVKComponent::from_wine(proton.wine(), config_dir);
+        let mut dxvk_component = DXVKComponent::from_wine(proton.wine(), config_dir);
+        dxvk_component.set_github_release_index(release_index);
+
         dxvk_component.install(progress).await?;
 
         let mut config = GameState::get_config().await;
@@ -107,7 +112,11 @@ impl GameManager {
 
         let winetricks = Winetricks::from_wine("/bin/winetricks", wine_with_proton_prefix);
         //winetricks.install("corefonts")?;
-        winetricks.install("vcrun2022")?;
+        let mut child = winetricks.install("vcrun2022")?;
+
+        child
+            .wait()
+            .expect("Something failed when waiting for the installation");
 
         let mut config = GameState::get_config().await;
         config.is_dependecies_installed = true;

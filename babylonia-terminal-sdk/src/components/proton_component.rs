@@ -14,37 +14,48 @@ use wincompatlib::wine::ext::WineBootExt;
 use super::component_downloader::ComponentDownloader;
 use crate::utils::github_requester::GithubRequester;
 
+pub static PROTON_DEV: &str = "GloriousEggroll";
+pub static PROTON_REPO: &str = "proton-ge-custom";
+
 #[derive(Debug, PartialEq, Eq)]
 pub struct ProtonComponent {
     path: PathBuf,
+    github_release_index: usize,
 }
 
-impl GithubRequester for ProtonComponent {}
+impl GithubRequester for ProtonComponent {
+    fn set_github_release_index(&mut self, new_release_index: usize) {
+        self.github_release_index = new_release_index;
+    }
+}
 
 impl ComponentDownloader for ProtonComponent {
     async fn install<P: Reporter + 'static>(&self, progress: Option<Arc<P>>) -> anyhow::Result<()> {
-        let file_output = Self::download(
-            &self
-                .path
-                .parent()
-                .expect("Failed to get the parent directory of Wine")
-                .to_path_buf(),
-            progress,
-        )
-        .await?;
+        let file_output = self
+            .download(
+                &self
+                    .path
+                    .parent()
+                    .expect("Failed to get the parent directory of Wine")
+                    .to_path_buf(),
+                progress,
+            )
+            .await?;
         Self::uncompress(file_output.clone(), self.path.clone()).await?;
 
         Ok(())
     }
 
     async fn download<P: Reporter + 'static>(
+        &self,
         output_dir: &PathBuf,
         progress: Option<Arc<P>>,
     ) -> anyhow::Result<PathBuf> {
         let release =
-            Self::get_latest_github_release("GloriousEggroll", "proton-ge-custom").await?;
+            Self::get_github_release_version(PROTON_DEV, PROTON_REPO, self.github_release_index)
+                .await?;
 
-        let asset = release[0]
+        let asset = release
             .assets
             .get(1)
             .expect("Asset not found in the github release");
@@ -91,6 +102,7 @@ impl ProtonComponent {
     pub fn new(path: PathBuf) -> Self {
         ProtonComponent {
             path: path.join("proton"),
+            github_release_index: 0,
         }
     }
 

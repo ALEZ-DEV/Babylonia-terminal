@@ -90,7 +90,9 @@ impl GameComponent {
     }
 }
 
-impl GithubRequester for GameComponent {}
+impl GithubRequester for GameComponent {
+    fn set_github_release_index(&mut self, _: usize) {}
+}
 
 impl ComponentDownloader for GameComponent {
     async fn install<P: downloader::progress::Reporter + 'static>(
@@ -98,12 +100,13 @@ impl ComponentDownloader for GameComponent {
         progress: Option<std::sync::Arc<P>>,
     ) -> anyhow::Result<()> {
         let _ = create_dir_all(&self.game_dir).await;
-        Self::download(&self.game_dir, progress).await?;
+        self.download(&self.game_dir, progress).await?;
 
         Ok(())
     }
 
     async fn download<P: downloader::progress::Reporter + 'static>(
+        &self,
         output_dir: &std::path::PathBuf,
         progress: Option<std::sync::Arc<P>>,
     ) -> anyhow::Result<std::path::PathBuf> {
@@ -179,6 +182,6 @@ impl ComponentDownloader for GameComponent {
         _file: std::path::PathBuf,
         _new_filename: std::path::PathBuf,
     ) -> anyhow::Result<()> {
-        panic!("How did you run this function??!!")
+        anyhow::bail!("How did you run this function??!!")
     }
 }

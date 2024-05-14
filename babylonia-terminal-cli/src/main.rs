@@ -1,7 +1,12 @@
 use std::{path::PathBuf, str::FromStr};
 
 use babylonia_terminal_sdk::{
-    components::proton_component::ProtonComponent, game_manager::GameManager, game_state::GameState,
+    components::{
+        dxvk_component::{DXVK_DEV, DXVK_REPO},
+        proton_component::{ProtonComponent, PROTON_DEV, PROTON_REPO},
+    },
+    game_manager::GameManager,
+    game_state::GameState,
 };
 use log::{debug, info, LevelFilter};
 use simple_logger::SimpleLogger;
@@ -9,6 +14,7 @@ use tokio::io::{AsyncBufReadExt, BufReader};
 use wincompatlib::prelude::*;
 
 pub mod reporter;
+pub mod utils;
 
 use crate::reporter::DownloadReporter;
 
@@ -49,10 +55,24 @@ async fn main() {
 
         match state {
             GameState::ProtonNotInstalled => {
+                let release;
+                if utils::use_latest("Do you want to install latest version of Proton GE or a specific version of it?") {
+                    release = 0;
+                } else {
+                    release = utils::choose_release_version(
+                        PROTON_DEV,
+                        PROTON_REPO,
+                        "Please, select a version of Proton GE to install.",
+                    )
+                    .await
+                    .expect("Failed to fetch proton version!");
+                }
+
                 info!("Proton not installed, installing it...");
                 proton_component = Some(
                     GameManager::install_wine(
                         GameState::get_config_directory().await,
+                        release,
                         Some(DownloadReporter::create(false)),
                     )
                     .await
@@ -61,11 +81,27 @@ async fn main() {
                 info!("Proton installed");
             }
             GameState::DXVKNotInstalled => {
+                let release;
+                if utils::use_latest(
+                    "Do you want to install latest version of DXVK or a specific version of it?",
+                ) {
+                    release = 0;
+                } else {
+                    release = utils::choose_release_version(
+                        DXVK_DEV,
+                        DXVK_REPO,
+                        "Please, select a version of DXVK to install.",
+                    )
+                    .await
+                    .expect("Failed to fetch DXVK version!");
+                }
+
                 info!("DXVK not installed, installing it...");
                 debug!("{:?}", proton_component);
                 GameManager::install_dxvk(
                     &proton.clone().unwrap(),
                     GameState::get_config_directory().await,
+                    release,
                     Some(DownloadReporter::create(false)),
                 )
                 .await

@@ -64,7 +64,7 @@ pub trait GithubRequester {
     }
 
     #[allow(async_fn_in_trait)]
-    async fn get_latest_github_release(
+    async fn get_github_releases(
         user: &str,
         repo_name: &str,
     ) -> anyhow::Result<Vec<GithubRelease>> {
@@ -80,4 +80,23 @@ pub trait GithubRequester {
         let releases: Vec<GithubRelease> = serde_json::from_str(&body)?;
         Ok(releases)
     }
+
+    #[allow(async_fn_in_trait)]
+    async fn get_github_release_version(
+        user: &str,
+        repo_name: &str,
+        release_index: usize,
+    ) -> anyhow::Result<GithubRelease> {
+        let releases = Self::get_github_releases(user, repo_name).await?;
+
+        let release = releases.get(release_index);
+
+        if release.is_none() {
+            anyhow::bail!("Wrong index when trying to get the github release");
+        }
+
+        Ok(release.unwrap().to_owned())
+    }
+
+    fn set_github_release_index(&mut self, new_release_index: usize);
 }

@@ -43,6 +43,7 @@ dependencies:
   media_kit_video: any
   media_kit_libs_video: any
   media_kit_native_event_loop: any
+  provider: ^6.1.2
 
 dependency_overrides:
   media_kit:

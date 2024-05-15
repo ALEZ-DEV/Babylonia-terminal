@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
+import 'package:provider/provider.dart';
+
+import './../providers/settings_provider.dart';
+import './../models/settings.dart';
 
 class Background extends StatefulWidget {
   const Background({super.key});
@@ -34,12 +38,16 @@ class _BackgroundState extends State<Background> {
 
   @override
   Widget build(BuildContext context) {
+    final provider = Provider.of<SettingsProvider>(context);
+
     player.play();
     return Video(
       controller: controller,
       controls: NoVideoControls,
       wakelock: false,
-      fit: BoxFit.cover,
+      fit: Settings.getBoxFitFromBackgroundType(
+        provider.getSelectedBackgroundType,
+      ),
     );
   }
 }

@@ -32,7 +32,8 @@ class _SettingsScreenState extends State<SettingsScreen>
     return Center(
       child: Column(
         children: [
-          SizedBox(
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15.0),
             child: YaruTabBar(
               tabController: tabController,
               tabs: SettingsPage.tabItems(),

@@ -13,15 +13,15 @@ class StyleSettingsPage extends StatefulWidget {
 }
 
 class _StyleSettingsPageState extends State<StyleSettingsPage> {
-  late int _radioValue;
+  late BackgroundType _radioValue;
 
   void setBackgroundValue(
     BuildContext context,
     SettingsProvider provider,
-    int? value,
+    BackgroundType? value,
   ) {
     if (value != null) {
-      provider.setSelectedBackgroundType = Settings.backgoundList[value];
+      provider.setSelectedBackgroundType = value;
       setState(() {
         _radioValue = value;
       });
@@ -31,29 +31,38 @@ class _StyleSettingsPageState extends State<StyleSettingsPage> {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<SettingsProvider>(context, listen: false);
-    _radioValue = Settings.backgoundList.indexWhere(
-      (element) => element == provider.getSelectedBackgroundType,
-    );
+    _radioValue = provider.getSelectedBackgroundType;
 
     return Center(
-      child: YaruSection(
-        headline: const Text('Background video'),
-        child: Column(
-          children: [
-            for (int i = 0; i < Settings.backgoundList.length; i++)
-              YaruRadioListTile(
-                value: i,
-                groupValue: _radioValue,
-                onChanged: (v) => setBackgroundValue(context, provider, v),
-                toggleable: true,
-                title: Text(
-                  Settings.getStringNameOfBackgroundType(
-                    Settings.backgoundList[i],
-                  ),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(15.0),
+            child: SizedBox(
+              child: YaruSection(
+                headline: const Text('Background video'),
+                child: Column(
+                  children: Settings.backgoundList
+                      .map(
+                        (b) => YaruRadioListTile(
+                          value: b,
+                          groupValue: _radioValue,
+                          onChanged: (v) =>
+                              setBackgroundValue(context, provider, v),
+                          toggleable: true,
+                          title: Text(
+                            Settings.getStringNameOfBackgroundType(
+                              b,
+                            ),
+                          ),
+                        ),
+                      )
+                      .toList(),
                 ),
               ),
-          ],
-        ),
+            ),
+          ),
+        ],
       ),
     );
   }

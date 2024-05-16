@@ -55,6 +55,7 @@ class HomeScreen extends StatelessWidget {
                     children: [
                       ConstrainedBox(
                         constraints: const BoxConstraints(
+                          maxWidth: 600,
                           maxHeight: 50,
                         ),
                         child: ElevatedButton(

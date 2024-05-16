@@ -24,7 +24,7 @@ class _BackgroundState extends State<Background> {
     super.initState();
     player.open(
       Media(
-        'https://media-cdn-zspms.kurogame.net/pnswebsite/website2.0/video/1715184000000/1l5uvj9eqpjjcazt4p-1715219648481.mp4',
+        '/home/alez/Downloads/1l5uvj9eqpjjcazt4p-1715219648481.mp4',
       ),
     );
     player.setPlaylistMode(PlaylistMode.loop);

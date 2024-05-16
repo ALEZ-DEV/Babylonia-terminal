@@ -44,6 +44,8 @@ dependencies:
   media_kit_libs_video: any
   media_kit_native_event_loop: any
   provider: ^6.1.2
+  rinf: ^6.9.0
+  protobuf: ^3.1.0
 
 dependency_overrides:
   media_kit:

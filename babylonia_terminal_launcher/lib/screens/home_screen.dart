@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import './../widgets/background.dart';
-import './../providers/settings_provider.dart';
+import './../providers/providers.dart';
 import './../models/settings.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -62,7 +62,11 @@ class HomeScreen extends StatelessWidget {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.blue[500],
                           ),
-                          onPressed: () {},
+                          onPressed: () async {
+                            Provider.of<GameStateProvider>(context,
+                                    listen: false)
+                                .updateGameState();
+                          },
                           child: const Center(
                             child: Text("Download"),
                           ),

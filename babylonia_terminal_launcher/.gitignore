@@ -47,3 +47,10 @@ app.*.map.json
 
 # Misc
 /test
+
+# Rust related
+.cargo/
+target/
+
+# Generated messages
+*/**/messages/

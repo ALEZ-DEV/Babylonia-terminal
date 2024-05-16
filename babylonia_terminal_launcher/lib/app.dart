@@ -4,15 +4,22 @@ import 'package:yaru/yaru.dart';
 
 import './screens/screens.dart';
 
-import './providers/settings_provider.dart';
+import './providers/providers.dart';
 
 class BabyloniaLauncher extends StatelessWidget {
   const BabyloniaLauncher({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => SettingsProvider(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (context) => SettingsProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => GameStateProvider(),
+        ),
+      ],
       child: YaruTheme(
         builder: (context, yaru, child) => MaterialApp(
           title: "Babylonia Terminal",

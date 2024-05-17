@@ -16,6 +16,7 @@ class GameStateProvider with ChangeNotifier {
         break;
       }
       isUpdating = false;
+      notifyListeners();
     }
   }
 }

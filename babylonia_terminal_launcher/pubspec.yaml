@@ -46,6 +46,7 @@ dependencies:
   provider: ^6.1.2
   rinf: ^6.9.0
   protobuf: ^3.1.0
+  shared_preferences: ^2.2.3
 
 dependency_overrides:
   media_kit:

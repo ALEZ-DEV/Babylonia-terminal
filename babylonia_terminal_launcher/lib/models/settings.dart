@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 enum BackgroundType {
   contain,
@@ -10,7 +13,40 @@ enum BackgroundType {
 }
 
 class Settings {
-  BackgroundType _backgroundType = BackgroundType.cover;
+  final SharedPreferences prefs;
+
+  Settings({required this.prefs});
+
+  static Future<Settings> create() async {
+    final prefs = await SharedPreferences.getInstance();
+    return Settings(prefs: prefs);
+  }
+
+  BackgroundType? _backgroundType;
+  String backgroundTypeKey = 'background_type';
+
+  BackgroundType get selectedBackgroundType {
+    final bt = prefs.getString(backgroundTypeKey);
+    if (bt == null) {
+      _backgroundType = BackgroundType.disable;
+      prefs.setString(
+        backgroundTypeKey,
+        getStringNameOfBackgroundType(_backgroundType!),
+      );
+    } else {
+      _backgroundType ??= getBackgroundTypeFromString(bt);
+    }
+
+    return _backgroundType!;
+  }
+
+  set selectedBackgroundType(BackgroundType selectedBackground) {
+    _backgroundType = selectedBackground;
+    prefs.setString(
+      backgroundTypeKey,
+      getStringNameOfBackgroundType(selectedBackground),
+    );
+  }
 
   static final List<BackgroundType> backgoundList = [
     BackgroundType.contain,
@@ -73,13 +109,5 @@ class Settings {
         throw FormatException(
             'Can\'t convert BackgroundType to widget BoxFit!');
     }
-  }
-
-  BackgroundType get selectedBackgroundType {
-    return _backgroundType;
-  }
-
-  set selectedBackgroundType(BackgroundType selectedBackground) {
-    _backgroundType = selectedBackground;
   }
 }

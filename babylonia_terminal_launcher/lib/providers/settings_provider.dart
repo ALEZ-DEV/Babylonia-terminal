@@ -3,7 +3,11 @@ import 'package:flutter/material.dart';
 import './../models/settings.dart';
 
 class SettingsProvider with ChangeNotifier {
-  final Settings _settings = Settings();
+  late final Settings _settings;
+
+  Future init() async {
+    _settings = await Settings.create();
+  }
 
   set setSelectedBackgroundType(BackgroundType selectedBackground) {
     _settings.selectedBackgroundType = selectedBackground;

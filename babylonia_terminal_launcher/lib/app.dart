@@ -7,14 +7,15 @@ import './screens/screens.dart';
 import './providers/providers.dart';
 
 class BabyloniaLauncher extends StatelessWidget {
-  const BabyloniaLauncher({super.key});
+  const BabyloniaLauncher({super.key, required this.settingsProvider});
+  final SettingsProvider settingsProvider;
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (context) => SettingsProvider(),
+          create: (context) => settingsProvider,
         ),
         ChangeNotifierProvider(
           create: (context) => GameStateProvider(),

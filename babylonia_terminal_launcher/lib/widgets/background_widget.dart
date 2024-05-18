@@ -5,17 +5,20 @@ import 'package:provider/provider.dart';
 
 import './../providers/settings_provider.dart';
 import './../models/settings.dart';
+import './../models/background.dart';
 
-class Background extends StatefulWidget {
-  const Background({super.key});
+class BackgroundWidget extends StatefulWidget {
+  const BackgroundWidget({super.key, required this.background});
+
+  final Background background;
 
   @override
-  State<Background> createState() => _BackgroundState();
+  State<BackgroundWidget> createState() => _BackgroundWidgetState();
 }
 
-class _BackgroundState extends State<Background> {
+class _BackgroundWidgetState extends State<BackgroundWidget> {
   late final player = Player(
-    configuration: PlayerConfiguration(),
+    configuration: const PlayerConfiguration(),
   );
   late final controller = VideoController(player);
 
@@ -24,7 +27,7 @@ class _BackgroundState extends State<Background> {
     super.initState();
     player.open(
       Media(
-        '/home/alez/Downloads/1l5uvj9eqpjjcazt4p-1715219648481.mp4',
+        widget.background.path,
       ),
     );
     player.setPlaylistMode(PlaylistMode.loop);

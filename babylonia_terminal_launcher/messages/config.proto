@@ -1,0 +1,10 @@
+syntax = "proto3";
+package config;
+
+// [RINF:DART-SIGNAL]
+message ConfigInput {}
+
+// [RINF:RUST-SIGNAL]
+message ConfigOutput {
+    string configPath = 1;
+}

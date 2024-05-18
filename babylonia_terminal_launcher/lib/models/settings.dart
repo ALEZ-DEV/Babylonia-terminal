@@ -48,6 +48,20 @@ class Settings {
     );
   }
 
+  int? _backgroundId;
+  String backgroundIdKey = 'background_id';
+
+  int? get backgroundId {
+    _backgroundId ??= prefs.getInt(backgroundIdKey);
+
+    return _backgroundId;
+  }
+
+  set backgroundId(int? value) {
+    _backgroundId = value;
+    prefs.setInt(backgroundIdKey, value!);
+  }
+
   static final List<BackgroundType> backgoundList = [
     BackgroundType.contain,
     BackgroundType.fill,

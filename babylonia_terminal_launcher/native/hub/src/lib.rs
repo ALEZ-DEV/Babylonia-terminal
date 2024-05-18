@@ -6,6 +6,7 @@
 // if you're not targeting the web.
 use tokio_with_wasm::tokio;
 
+mod config;
 mod game_state;
 mod messages;
 
@@ -22,4 +23,5 @@ async fn main() {
     //tokio::spawn(sample_functions::stream_fractal());
     //tokio::spawn(sample_functions::run_debug_tests());
     tokio::spawn(game_state::get_game_state());
+    tokio::spawn(config::get_config());
 }

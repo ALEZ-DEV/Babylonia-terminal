@@ -2,7 +2,7 @@ import 'package:babylonia_terminal_launcher/messages/game_state.pb.dart';
 import 'package:flutter/material.dart';
 
 class GameStateProvider with ChangeNotifier {
-  States? _gameState = null;
+  States? _gameState;
   bool isUpdating = false;
 
   Future updateGameState() async {
@@ -18,5 +18,10 @@ class GameStateProvider with ChangeNotifier {
       isUpdating = false;
       notifyListeners();
     }
+  }
+
+  bool hasToSetup() {
+    return _gameState == States.ProtonNotInstalled ||
+        _gameState == States.DXVKNotInstalled;
   }
 }

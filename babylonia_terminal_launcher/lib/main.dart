@@ -14,7 +14,11 @@ void main() async {
   final SettingsProvider settings = SettingsProvider();
   await settings.init();
 
+  final GameStateProvider gameState = GameStateProvider();
+  await gameState.updateGameState();
+
   runApp(BabyloniaLauncher(
     settingsProvider: settings,
+    gameStateProvider: gameState,
   ));
 }

@@ -3,12 +3,16 @@ import 'package:provider/provider.dart';
 import 'package:yaru/yaru.dart';
 
 import './screens/screens.dart';
-
+import './screens/setup_screen.dart';
 import './providers/providers.dart';
 
 class BabyloniaLauncher extends StatelessWidget {
-  const BabyloniaLauncher({super.key, required this.settingsProvider});
+  const BabyloniaLauncher(
+      {super.key,
+      required this.settingsProvider,
+      required this.gameStateProvider});
   final SettingsProvider settingsProvider;
+  final GameStateProvider gameStateProvider;
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +22,7 @@ class BabyloniaLauncher extends StatelessWidget {
           create: (context) => settingsProvider,
         ),
         ChangeNotifierProvider(
-          create: (context) => GameStateProvider(),
+          create: (context) => gameStateProvider,
         ),
       ],
       child: YaruTheme(
@@ -30,7 +34,9 @@ class BabyloniaLauncher extends StatelessWidget {
           themeMode: ThemeMode.system,
           highContrastTheme: yaruHighContrastLight,
           highContrastDarkTheme: yaruHighContrastDark,
-          home: const Menu(),
+          home: Provider.of<GameStateProvider>(context).hasToSetup()
+              ? const SetupScreen()
+              : const Menu(),
         ),
       ),
     );

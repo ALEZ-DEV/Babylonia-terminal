@@ -22,6 +22,15 @@ class Settings {
     return Settings(prefs: prefs);
   }
 
+  String firstTimeKey = 'first_time';
+  bool? get firstTime {
+    return prefs.getBool(firstTimeKey);
+  }
+
+  set firstTime(bool? value) {
+    prefs.setBool(firstTimeKey, value!);
+  }
+
   BackgroundType? _backgroundType;
   String backgroundTypeKey = 'background_type';
 

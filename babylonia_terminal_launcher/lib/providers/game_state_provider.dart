@@ -5,6 +5,10 @@ class GameStateProvider with ChangeNotifier {
   States? _gameState;
   bool isUpdating = false;
 
+  get gameState {
+    return _gameState;
+  }
+
   Future updateGameState() async {
     if (!isUpdating) {
       isUpdating = true;

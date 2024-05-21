@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import './../models/settings.dart';
@@ -8,7 +9,23 @@ class SettingsProvider with ChangeNotifier {
 
   Future init() async {
     _settings = await Settings.create();
+    if (kDebugMode) {
+      _settings.firstTime = true;
+    }
     await Config.update();
+  }
+
+  bool get firstTime {
+    final result = _settings.firstTime;
+    if (result == null) {
+      _settings.firstTime = true;
+    }
+    return _settings.firstTime!;
+  }
+
+  set firstTime(bool value) {
+    _settings.firstTime = value;
+    notifyListeners();
   }
 
   set setSelectedBackgroundType(BackgroundType selectedBackground) {

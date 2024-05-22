@@ -16,7 +16,7 @@ If you have any issue with the launcher, don't hesitate to open an issue!
 
 Please install Rust from the [official website](https://www.rust-lang.org/fr/tools/install)  
 You need [python3](https://www.python.org/downloads/) installed on your system, but all major distro have it installed by default  
-You need Wintricks to be installed to install the fonts and the dependecies for the game, you can install it via your package manager or your store 
+You need Wintricks to be installed to install the fonts and the dependecies for the game, you can install it via your package manager or your store  
 You need Steam to be installed to run the game  
 
 ## Installation

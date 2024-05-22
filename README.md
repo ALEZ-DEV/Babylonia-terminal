@@ -7,9 +7,7 @@
 </div>
 
 ### This launcher download, install your favorite anime game and dependecies for you!
-
-For now, there is only a cli version of the launcher, but a gui one is on my radar, so stay tuned!
-
+For now, there is only a cli version of the launcher, but a gui one is on my radar, so stay tuned!  
 If you have any issue with the launcher, don't hesitate to open an issue!
 
 ## Requirement

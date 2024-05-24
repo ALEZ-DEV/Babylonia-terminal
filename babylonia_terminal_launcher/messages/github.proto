@@ -1,0 +1,10 @@
+syntax = "proto3";
+package github;
+
+// [RINF:DART-SIGNAL]
+message AskProtonVersions {}
+
+// [RINF:RUST-SIGNAL]
+message ProtonVersions {
+    repeated string versions = 1;
+}

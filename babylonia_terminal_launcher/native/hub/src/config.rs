@@ -2,7 +2,7 @@ use babylonia_terminal_sdk::game_state::GameState;
 
 use crate::messages::config::{ConfigInput, ConfigOutput};
 
-pub async fn get_config() {
+pub async fn listen_config() {
     let mut receiver = ConfigInput::get_dart_signal_receiver();
     while let Some(_) = receiver.recv().await {
         let config = GameState::get_config().await;

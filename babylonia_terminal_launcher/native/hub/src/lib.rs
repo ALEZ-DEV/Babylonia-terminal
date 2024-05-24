@@ -8,6 +8,7 @@ use tokio_with_wasm::tokio;
 
 mod config;
 mod game_state;
+mod github;
 mod messages;
 
 rinf::write_interface!();
@@ -22,6 +23,8 @@ async fn main() {
     //tokio::spawn(sample_functions::tell_numbers());
     //tokio::spawn(sample_functions::stream_fractal());
     //tokio::spawn(sample_functions::run_debug_tests());
-    tokio::spawn(game_state::get_game_state());
-    tokio::spawn(config::get_config());
+    tokio::spawn(game_state::listen_game_state());
+    tokio::spawn(config::listen_config());
+    tokio::spawn(config::listen_config());
+    tokio::spawn(github::listen_proton_version());
 }

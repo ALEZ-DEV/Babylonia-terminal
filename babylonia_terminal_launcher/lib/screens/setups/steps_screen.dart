@@ -59,9 +59,13 @@ class StepsScreen extends StatelessWidget {
               ),
             ),
           ),
-          SimpleButton(
-            onPressed: () => gameStateProvider.updateGameState(),
-            child: const Text('update'),
+          Padding(
+            padding: const EdgeInsets.only(top: 12.0),
+            child: SimpleButton(
+              onPressed:
+                  true ? null : () => gameStateProvider.updateGameState(),
+              child: const Text('next'),
+            ),
           ),
         ],
       ),

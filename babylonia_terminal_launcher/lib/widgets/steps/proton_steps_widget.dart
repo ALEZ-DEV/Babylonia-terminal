@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:yaru/widgets.dart';
 
 import './../../models/github.dart';
+import './../../providers/providers.dart';
 
 class ProtonSteps extends StatefulWidget {
   const ProtonSteps({super.key});

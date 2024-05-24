@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:yaru/theme.dart';
 
 class SimpleButton extends StatelessWidget {
   const SimpleButton({super.key, required this.child, required this.onPressed});
@@ -9,7 +10,12 @@ class SimpleButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return ElevatedButton(
       style: ButtonStyle(
-        backgroundColor: MaterialStateProperty.all(Colors.blue[500]),
+        backgroundColor: MaterialStateProperty.resolveWith((states) {
+          if (states.contains(MaterialState.disabled)) {
+            return Colors.grey;
+          }
+          return Colors.blue[500];
+        }),
         side: MaterialStateProperty.all(BorderSide.none),
         shape: MaterialStateProperty.all<RoundedRectangleBorder>(
           RoundedRectangleBorder(

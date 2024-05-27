@@ -1,0 +1,7 @@
+syntax = "proto3";
+package error;
+
+// [RINF:RUST-SIGNAL]
+message ReportError {
+    string errorMessage = 1;
+}

@@ -1,9 +1,14 @@
+use std::fmt::format;
+
 use babylonia_terminal_sdk::{
     components::proton_component::{PROTON_DEV, PROTON_REPO},
     utils::github_requester::{GithubRelease, GithubRequester},
 };
 
-use crate::messages::github::{AskProtonVersions, ProtonVersions};
+use crate::messages::{
+    error::ReportError,
+    github::{AskProtonVersions, ProtonVersions},
+};
 
 #[warn(dead_code)]
 struct GithubInfo;
@@ -24,7 +29,10 @@ pub async fn listen_proton_version() {
                 versions: r.iter().map(|v| v.tag_name.to_owned()).collect(),
             }
             .send_signal_to_dart(),
-            Err(_) => todo!(),
+            Err(e) => ReportError {
+                error_message: format!("When fetching proton versions : {}", e),
+            }
+            .send_signal_to_dart(),
         }
     }
 }

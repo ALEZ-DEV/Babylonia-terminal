@@ -1,6 +1,9 @@
 use babylonia_terminal_sdk::game_state::GameState;
 
-use crate::messages::game_state::{AskGameState, GameState as GameStateMessage, States};
+use crate::messages::{
+    error::ReportError,
+    game_state::{AskGameState, GameState as GameStateMessage, States},
+};
 
 impl GameStateMessage {
     fn from_sdk_state_to_msg_state(state: GameState) -> Self {
@@ -24,8 +27,12 @@ pub async fn listen_game_state() {
     let mut receiver = AskGameState::get_dart_signal_receiver();
     while let Some(_) = receiver.recv().await {
         let result_state = GameState::get_current_state().await;
-        if let Ok(state) = result_state {
-            GameStateMessage::from_sdk_state_to_msg_state(state).send_signal_to_dart();
+        match result_state {
+            Ok(state) => GameStateMessage::from_sdk_state_to_msg_state(state).send_signal_to_dart(),
+            Err(e) => ReportError {
+                error_message: format!("When updating the game state : {}", e),
+            }
+            .send_signal_to_dart(),
         }
     }
 }

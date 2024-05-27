@@ -5,17 +5,20 @@ import 'package:yaru/yaru.dart';
 import './screens/screens.dart';
 import './screens/setup_screen.dart';
 import './providers/providers.dart';
+import './models/error_reporter.dart';
 
 class BabyloniaLauncher extends StatelessWidget {
-  const BabyloniaLauncher(
+  BabyloniaLauncher(
       {super.key,
       required this.settingsProvider,
       required this.gameStateProvider});
   final SettingsProvider settingsProvider;
   final GameStateProvider gameStateProvider;
+  final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
   @override
   Widget build(BuildContext context) {
+    ErrorReporter.listenAllRustError(navigatorKey);
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
@@ -27,6 +30,7 @@ class BabyloniaLauncher extends StatelessWidget {
       ],
       child: YaruTheme(
         builder: (context, yaru, child) => MaterialApp(
+          navigatorKey: navigatorKey,
           title: "Babylonia Terminal",
           debugShowCheckedModeBanner: false,
           theme: yaru.theme,

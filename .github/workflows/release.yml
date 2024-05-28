@@ -20,4 +20,6 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Create release
-      run: cargo build --release --verbose
+      run: |
+        cd babylonia-terminal-cli
+        cargo build --release --verbose

@@ -13,8 +13,8 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            artifact_name: ${{ github.event.repository.name }}
-            asset_name: ${{ github.event.repository.name }}-linux-amd64
+            artifact_name: babylonia-terminal-cli
+            asset_name: babylonia-terminal-cli
     name: Release
     runs-on: ubuntu-latest
     steps:
@@ -28,5 +28,5 @@ jobs:
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         file: babylonia-terminal-cli/target/release/babylonia-terminal-cli
-        asset_name: ${{ github.event.repository.name }}-linux-amd64
+        asset_name: babylonia-terminal-cli
         tag: ${{ github.ref }}

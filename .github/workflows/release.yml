@@ -23,3 +23,10 @@ jobs:
       run: |
         cd babylonia-terminal-cli
         cargo build --release --verbose
+    - name: Upload binary to release
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: target/release/babylonia-terminal-cli
+        asset_name: ${{ github.event.repository.name }}-linux-amd64
+        tag: ${{ github.ref }}

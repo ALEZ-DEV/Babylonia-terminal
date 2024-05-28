@@ -27,6 +27,6 @@ jobs:
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: target/release/babylonia-terminal-cli
+        file: babylonia-terminal-cli/target/release/babylonia-terminal-cli
         asset_name: ${{ github.event.repository.name }}-linux-amd64
         tag: ${{ github.ref }}

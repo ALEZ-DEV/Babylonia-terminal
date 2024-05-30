@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:yaru/theme.dart';
 
 class SimpleButton extends StatelessWidget {
   const SimpleButton({super.key, required this.child, required this.onPressed});

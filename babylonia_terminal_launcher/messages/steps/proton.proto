@@ -1,0 +1,19 @@
+syntax = "proto3";
+package proton;
+
+// [RINF:RUST-SIGNAL]
+message ProtonDownloadProgress {
+    uint64 current = 1;
+    uint64 max = 2;
+}
+
+// [RINF:DART-SIGNAL]
+message StartProtonInstallation {
+    string protonVersion = 1;
+};
+
+// [RINF:RUST-SIGNAL]
+message NotifyProtonStartDecompressing {}
+
+// [RINF:RUST-SIGNAL]
+message NotifiyProtonSuccessfullyInstalled {}

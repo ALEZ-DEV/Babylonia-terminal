@@ -11,7 +11,7 @@ use crate::messages::{
 };
 
 #[warn(dead_code)]
-struct GithubInfo;
+pub struct GithubInfo;
 
 impl GithubRequester for GithubInfo {
     fn set_github_release_index(&mut self, _: usize) {

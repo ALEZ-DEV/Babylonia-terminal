@@ -49,6 +49,7 @@ dependencies:
   shared_preferences: ^2.2.3
   http: ^1.2.1
   flutter_highlight: ^0.7.0
+  fixnum: ^1.1.0
 
 dependency_overrides:
   media_kit:

@@ -1,6 +1,7 @@
 //! This `hub` crate is the
 //! entry point of the Rust logic.
 
+use proton::listen_proton_installation;
 // This `tokio` will be used by Rinf.
 // You can replace it with the original `tokio`
 // if you're not targeting the web.
@@ -10,6 +11,7 @@ mod config;
 mod game_state;
 mod github;
 mod messages;
+mod proton;
 
 rinf::write_interface!();
 
@@ -27,4 +29,5 @@ async fn main() {
     tokio::spawn(config::listen_config());
     tokio::spawn(config::listen_config());
     tokio::spawn(github::listen_proton_version());
+    tokio::spawn(proton::listen_proton_installation());
 }

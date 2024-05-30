@@ -3,7 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:yaru/widgets.dart';
 
 import './../../models/github.dart';
-import './../../providers/providers.dart';
+import './../../models/proton.dart';
+import './../../widgets/simple_button.dart';
 
 class ProtonSteps extends StatefulWidget {
   const ProtonSteps({super.key});
@@ -13,6 +14,40 @@ class ProtonSteps extends StatefulWidget {
 }
 
 class _ProtonStepsState extends State<ProtonSteps> {
+  final Proton proton = Proton();
+
+  @override
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => proton,
+      child: Builder(
+        builder: (context) {
+          switch (Provider.of<Proton>(context).protonState) {
+            case ProtonInstallationState.idle:
+              return const InstallProton();
+            case ProtonInstallationState.downloading:
+              return const Center(
+                child: Text('downloading...'),
+              );
+            case ProtonInstallationState.decompressing:
+              return const Center(
+                child: Text('decompressing...'),
+              );
+          }
+        },
+      ),
+    );
+  }
+}
+
+class InstallProton extends StatefulWidget {
+  const InstallProton({super.key});
+
+  @override
+  State<InstallProton> createState() => _InstallProtonState();
+}
+
+class _InstallProtonState extends State<InstallProton> {
   bool hasLoaded = false;
   bool isLoading = false;
   late List<String> protonVersions;
@@ -39,7 +74,7 @@ class _ProtonStepsState extends State<ProtonSteps> {
     }
 
     return Padding(
-      padding: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.all(20.0),
       child: isLoading
           ? const Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -51,20 +86,33 @@ class _ProtonStepsState extends State<ProtonSteps> {
                 Text('Fetching versions...'),
               ],
             )
-          : YaruPopupMenuButton(
-              initialValue: selectedValue,
-              itemBuilder: (_) => protonVersions
-                  .map(
-                    (e) => PopupMenuItem(
-                      value: e,
-                      child: Text(e),
-                    ),
-                  )
-                  .toList(),
-              onSelected: (v) => setState(() {
-                selectedValue = v!;
-              }),
-              child: Text(selectedValue!),
+          : Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                YaruPopupMenuButton(
+                  initialValue: selectedValue,
+                  itemBuilder: (_) => protonVersions
+                      .map(
+                        (e) => PopupMenuItem(
+                          value: e,
+                          child: Text(e),
+                        ),
+                      )
+                      .toList(),
+                  onSelected: (v) => setState(() {
+                    selectedValue = v;
+                  }),
+                  child: Text(selectedValue!),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8.0),
+                  child: SimpleButton(
+                    onPressed: () => Provider.of<Proton>(context, listen: false)
+                        .startInstallation(context, selectedValue!),
+                    child: const Text("Install"),
+                  ),
+                ),
+              ],
             ),
     );
   }

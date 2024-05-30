@@ -17,3 +17,5 @@ prost = "0.12.3"
 wasm-bindgen = "0.2.91"
 tokio_with_wasm = "0.4.3"
 babylonia-terminal-sdk = { path = "./../../../babylonia-terminal-sdk" }
+downloader = { git = "https://github.com/ALEZ-DEV/downloader" }         # version = "0.2.7",
+once_cell = "1.19.0"

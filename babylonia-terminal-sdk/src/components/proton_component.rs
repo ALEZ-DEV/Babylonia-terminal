@@ -81,18 +81,16 @@ impl ComponentDownloader for ProtonComponent {
             let tar_xz = File::open(file.clone()).unwrap();
             let tar = GzDecoder::new(tar_xz);
             let mut archive = Archive::new(tar);
-            archive
-                .unpack(new_directory_name.parent().unwrap())
-                .unwrap();
-            remove_file(file.clone()).unwrap();
+            archive.unpack(new_directory_name.parent().unwrap())?;
+            remove_file(file.clone())?;
             rename(
                 file.to_str().unwrap().strip_suffix(".tar.gz").unwrap(),
                 new_directory_name,
-            )
-            .unwrap();
+            )?;
+
+            Ok::<(), anyhow::Error>(())
         })
-        .await
-        .unwrap();
+        .await??;
 
         Ok(())
     }

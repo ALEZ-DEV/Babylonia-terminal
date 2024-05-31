@@ -105,21 +105,20 @@ impl<'a> ComponentDownloader for DXVKComponent<'a> {
         file: std::path::PathBuf,
         new_directory_name: std::path::PathBuf,
     ) -> anyhow::Result<()> {
-        tokio::task::spawn_blocking(move || {
-            let tar_gz = File::open(file.clone()).unwrap();
+        tokio::task::spawn_blocking(move || -> anyhow::Result<()> {
+            let tar_gz = File::open(file.clone())?;
             let tar = GzDecoder::new(tar_gz);
             let mut archive = Archive::new(tar);
-            archive
-                .unpack(new_directory_name.parent().unwrap())
-                .unwrap();
-            remove_file(file.clone()).unwrap();
+            archive.unpack(new_directory_name.parent().unwrap())?;
+            remove_file(file.clone())?;
             rename(
                 file.to_str().unwrap().strip_suffix(".tar.gz").unwrap(),
                 new_directory_name,
-            )
-            .unwrap()
+            )?;
+
+            Ok::<(), anyhow::Error>(())
         })
-        .await?;
+        .await??;
 
         Ok(())
     }

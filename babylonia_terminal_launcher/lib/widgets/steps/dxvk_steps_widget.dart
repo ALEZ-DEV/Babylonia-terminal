@@ -5,6 +5,7 @@ import 'package:yaru/widgets.dart';
 import './../../models/github.dart';
 import './../../models/dxvk.dart';
 import './../../widgets/simple_button.dart';
+import './../../widgets/gtk_spinner_widget.dart';
 import './../../providers/providers.dart';
 
 class DXVKSteps extends StatefulWidget {
@@ -36,7 +37,7 @@ class _DXVKStepsState extends State<DXVKSteps> {
                   children: [
                     Padding(
                       padding: EdgeInsets.all(8.0),
-                      child: CircularProgressIndicator(),
+                      child: GtkSpinner(),
                     ),
                     Text('Installing...'),
                   ],
@@ -89,7 +90,7 @@ class _InstallDXVKState extends State<InstallDXVK> {
             children: [
               Padding(
                 padding: EdgeInsets.all(8.0),
-                child: CircularProgressIndicator(),
+                child: GtkSpinner(),
               ),
               Text('Fetching versions...'),
             ],

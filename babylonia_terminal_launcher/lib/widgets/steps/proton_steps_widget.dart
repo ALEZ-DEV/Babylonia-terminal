@@ -5,6 +5,7 @@ import 'package:yaru/widgets.dart';
 import './../../models/github.dart';
 import './../../models/proton.dart';
 import './../../widgets/simple_button.dart';
+import './../../widgets/gtk_spinner_widget.dart';
 import './../../providers/providers.dart';
 
 class ProtonSteps extends StatefulWidget {
@@ -36,7 +37,7 @@ class _ProtonStepsState extends State<ProtonSteps> {
                   children: [
                     Padding(
                       padding: EdgeInsets.all(8.0),
-                      child: CircularProgressIndicator(),
+                      child: GtkSpinner(),
                     ),
                     Text('decompressing...'),
                   ],
@@ -89,7 +90,7 @@ class _InstallProtonState extends State<InstallProton> {
             children: [
               Padding(
                 padding: EdgeInsets.all(8.0),
-                child: CircularProgressIndicator(),
+                child: GtkSpinner(),
               ),
               Text('Fetching versions...'),
             ],

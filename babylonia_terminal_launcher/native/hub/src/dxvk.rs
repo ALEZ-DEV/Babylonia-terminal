@@ -2,35 +2,34 @@ use std::thread;
 
 use babylonia_terminal_sdk::{
     components::{
-        component_downloader::ComponentDownloader,
-        proton_component::{ProtonComponent, PROTON_DEV, PROTON_REPO},
+        dxvk_component::{DXVK_DEV, DXVK_REPO},
+        proton_component::ProtonComponent,
     },
     game_manager::GameManager,
     game_state::GameState,
     utils::github_requester::{GithubRelease, GithubRequester},
 };
-use rinf::debug_print;
 use tokio_with_wasm::tokio;
 
 use crate::{
     github::GithubInfo,
     messages::{
         error::ReportError,
-        steps::proton::{
-            NotifiyProtonSuccessfullyInstalled, NotifyProtonStartDecompressing,
-            ProtonDownloadProgress, StartProtonInstallation,
+        steps::dxvk::{
+            DxvkDownloadProgress, NotifiyDxvkSuccessfullyInstalled, NotifyDxvkStartDecompressing,
+            StartDxvkInstallation,
         },
     },
 };
 
-pub async fn listen_proton_installation() {
-    let mut receiver = StartProtonInstallation::get_dart_signal_receiver();
+pub async fn listen_dxvk_installation() {
+    let mut receiver = StartDxvkInstallation::get_dart_signal_receiver();
     while let Some(info) = receiver.recv().await {
         let releases: Result<Vec<GithubRelease>, _> =
-            GithubInfo::get_github_releases(PROTON_DEV, PROTON_REPO).await;
+            GithubInfo::get_github_releases(DXVK_DEV, DXVK_REPO).await;
         if releases.is_err() {
             ReportError {
-                error_message: format!("When fetching proton versions : {}", releases.unwrap_err()),
+                error_message: format!("When fetching DXVK versions : {}", releases.unwrap_err()),
             }
             .send_signal_to_dart();
             continue;
@@ -43,7 +42,17 @@ pub async fn listen_proton_installation() {
 
         if release_index.is_none() {
             ReportError {
-                error_message: "Failed to find Proton version".to_string(),
+                error_message: "Failed to find DXVK version".to_string(),
+            }
+            .send_signal_to_dart();
+            continue;
+        }
+
+        let proton_component = ProtonComponent::new(GameState::get_config().await.config_dir);
+        let proton = proton_component.init_proton();
+        if let Err(e) = proton {
+            ReportError {
+                error_message: format!("Failed to initialize DXVK : {}", e),
             }
             .send_signal_to_dart();
             continue;
@@ -55,7 +64,8 @@ pub async fn listen_proton_installation() {
                 .build()
                 .unwrap()
                 .block_on(async {
-                    match GameManager::install_wine(
+                    match GameManager::install_dxvk(
+                        &proton.unwrap(),
                         GameState::get_config().await.config_dir,
                         release_index.unwrap(),
                         Some(DownloadReporter::create()),
@@ -63,10 +73,10 @@ pub async fn listen_proton_installation() {
                     .await
                     {
                         Err(e) => ReportError {
-                            error_message: format!("Failed to install Proton : {}", e),
+                            error_message: format!("Failed to install DXVK : {}", e),
                         }
                         .send_signal_to_dart(),
-                        Ok(_) => NotifiyProtonSuccessfullyInstalled {}.send_signal_to_dart(),
+                        Ok(_) => NotifiyDxvkSuccessfullyInstalled {}.send_signal_to_dart(),
                     }
                 });
         });
@@ -99,7 +109,7 @@ impl downloader::progress::Reporter for DownloadReporter {
 
     fn progress(&self, current: u64) {
         if let Some(p) = self.private.lock().unwrap().as_mut() {
-            ProtonDownloadProgress {
+            DxvkDownloadProgress {
                 current,
                 max: p.max_progress.unwrap(),
             }
@@ -110,7 +120,7 @@ impl downloader::progress::Reporter for DownloadReporter {
     fn set_message(&self, _: &str) {}
 
     fn done(&self) {
-        NotifyProtonStartDecompressing {}.send_signal_to_dart();
+        NotifyDxvkStartDecompressing {}.send_signal_to_dart();
         let mut guard = self.private.lock().unwrap();
         *guard = None;
     }

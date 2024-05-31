@@ -3,19 +3,19 @@ import 'package:provider/provider.dart';
 import 'package:yaru/widgets.dart';
 
 import './../../models/github.dart';
-import './../../models/proton.dart';
+import './../../models/dxvk.dart';
 import './../../widgets/simple_button.dart';
 import './../../providers/providers.dart';
 
-class ProtonSteps extends StatefulWidget {
-  const ProtonSteps({super.key});
+class DXVKSteps extends StatefulWidget {
+  const DXVKSteps({super.key});
 
   @override
-  State<ProtonSteps> createState() => _ProtonStepsState();
+  State<DXVKSteps> createState() => _DXVKStepsState();
 }
 
-class _ProtonStepsState extends State<ProtonSteps> {
-  final Proton proton = Proton();
+class _DXVKStepsState extends State<DXVKSteps> {
+  final DXVK proton = DXVK();
 
   @override
   Widget build(BuildContext context) {
@@ -25,12 +25,12 @@ class _ProtonStepsState extends State<ProtonSteps> {
         create: (_) => proton,
         child: Builder(
           builder: (context) {
-            switch (Provider.of<Proton>(context).protonState) {
-              case ProtonInstallationState.idle:
-                return const InstallProton();
-              case ProtonInstallationState.downloading:
-                return const ProtonDownloadProgress();
-              case ProtonInstallationState.decompressing:
+            switch (Provider.of<DXVK>(context).protonState) {
+              case DXVKInstallationState.idle:
+                return const InstallDXVK();
+              case DXVKInstallationState.downloading:
+                return const DXVKDownloadProgress();
+              case DXVKInstallationState.decompressing:
                 return const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -38,7 +38,7 @@ class _ProtonStepsState extends State<ProtonSteps> {
                       padding: EdgeInsets.all(8.0),
                       child: CircularProgressIndicator(),
                     ),
-                    Text('decompressing...'),
+                    Text('Installing...'),
                   ],
                 );
             }
@@ -49,14 +49,14 @@ class _ProtonStepsState extends State<ProtonSteps> {
   }
 }
 
-class InstallProton extends StatefulWidget {
-  const InstallProton({super.key});
+class InstallDXVK extends StatefulWidget {
+  const InstallDXVK({super.key});
 
   @override
-  State<InstallProton> createState() => _InstallProtonState();
+  State<InstallDXVK> createState() => _InstallDXVKState();
 }
 
-class _InstallProtonState extends State<InstallProton> {
+class _InstallDXVKState extends State<InstallDXVK> {
   bool hasLoaded = false;
   bool isLoading = false;
   late List<String> protonVersions;
@@ -67,7 +67,7 @@ class _InstallProtonState extends State<InstallProton> {
   void didChangeDependencies() async {
     if (!hasLoaded) {
       isLoading = true;
-      protonVersions = await Github.getProtonVersions();
+      protonVersions = await Github.getDXVKVersions();
       setState(() {
         isLoading = false;
         hasLoaded = true;
@@ -117,7 +117,7 @@ class _InstallProtonState extends State<InstallProton> {
                 child: SimpleButton(
                   onPressed: canInstall
                       ? () {
-                          Provider.of<Proton>(context, listen: false)
+                          Provider.of<DXVK>(context, listen: false)
                               .startInstallation(
                                   Provider.of<GameStateProvider>(context,
                                       listen: false),
@@ -135,12 +135,12 @@ class _InstallProtonState extends State<InstallProton> {
   }
 }
 
-class ProtonDownloadProgress extends StatelessWidget {
-  const ProtonDownloadProgress({super.key});
+class DXVKDownloadProgress extends StatelessWidget {
+  const DXVKDownloadProgress({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<Proton>(context);
+    final provider = Provider.of<DXVK>(context);
     final pourcent =
         (provider.currentProgress.toInt() / provider.maxProgress.toInt()) * 100;
 

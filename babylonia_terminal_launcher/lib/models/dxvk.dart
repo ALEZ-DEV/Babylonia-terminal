@@ -1,17 +1,17 @@
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 
-import './../messages/steps/proton.pb.dart';
+import './../messages/steps/dxvk.pb.dart';
 import './../providers/providers.dart';
 
-enum ProtonInstallationState {
+enum DXVKInstallationState {
   idle,
   downloading,
   decompressing,
 }
 
-class Proton with ChangeNotifier {
-  ProtonInstallationState protonState = ProtonInstallationState.idle;
+class DXVK with ChangeNotifier {
+  DXVKInstallationState protonState = DXVKInstallationState.idle;
 
   Int64 currentProgress = Int64(0);
   Int64 maxProgress = Int64(0);
@@ -20,14 +20,14 @@ class Proton with ChangeNotifier {
       GameStateProvider gameStateProvider, String protonVersion) async {
     notifyListeners();
 
-    StartProtonInstallation(protonVersion: protonVersion).sendSignalToRust();
-    final progressStream = ProtonDownloadProgress.rustSignalStream;
+    StartDXVKInstallation(protonVersion: protonVersion).sendSignalToRust();
+    final progressStream = DXVKDownloadProgress.rustSignalStream;
     await for (final rustSignal in progressStream) {
       currentProgress = rustSignal.message.current;
       maxProgress = rustSignal.message.max;
 
-      if (protonState == ProtonInstallationState.idle) {
-        protonState = ProtonInstallationState.downloading;
+      if (protonState == DXVKInstallationState.idle) {
+        protonState = DXVKInstallationState.downloading;
       }
 
       notifyListeners();
@@ -38,15 +38,15 @@ class Proton with ChangeNotifier {
     }
 
     final notificationDecompressingStream =
-        NotifyProtonStartDecompressing.rustSignalStream;
+        NotifyDXVKStartDecompressing.rustSignalStream;
     await for (final _ in notificationDecompressingStream) {
-      protonState = ProtonInstallationState.decompressing;
+      protonState = DXVKInstallationState.decompressing;
       notifyListeners();
       break;
     }
 
     final notificationInstalledStream =
-        NotifiyProtonSuccessfullyInstalled.rustSignalStream;
+        NotifiyDXVKSuccessfullyInstalled.rustSignalStream;
     await for (final _ in notificationInstalledStream) {
       gameStateProvider.updateGameState();
       break;

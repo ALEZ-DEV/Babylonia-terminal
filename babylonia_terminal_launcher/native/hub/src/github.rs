@@ -1,13 +1,14 @@
-use std::fmt::format;
-
 use babylonia_terminal_sdk::{
-    components::proton_component::{PROTON_DEV, PROTON_REPO},
+    components::{
+        dxvk_component::{DXVK_DEV, DXVK_REPO},
+        proton_component::{PROTON_DEV, PROTON_REPO},
+    },
     utils::github_requester::{GithubRelease, GithubRequester},
 };
 
 use crate::messages::{
     error::ReportError,
-    github::{AskProtonVersions, ProtonVersions},
+    github::{AskDxvkVersions, AskProtonVersions, DxvkVersions, ProtonVersions},
 };
 
 #[warn(dead_code)]
@@ -31,6 +32,24 @@ pub async fn listen_proton_version() {
             .send_signal_to_dart(),
             Err(e) => ReportError {
                 error_message: format!("When fetching proton versions : {}", e),
+            }
+            .send_signal_to_dart(),
+        }
+    }
+}
+
+pub async fn listen_dxvk_version() {
+    let mut receiver = AskDxvkVersions::get_dart_signal_receiver();
+    while let Some(_) = receiver.recv().await {
+        let releases: Result<Vec<GithubRelease>, _> =
+            GithubInfo::get_github_releases(DXVK_DEV, DXVK_REPO).await;
+        match releases {
+            Ok(r) => DxvkVersions {
+                versions: r.iter().map(|v| v.tag_name.to_owned()).collect(),
+            }
+            .send_signal_to_dart(),
+            Err(e) => ReportError {
+                error_message: format!("When fetching dxvk versions : {}", e),
             }
             .send_signal_to_dart(),
         }

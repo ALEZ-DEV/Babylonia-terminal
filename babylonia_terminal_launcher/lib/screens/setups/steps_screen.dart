@@ -7,6 +7,7 @@ import './../../providers/providers.dart';
 import './../../widgets/selectable_yaru_expansion_panel.dart';
 import './../../widgets/simple_button.dart';
 import './../../widgets/steps/proton_steps_widget.dart';
+import './../../widgets/steps/dxvk_steps_widget.dart';
 
 class StepsScreen extends StatelessWidget {
   StepsScreen({super.key});
@@ -47,10 +48,7 @@ class StepsScreen extends StatelessWidget {
                 ],
                 children: const [
                   ProtonSteps(),
-                  Padding(
-                    padding: EdgeInsets.all(40.0),
-                    child: Text("DXVK"),
-                  ),
+                  DXVKSteps(),
                   Padding(
                     padding: EdgeInsets.all(40.0),
                     child: Text("Dependecies"),

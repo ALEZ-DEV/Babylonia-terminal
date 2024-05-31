@@ -8,3 +8,11 @@ message AskProtonVersions {}
 message ProtonVersions {
     repeated string versions = 1;
 }
+
+// [RINF:DART-SIGNAL]
+message AskDXVKVersions {}
+
+// [RINF:RUST-SIGNAL]
+message DXVKVersions {
+    repeated string versions = 1;
+}

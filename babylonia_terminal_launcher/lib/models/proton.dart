@@ -17,8 +17,8 @@ class Proton with ChangeNotifier {
   Int64 currentProgress = Int64(0);
   Int64 maxProgress = Int64(0);
 
-  Future startInstallation(BuildContext context, String protonVersion) async {
-    protonState = ProtonInstallationState.downloading;
+  Future startInstallation(
+      GameStateProvider gameStateProvider, String protonVersion) async {
     notifyListeners();
 
     StartProtonInstallation(protonVersion: protonVersion).sendSignalToRust();
@@ -26,6 +26,11 @@ class Proton with ChangeNotifier {
     await for (final rustSignal in progressStream) {
       currentProgress = rustSignal.message.current;
       maxProgress = rustSignal.message.max;
+
+      if (protonState == ProtonInstallationState.idle) {
+        protonState = ProtonInstallationState.downloading;
+      }
+
       notifyListeners();
 
       if (currentProgress >= maxProgress) {
@@ -44,7 +49,7 @@ class Proton with ChangeNotifier {
     final notificationInstalledStream =
         NotifiyProtonSuccessfullyInstalled.rustSignalStream;
     await for (final _ in notificationInstalledStream) {
-      Provider.of<GameStateProvider>(context, listen: false).updateGameState();
+      gameStateProvider.updateGameState();
       break;
     }
   }

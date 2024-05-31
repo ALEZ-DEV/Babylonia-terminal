@@ -75,7 +75,19 @@ pub async fn install_proton(component: ProtonComponent) {
             error_message: format!("Failed to install Proton : {}", e),
         }
         .send_signal_to_dart(),
-        Ok(_) => NotifiyProtonSuccessfullyInstalled {}.send_signal_to_dart(),
+        Ok(_) => {
+            let mut config = GameState::get_config().await;
+            config.is_wine_installed = true;
+            let result = GameState::save_config(config).await;
+            if let Err(e) = result {
+                ReportError {
+                    error_message: format!("Failed to update config : {}", e),
+                }
+                .send_signal_to_dart();
+            }
+
+            NotifiyProtonSuccessfullyInstalled {}.send_signal_to_dart()
+        }
     }
 }
 

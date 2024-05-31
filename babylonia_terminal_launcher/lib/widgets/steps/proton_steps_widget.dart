@@ -5,6 +5,7 @@ import 'package:yaru/widgets.dart';
 import './../../models/github.dart';
 import './../../models/proton.dart';
 import './../../widgets/simple_button.dart';
+import './../../providers/providers.dart';
 
 class ProtonSteps extends StatefulWidget {
   const ProtonSteps({super.key});
@@ -18,23 +19,31 @@ class _ProtonStepsState extends State<ProtonSteps> {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => proton,
-      child: Builder(
-        builder: (context) {
-          switch (Provider.of<Proton>(context).protonState) {
-            case ProtonInstallationState.idle:
-              return const InstallProton();
-            case ProtonInstallationState.downloading:
-              return const Center(
-                child: Text('downloading...'),
-              );
-            case ProtonInstallationState.decompressing:
-              return const Center(
-                child: Text('decompressing...'),
-              );
-          }
-        },
+    return Padding(
+      padding: const EdgeInsets.all(20.0),
+      child: ChangeNotifierProvider(
+        create: (_) => proton,
+        child: Builder(
+          builder: (context) {
+            switch (Provider.of<Proton>(context).protonState) {
+              case ProtonInstallationState.idle:
+                return const InstallProton();
+              case ProtonInstallationState.downloading:
+                return const ProtonDownloadProgress();
+              case ProtonInstallationState.decompressing:
+                return const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: CircularProgressIndicator(),
+                    ),
+                    Text('decompressing...'),
+                  ],
+                );
+            }
+          },
+        ),
       ),
     );
   }
@@ -73,47 +82,67 @@ class _InstallProtonState extends State<InstallProton> {
       selectedValue = protonVersions.first;
     }
 
-    return Padding(
-      padding: const EdgeInsets.all(20.0),
-      child: isLoading
-          ? const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: CircularProgressIndicator(),
+    return isLoading
+        ? const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Padding(
+                padding: EdgeInsets.all(8.0),
+                child: CircularProgressIndicator(),
+              ),
+              Text('Fetching versions...'),
+            ],
+          )
+        : Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              YaruPopupMenuButton(
+                initialValue: selectedValue,
+                itemBuilder: (_) => protonVersions
+                    .map(
+                      (e) => PopupMenuItem(
+                        value: e,
+                        child: Text(e),
+                      ),
+                    )
+                    .toList(),
+                onSelected: (v) => setState(() {
+                  selectedValue = v;
+                }),
+                child: Text(selectedValue!),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 8.0),
+                child: SimpleButton(
+                  onPressed: () => Provider.of<Proton>(context, listen: false)
+                      .startInstallation(
+                          Provider.of<GameStateProvider>(context,
+                              listen: false),
+                          selectedValue!),
+                  child: const Text("Install"),
                 ),
-                Text('Fetching versions...'),
-              ],
-            )
-          : Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                YaruPopupMenuButton(
-                  initialValue: selectedValue,
-                  itemBuilder: (_) => protonVersions
-                      .map(
-                        (e) => PopupMenuItem(
-                          value: e,
-                          child: Text(e),
-                        ),
-                      )
-                      .toList(),
-                  onSelected: (v) => setState(() {
-                    selectedValue = v;
-                  }),
-                  child: Text(selectedValue!),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 8.0),
-                  child: SimpleButton(
-                    onPressed: () => Provider.of<Proton>(context, listen: false)
-                        .startInstallation(context, selectedValue!),
-                    child: const Text("Install"),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
+          );
+  }
+}
+
+class ProtonDownloadProgress extends StatelessWidget {
+  const ProtonDownloadProgress({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = Provider.of<Proton>(context);
+    final pourcent =
+        (provider.currentProgress.toInt() / provider.maxProgress.toInt()) * 100;
+
+    return Column(
+      children: [
+        Text("Downloaded: ${pourcent.toStringAsFixed(2)}%"),
+        YaruLinearProgressIndicator(
+          value: pourcent / 100,
+        ),
+      ],
     );
   }
 }

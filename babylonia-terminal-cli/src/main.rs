@@ -1,4 +1,4 @@
-use std::{path::PathBuf, str::FromStr};
+use std::{path::PathBuf, str::FromStr, sync::Arc};
 
 use babylonia_terminal_sdk::{
     components::{
@@ -110,7 +110,7 @@ async fn main() {
             }
             GameState::FontNotInstalled => {
                 info!("Fonts not installed, installing it...");
-                GameManager::install_font(&proton.clone().unwrap())
+                GameManager::install_font(&proton.clone().unwrap(), None::<Arc<DownloadReporter>>)
                     .await
                     .expect("Failed to install fonts");
                 info!("Fonts installed");

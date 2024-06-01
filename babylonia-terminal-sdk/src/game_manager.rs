@@ -59,43 +59,49 @@ impl GameManager {
         Ok(())
     }
 
-    pub async fn install_font(proton: &Proton) -> anyhow::Result<()> {
+    pub async fn install_font<P>(proton: &Proton, progress: Option<Arc<P>>) -> anyhow::Result<()>
+    where
+        P: Reporter + 'static,
+    {
         let wine_with_proton_prefix = proton // wine take the data/wine/pfx prefix, but we want the data/wine prefix
             .wine()
             .clone()
             .with_prefix(proton.wine().prefix.parent().unwrap());
+        if let Some(p) = &progress {
+            p.setup(Some(10), "");
+        }
 
-        info!("0/10 font installed");
+        notify_fonts_progress(0, &progress);
 
         wine_with_proton_prefix.install_font(Font::Arial)?;
-        info!("1/10 font installed");
+        notify_fonts_progress(1, &progress);
 
         wine_with_proton_prefix.install_font(Font::Andale)?;
-        info!("2/10 font installed");
+        notify_fonts_progress(2, &progress);
 
         wine_with_proton_prefix.install_font(Font::Courier)?;
-        info!("3/10 font installed");
+        notify_fonts_progress(3, &progress);
 
         wine_with_proton_prefix.install_font(Font::ComicSans)?;
-        info!("4/10 font installed");
+        notify_fonts_progress(4, &progress);
 
         wine_with_proton_prefix.install_font(Font::Georgia)?;
-        info!("5/10 font installed");
+        notify_fonts_progress(5, &progress);
 
         wine_with_proton_prefix.install_font(Font::Impact)?;
-        info!("6/10 font installed");
+        notify_fonts_progress(6, &progress);
 
         wine_with_proton_prefix.install_font(Font::Times)?;
-        info!("7/10 font installed");
+        notify_fonts_progress(7, &progress);
 
         wine_with_proton_prefix.install_font(Font::Trebuchet)?;
-        info!("8/10 font installed");
+        notify_fonts_progress(8, &progress);
 
         wine_with_proton_prefix.install_font(Font::Verdana)?;
-        info!("9/10 font installed");
+        notify_fonts_progress(9, &progress);
 
         wine_with_proton_prefix.install_font(Font::Webdings)?;
-        info!("10/10 font installed");
+        notify_fonts_progress(10, &progress);
 
         let mut config = GameState::get_config().await;
         config.is_font_installed = true;
@@ -168,5 +174,15 @@ impl GameManager {
             )
             .unwrap();
         child.wait().expect("The game failed to run");
+    }
+}
+
+fn notify_fonts_progress<P>(nbr: u64, progress: &Option<Arc<P>>)
+where
+    P: Reporter + 'static,
+{
+    info!("{}", format!("{}/10 font installed", nbr));
+    if let Some(p) = progress {
+        p.progress(nbr);
     }
 }

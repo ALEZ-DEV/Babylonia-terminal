@@ -27,6 +27,7 @@ class GameStateProvider with ChangeNotifier {
   bool hasToSetup() {
     return _gameState == States.ProtonNotInstalled ||
         _gameState == States.DXVKNotInstalled ||
+        _gameState == States.FontNotInstalled ||
         _gameState == States.DependecieNotInstalled;
   }
 }

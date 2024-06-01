@@ -8,6 +8,7 @@ import './../../widgets/selectable_yaru_expansion_panel.dart';
 import './../../widgets/simple_button.dart';
 import './../../widgets/steps/proton_steps_widget.dart';
 import './../../widgets/steps/dxvk_steps_widget.dart';
+import './../../widgets/steps/fonts_steps_widget.dart';
 
 class StepsScreen extends StatelessWidget {
   StepsScreen({super.key});
@@ -23,8 +24,11 @@ class StepsScreen extends StatelessWidget {
       case States.DXVKNotInstalled:
         controller.updateSection(1);
         break;
-      case States.DependecieNotInstalled:
+      case States.FontNotInstalled:
         controller.updateSection(2);
+        break;
+      case States.DependecieNotInstalled:
+        controller.updateSection(3);
         break;
     }
 
@@ -44,11 +48,13 @@ class StepsScreen extends StatelessWidget {
                 headers: const [
                   Text("Proton"),
                   Text("DXVK"),
+                  Text("Fonts"),
                   Text("Dependecies"),
                 ],
                 children: const [
                   ProtonSteps(),
                   DXVKSteps(),
+                  FontsSteps(),
                   Padding(
                     padding: EdgeInsets.all(40.0),
                     child: Text("Dependecies"),

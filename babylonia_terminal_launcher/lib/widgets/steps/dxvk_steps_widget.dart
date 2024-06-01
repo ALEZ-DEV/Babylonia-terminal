@@ -26,7 +26,7 @@ class _DXVKStepsState extends State<DXVKSteps> {
         create: (_) => proton,
         child: Builder(
           builder: (context) {
-            switch (Provider.of<DXVK>(context).protonState) {
+            switch (Provider.of<DXVK>(context).dxvkState) {
               case DXVKInstallationState.idle:
                 return const InstallDXVK();
               case DXVKInstallationState.downloading:

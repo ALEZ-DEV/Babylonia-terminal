@@ -2,6 +2,7 @@ use tokio_with_wasm::tokio;
 
 mod config;
 mod dxvk;
+mod fonts;
 mod game_state;
 mod github;
 mod messages;
@@ -21,4 +22,5 @@ async fn main() {
     //installation
     tokio::spawn(proton::listen_proton_installation());
     tokio::spawn(dxvk::listen_dxvk_installation());
+    tokio::spawn(fonts::listen_fonts_installation());
 }

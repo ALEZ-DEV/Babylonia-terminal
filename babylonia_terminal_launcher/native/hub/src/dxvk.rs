@@ -52,7 +52,7 @@ pub async fn listen_dxvk_installation() {
         let proton = proton_component.init_proton();
         if let Err(e) = proton {
             ReportError {
-                error_message: format!("Failed to initialize DXVK : {}", e),
+                error_message: format!("Failed to install DXVK : {}", e),
             }
             .send_signal_to_dart();
             continue;

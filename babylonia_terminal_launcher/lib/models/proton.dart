@@ -18,8 +18,6 @@ class Proton with ChangeNotifier {
 
   Future startInstallation(
       GameStateProvider gameStateProvider, String protonVersion) async {
-    notifyListeners();
-
     StartProtonInstallation(protonVersion: protonVersion).sendSignalToRust();
     final progressStream = ProtonDownloadProgress.rustSignalStream;
     await for (final rustSignal in progressStream) {

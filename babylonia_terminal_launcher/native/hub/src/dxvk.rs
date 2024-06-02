@@ -16,7 +16,7 @@ use crate::{
     messages::{
         error::ReportError,
         steps::dxvk::{
-            DxvkDownloadProgress, NotifiyDxvkSuccessfullyInstalled, NotifyDxvkStartDecompressing,
+            DxvkDownloadProgress, NotifyDxvkStartDecompressing, NotifyDxvkSuccessfullyInstalled,
             StartDxvkInstallation,
         },
     },
@@ -76,7 +76,7 @@ pub async fn listen_dxvk_installation() {
                             error_message: format!("Failed to install DXVK : {}", e),
                         }
                         .send_signal_to_dart(),
-                        Ok(_) => NotifiyDxvkSuccessfullyInstalled {}.send_signal_to_dart(),
+                        Ok(_) => NotifyDxvkSuccessfullyInstalled {}.send_signal_to_dart(),
                     }
                 });
         });

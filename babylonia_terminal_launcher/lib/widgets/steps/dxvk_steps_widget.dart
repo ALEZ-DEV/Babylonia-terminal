@@ -99,6 +99,7 @@ class _InstallDXVKState extends State<InstallDXVK> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               YaruPopupMenuButton(
+                enabled: canInstall,
                 initialValue: selectedValue,
                 itemBuilder: (_) => protonVersions
                     .map(
@@ -131,6 +132,7 @@ class _InstallDXVKState extends State<InstallDXVK> {
                   child: const Text("Install"),
                 ),
               ),
+              if (!canInstall) const GtkSpinner(),
             ],
           );
   }

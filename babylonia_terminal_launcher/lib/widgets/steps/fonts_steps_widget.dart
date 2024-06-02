@@ -45,18 +45,25 @@ class _InstallFontsState extends State<InstallFonts> {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(left: 8.0),
-      child: SimpleButton(
-        onPressed: canInstall
-            ? () {
-                Provider.of<Fonts>(context, listen: false).startInstallation(
-                  Provider.of<GameStateProvider>(context, listen: false),
-                );
-                setState(() {
-                  canInstall = false;
-                });
-              }
-            : null,
-        child: const Text("Install"),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SimpleButton(
+            onPressed: canInstall
+                ? () {
+                    Provider.of<Fonts>(context, listen: false)
+                        .startInstallation(
+                      Provider.of<GameStateProvider>(context, listen: false),
+                    );
+                    setState(() {
+                      canInstall = false;
+                    });
+                  }
+                : null,
+            child: const Text("Install"),
+          ),
+          if (!canInstall) const GtkSpinner(),
+        ],
       ),
     );
   }

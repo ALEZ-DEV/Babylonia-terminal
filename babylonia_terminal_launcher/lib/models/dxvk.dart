@@ -44,7 +44,7 @@ class DXVK with ChangeNotifier {
     }
 
     final notificationInstalledStream =
-        NotifiyDXVKSuccessfullyInstalled.rustSignalStream;
+        NotifyDXVKSuccessfullyInstalled.rustSignalStream;
     await for (final _ in notificationInstalledStream) {
       gameStateProvider.updateGameState();
       break;

@@ -16,4 +16,4 @@ message StartDXVKInstallation {
 message NotifyDXVKStartDecompressing {}
 
 // [RINF:RUST-SIGNAL]
-message NotifiyDXVKSuccessfullyInstalled {}
+message NotifyDXVKSuccessfullyInstalled {}

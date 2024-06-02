@@ -8,9 +8,7 @@ message FontsInstallationProgress {
 }
 
 // [RINF:DART-SIGNAL]
-message StartFontsInstallation {
-    string protonVersion = 1;
-};
+message StartFontsInstallation {};
 
 // [RINF:RUST-SIGNAL]
-message NotifiyFontsSuccessfullyInstalled {}
+message NotifyFontsSuccessfullyInstalled {}

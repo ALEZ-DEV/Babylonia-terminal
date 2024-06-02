@@ -8,7 +8,7 @@ use tokio_with_wasm::tokio;
 use crate::messages::{
     error::ReportError,
     steps::fonts::{
-        FontsInstallationProgress, NotifiyFontsSuccessfullyInstalled, StartFontsInstallation,
+        FontsInstallationProgress, NotifyFontsSuccessfullyInstalled, StartFontsInstallation,
     },
 };
 
@@ -41,19 +41,19 @@ pub async fn listen_fonts_installation() {
                             error_message: format!("Failed to install DXVK : {}", e),
                         }
                         .send_signal_to_dart(),
-                        Ok(_) => NotifiyFontsSuccessfullyInstalled {}.send_signal_to_dart(),
+                        Ok(_) => NotifyFontsSuccessfullyInstalled {}.send_signal_to_dart(),
                     }
                 });
         });
     }
 }
 
-struct InstallationReporterPrivate {
+struct DownloadReporterPrivate {
     max_progress: Option<u64>,
 }
 
 struct InstallationReporter {
-    private: std::sync::Mutex<Option<InstallationReporterPrivate>>,
+    private: std::sync::Mutex<Option<DownloadReporterPrivate>>,
 }
 
 impl InstallationReporter {
@@ -66,7 +66,7 @@ impl InstallationReporter {
 
 impl downloader::progress::Reporter for InstallationReporter {
     fn setup(&self, max_progress: Option<u64>, _: &str) {
-        let private = InstallationReporterPrivate { max_progress };
+        let private = DownloadReporterPrivate { max_progress };
 
         let mut guard = self.private.lock().unwrap();
         *guard = Some(private);

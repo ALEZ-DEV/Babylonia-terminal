@@ -44,7 +44,7 @@ class Proton with ChangeNotifier {
     }
 
     final notificationInstalledStream =
-        NotifiyProtonSuccessfullyInstalled.rustSignalStream;
+        NotifyProtonSuccessfullyInstalled.rustSignalStream;
     await for (final _ in notificationInstalledStream) {
       gameStateProvider.updateGameState();
       break;

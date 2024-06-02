@@ -117,7 +117,7 @@ async fn main() {
             }
             GameState::DependecieNotInstalled => {
                 info!("Dependecies not installed, installing it...");
-                GameManager::install_dependecies(&proton.clone().unwrap())
+                GameManager::install_dependencies(&proton.clone().unwrap())
                     .await
                     .expect("Failed to install dependecies");
                 info!("Dependecies installed");

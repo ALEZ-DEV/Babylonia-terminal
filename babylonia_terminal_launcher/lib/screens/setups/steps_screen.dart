@@ -9,6 +9,7 @@ import './../../widgets/simple_button.dart';
 import './../../widgets/steps/proton_steps_widget.dart';
 import './../../widgets/steps/dxvk_steps_widget.dart';
 import './../../widgets/steps/fonts_steps_widget.dart';
+import './../../widgets/steps/dependencies_steps_widget.dart';
 
 class StepsScreen extends StatelessWidget {
   StepsScreen({super.key});
@@ -49,16 +50,13 @@ class StepsScreen extends StatelessWidget {
                   Text("Proton"),
                   Text("DXVK"),
                   Text("Fonts"),
-                  Text("Dependecies"),
+                  Text("Dependencies"),
                 ],
                 children: const [
                   ProtonSteps(),
                   DXVKSteps(),
                   FontsSteps(),
-                  Padding(
-                    padding: EdgeInsets.all(40.0),
-                    child: Text("Dependecies"),
-                  ),
+                  DependenciesSteps(),
                 ],
               ),
             ),

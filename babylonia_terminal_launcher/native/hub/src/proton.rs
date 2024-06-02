@@ -17,7 +17,7 @@ use crate::{
     messages::{
         error::ReportError,
         steps::proton::{
-            NotifiyProtonSuccessfullyInstalled, NotifyProtonStartDecompressing,
+            NotifyProtonStartDecompressing, NotifyProtonSuccessfullyInstalled,
             ProtonDownloadProgress, StartProtonInstallation,
         },
     },
@@ -66,7 +66,7 @@ pub async fn listen_proton_installation() {
                             error_message: format!("Failed to install Proton : {}", e),
                         }
                         .send_signal_to_dart(),
-                        Ok(_) => NotifiyProtonSuccessfullyInstalled {}.send_signal_to_dart(),
+                        Ok(_) => NotifyProtonSuccessfullyInstalled {}.send_signal_to_dart(),
                     }
                 });
         });

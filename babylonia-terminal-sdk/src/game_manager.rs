@@ -110,7 +110,7 @@ impl GameManager {
         Ok(())
     }
 
-    pub async fn install_dependecies(proton: &Proton) -> anyhow::Result<()> {
+    pub async fn install_dependencies(proton: &Proton) -> anyhow::Result<()> {
         let wine_with_proton_prefix = proton // wine take the data/wine/pfx prefix, but we want the data/wine prefix
             .wine()
             .clone()

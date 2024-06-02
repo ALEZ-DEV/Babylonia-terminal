@@ -16,4 +16,4 @@ message StartProtonInstallation {
 message NotifyProtonStartDecompressing {}
 
 // [RINF:RUST-SIGNAL]
-message NotifiyProtonSuccessfullyInstalled {}
+message NotifyProtonSuccessfullyInstalled {}

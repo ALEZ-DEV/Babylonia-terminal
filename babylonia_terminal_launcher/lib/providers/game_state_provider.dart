@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 class GameStateProvider with ChangeNotifier {
   States? _gameState;
   bool isUpdating = false;
+  bool haveToSetup = false;
 
   get gameState {
     return _gameState;
@@ -24,7 +25,12 @@ class GameStateProvider with ChangeNotifier {
     }
   }
 
-  bool hasToSetup() {
+  void updateSetup() {
+    haveToSetup = needToSetup();
+    notifyListeners();
+  }
+
+  bool needToSetup() {
     return _gameState == States.ProtonNotInstalled ||
         _gameState == States.DXVKNotInstalled ||
         _gameState == States.FontNotInstalled ||

@@ -19,6 +19,7 @@ class BabyloniaLauncher extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     ErrorReporter.listenAllRustError(navigatorKey);
+    gameStateProvider.updateSetup();
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
@@ -38,7 +39,7 @@ class BabyloniaLauncher extends StatelessWidget {
           themeMode: ThemeMode.system,
           highContrastTheme: yaruHighContrastLight,
           highContrastDarkTheme: yaruHighContrastDark,
-          home: Provider.of<GameStateProvider>(context).hasToSetup()
+          home: Provider.of<GameStateProvider>(context).haveToSetup
               ? const SetupScreen()
               : const Menu(),
         ),

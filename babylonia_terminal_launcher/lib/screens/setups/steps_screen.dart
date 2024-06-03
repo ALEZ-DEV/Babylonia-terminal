@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
+import 'package:yaru/yaru.dart';
 
 import './../../messages/game_state.pb.dart';
 import './../../providers/providers.dart';
@@ -30,6 +31,9 @@ class StepsScreen extends StatelessWidget {
         break;
       case States.DependecieNotInstalled:
         controller.updateSection(3);
+        break;
+      default:
+        controller.updateSection(null);
         break;
     }
 
@@ -64,8 +68,9 @@ class StepsScreen extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(top: 12.0),
             child: SimpleButton(
-              onPressed:
-                  true ? null : () => gameStateProvider.updateGameState(),
+              onPressed: !gameStateProvider.needToSetup()
+                  ? () => gameStateProvider.updateSetup()
+                  : null,
               child: const Text('next'),
             ),
           ),

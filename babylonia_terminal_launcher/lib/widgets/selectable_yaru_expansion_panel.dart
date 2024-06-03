@@ -8,12 +8,12 @@ import 'package:yaru/constants.dart';
 import 'package:yaru/widgets.dart';
 
 class SectionController extends ChangeNotifier {
-  int selectedItem = 0;
+  int? selectedItem;
   Function()? onChange;
 
   SectionController({required this.selectedItem});
 
-  void updateSection(int newSelectedItem) {
+  void updateSection(int? newSelectedItem) {
     selectedItem = newSelectedItem;
     notifyListeners();
     if (onChange != null) {
@@ -77,9 +77,15 @@ class _SelectableYaruExpansionPanelState
     super.initState();
     widget.controller.onChange = widget.collapseOnExpand
         ? () {
-            _expandedStore[widget.controller.selectedItem];
-            for (var n = 0; n < _expandedStore.length; n++) {
-              if (_expandedStore[n]) {
+            if (widget.controller.selectedItem != null) {
+              _expandedStore[widget.controller.selectedItem!];
+              for (var n = 0; n < _expandedStore.length; n++) {
+                if (_expandedStore[n]) {
+                  setState(() => _expandedStore[n] = false);
+                }
+              }
+            } else {
+              for (var n = 0; n < _expandedStore.length; n++) {
                 setState(() => _expandedStore[n] = false);
               }
             }
@@ -93,7 +99,9 @@ class _SelectableYaruExpansionPanelState
   Widget build(BuildContext context) {
     assert(widget.children.length == widget.headers.length);
 
-    _expandedStore[widget.controller.selectedItem] = true;
+    if (widget.controller.selectedItem != null) {
+      _expandedStore[widget.controller.selectedItem!] = true;
+    }
 
     return YaruBorderContainer(
       border: widget.border,

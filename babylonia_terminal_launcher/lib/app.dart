@@ -6,6 +6,7 @@ import './screens/screens.dart';
 import './screens/setup_screen.dart';
 import './providers/providers.dart';
 import './models/error_reporter.dart';
+import './models/game.dart';
 
 class BabyloniaLauncher extends StatelessWidget {
   BabyloniaLauncher(
@@ -105,17 +106,20 @@ class _MenuState extends State<Menu> {
       ),
     );
 
-    return Scaffold(
-      drawer: Drawer(
-        child: ListView(
-          children: items,
+    return ChangeNotifierProvider(
+      create: (context) => Game(),
+      child: Scaffold(
+        drawer: Drawer(
+          child: ListView(
+            children: items,
+          ),
         ),
+        appBar: AppBar(
+          title: const Text("Babylonia Terminal"),
+          centerTitle: true,
+        ),
+        body: Screens.getCurrent(_selectedIndex),
       ),
-      appBar: AppBar(
-        title: const Text("Babylonia Terminal"),
-        centerTitle: true,
-      ),
-      body: Screens.getCurrent(_selectedIndex),
     );
   }
 }

@@ -4,6 +4,7 @@ mod config;
 mod dependencies;
 mod dxvk;
 mod fonts;
+mod game;
 mod game_state;
 mod github;
 mod messages;
@@ -25,4 +26,5 @@ async fn main() {
     tokio::spawn(dxvk::listen_dxvk_installation());
     tokio::spawn(fonts::listen_fonts_installation());
     tokio::spawn(dependencies::listen_dependecies_installation());
+    tokio::spawn(game::listen_game_installation());
 }

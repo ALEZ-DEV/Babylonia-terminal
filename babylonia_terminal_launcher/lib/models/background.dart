@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:babylonia_terminal_launcher/models/config.dart';
-import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 import './../providers/providers.dart';

@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../widgets/background_widget.dart';
 import '../widgets/serious_lee_widget.dart';
-import '../widgets/simple_button.dart';
+import '../widgets/play_button.dart';
 import '../widgets/steps/game_steps_widget.dart';
 import './../providers/providers.dart';
 import './../models/settings.dart';
@@ -22,38 +22,7 @@ class HomeScreen extends StatelessWidget {
         const ShowBackground(),
         gameStateProvider.gameState != States.GameInstalled
             ? const GameSteps()
-            : Padding(
-                padding: const EdgeInsets.all(50.0),
-                child: Row(
-                  children: [
-                    const Expanded(
-                      child: SizedBox(),
-                    ),
-                    const Expanded(
-                      child: SizedBox(),
-                    ),
-                    Expanded(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          ConstrainedBox(
-                            constraints: const BoxConstraints(
-                              maxWidth: 600,
-                              maxHeight: 50,
-                            ),
-                            child: SimpleButton(
-                              onPressed: () async {},
-                              child: const Center(
-                                child: Text("Play"),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+            : const PlayButton(),
       ],
     );
   }

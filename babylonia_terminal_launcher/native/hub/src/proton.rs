@@ -10,7 +10,8 @@ use babylonia_terminal_sdk::{
     utils::github_requester::{GithubRelease, GithubRequester},
 };
 use rinf::debug_print;
-use tokio_with_wasm::tokio;
+use tokio_with_wasm::tokio::{self, sync::OnceCell};
+use wincompatlib::wine::bundle::proton::Proton;
 
 use crate::{
     github::GithubInfo,
@@ -22,6 +23,25 @@ use crate::{
         },
     },
 };
+
+static PROTON: OnceCell<Proton> = OnceCell::const_new();
+
+pub async fn get_proton() -> Proton {
+    PROTON
+        .get_or_init(|| async {
+            let proton_component = ProtonComponent::new(GameState::get_config().await.config_dir);
+            let proton = proton_component.init_proton();
+            if let Err(ref e) = proton {
+                ReportError {
+                    error_message: format!("Failed to initialize proton : {}", e),
+                }
+                .send_signal_to_dart();
+            }
+            proton.unwrap()
+        })
+        .await
+        .clone()
+}
 
 pub async fn listen_proton_installation() {
     let mut receiver = StartProtonInstallation::get_dart_signal_receiver();

@@ -6,13 +6,37 @@ use babylonia_terminal_sdk::{
 use rinf::debug_print;
 use tokio_with_wasm::tokio;
 
-use crate::messages::{
-    error::ReportError,
-    steps::game::{
-        GameInstallationProgress, NotifyGameStartDownloading, NotifyGameStartPatching,
-        NotifyGameSuccessfullyInstalled, StartGameInstallation,
+use crate::{
+    messages::{
+        error::ReportError,
+        steps::game::{
+            GameInstallationProgress, GameStopped, NotifyGameStartDownloading,
+            NotifyGameStartPatching, NotifyGameSuccessfullyInstalled, RunGame,
+            StartGameInstallation,
+        },
     },
+    proton::get_proton,
 };
+
+pub async fn listen_game_running() {
+    let mut receiver = RunGame::get_dart_signal_receiver();
+    while let Some(_) = receiver.recv().await {
+        let proton = get_proton().await;
+        let game_dir = GameState::get_game_dir().await;
+        if game_dir.is_none() {
+            ReportError {
+                error_message: "Failed to start game, the game directory was not found".to_string(),
+            }
+            .send_signal_to_dart();
+            GameStopped {}.send_signal_to_dart();
+            continue;
+        }
+
+        GameManager::start_game(&proton, game_dir.unwrap()).await;
+
+        GameStopped {}.send_signal_to_dart();
+    }
+}
 
 pub async fn listen_game_installation() {
     let mut receiver = StartGameInstallation::get_dart_signal_receiver();
@@ -24,6 +48,21 @@ pub async fn listen_game_installation() {
                 .build()
                 .unwrap()
                 .block_on(async {
+                    if GameState::get_game_dir().await.is_none() {
+                        if let Err(e) = GameState::set_game_dir(Some(
+                            GameState::get_config_directory()
+                                .await
+                                .join("babylonia-terminal-config"),
+                        ))
+                        .await
+                        {
+                            ReportError {
+                                error_message: format!("Failed to set new path : {}", e),
+                            }
+                            .send_signal_to_dart();
+                        }
+                    }
+
                     if info.message.is_updating {
                         if let Err(e) = GameManager::update_game().await {
                             ReportError {
@@ -33,10 +72,16 @@ pub async fn listen_game_installation() {
                         }
                     }
 
-                    let game_dir = GameState::get_config().await.config_dir;
+                    let game_dir = GameState::get_game_dir().await;
+                    if game_dir.is_none() {
+                        ReportError {
+                            error_message: "Failed to get the game directory".to_string(),
+                        }
+                        .send_signal_to_dart();
+                    }
 
                     match GameManager::install_game(
-                        game_dir.clone(),
+                        game_dir.clone().unwrap(),
                         InstallationReporter::create(),
                     )
                     .await
@@ -48,7 +93,7 @@ pub async fn listen_game_installation() {
                         Ok(_) => {
                             NotifyGameStartPatching {}.send_signal_to_dart();
                             debug_print!("start patching game...");
-                            match GameManager::patch_game(game_dir).await {
+                            match GameManager::patch_game(game_dir.unwrap()).await {
                                 Err(e) => ReportError {
                                     error_message: format!("Failed to install game : {}", e),
                                 }

@@ -5,23 +5,20 @@ use babylonia_terminal_sdk::{
 };
 use tokio_with_wasm::tokio;
 
-use crate::messages::{
-    error::ReportError,
-    steps::dependencies::{NotifyDependenciesSuccessfullyInstalled, StartDependenciesInstallation},
+use crate::{
+    messages::{
+        error::ReportError,
+        steps::dependencies::{
+            NotifyDependenciesSuccessfullyInstalled, StartDependenciesInstallation,
+        },
+    },
+    proton::get_proton,
 };
 
 pub async fn listen_dependecies_installation() {
     let mut receiver = StartDependenciesInstallation::get_dart_signal_receiver();
     while let Some(_) = receiver.recv().await {
-        let proton_component = ProtonComponent::new(GameState::get_config().await.config_dir);
-        let proton = proton_component.init_proton();
-        if let Err(e) = proton {
-            ReportError {
-                error_message: format!("Failed to install DXVK : {}", e),
-            }
-            .send_signal_to_dart();
-            continue;
-        }
+        let proton = get_proton().await;
 
         thread::spawn(move || {
             tokio::runtime::Builder::new_current_thread()
@@ -29,7 +26,7 @@ pub async fn listen_dependecies_installation() {
                 .build()
                 .unwrap()
                 .block_on(async {
-                    match GameManager::install_dependencies(&proton.unwrap()).await {
+                    match GameManager::install_dependencies(&proton).await {
                         Err(e) => ReportError {
                             error_message: format!("Failed to install dependencies : {}", e),
                         }

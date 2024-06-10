@@ -27,4 +27,7 @@ async fn main() {
     tokio::spawn(fonts::listen_fonts_installation());
     tokio::spawn(dependencies::listen_dependecies_installation());
     tokio::spawn(game::listen_game_installation());
+
+    // game
+    tokio::spawn(game::listen_game_running());
 }

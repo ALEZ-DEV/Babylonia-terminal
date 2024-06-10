@@ -20,3 +20,9 @@ message NotifyGameStartPatching {}
 
 // [RINF:RUST-SIGNAL]
 message NotifyGameSuccessfullyInstalled {}
+
+// [RINF:DART-SIGNAL]
+message RunGame {}
+
+// [RINF:RUST-SIGNAL]
+message GameStopped {}

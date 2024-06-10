@@ -20,6 +20,7 @@ use crate::{
             StartDxvkInstallation,
         },
     },
+    proton::get_proton,
 };
 
 pub async fn listen_dxvk_installation() {
@@ -48,15 +49,7 @@ pub async fn listen_dxvk_installation() {
             continue;
         }
 
-        let proton_component = ProtonComponent::new(GameState::get_config().await.config_dir);
-        let proton = proton_component.init_proton();
-        if let Err(e) = proton {
-            ReportError {
-                error_message: format!("Failed to install DXVK : {}", e),
-            }
-            .send_signal_to_dart();
-            continue;
-        }
+        let proton = get_proton().await;
 
         thread::spawn(move || {
             tokio::runtime::Builder::new_current_thread()
@@ -65,7 +58,7 @@ pub async fn listen_dxvk_installation() {
                 .unwrap()
                 .block_on(async {
                     match GameManager::install_dxvk(
-                        &proton.unwrap(),
+                        &proton,
                         GameState::get_config().await.config_dir,
                         release_index.unwrap(),
                         Some(DownloadReporter::create()),

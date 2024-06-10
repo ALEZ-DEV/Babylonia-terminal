@@ -11,8 +11,14 @@ enum GameInstallationState {
   patching,
 }
 
+enum GameRunState {
+  idle,
+  running,
+}
+
 class Game with ChangeNotifier {
   GameInstallationState gameInstallationState = GameInstallationState.idle;
+  GameRunState gameRunState = GameRunState.idle;
 
   Int64 currentProgress = Int64(0);
   Int64 maxProgress = Int64(0);
@@ -52,6 +58,19 @@ class Game with ChangeNotifier {
     final successStream = NotifyGameSuccessfullyInstalled.rustSignalStream;
     await for (final _ in successStream) {
       gameState.updateGameState();
+      break;
+    }
+  }
+
+  Future startGame() async {
+    RunGame().sendSignalToRust();
+    gameRunState = GameRunState.running;
+    notifyListeners();
+
+    final stream = GameStopped.rustSignalStream;
+    await for (final _ in stream) {
+      gameRunState = GameRunState.idle;
+      notifyListeners();
       break;
     }
   }

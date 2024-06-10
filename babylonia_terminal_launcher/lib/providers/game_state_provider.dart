@@ -36,4 +36,8 @@ class GameStateProvider with ChangeNotifier {
         _gameState == States.FontNotInstalled ||
         _gameState == States.DependecieNotInstalled;
   }
+
+  bool isGameUpdating() {
+    return _gameState == States.GameNeedUpdate;
+  }
 }

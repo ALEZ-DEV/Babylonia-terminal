@@ -17,8 +17,8 @@ class Game with ChangeNotifier {
   Int64 currentProgress = Int64(0);
   Int64 maxProgress = Int64(0);
 
-  Future startInstallation(GameStateProvider gameState) async {
-    StartGameInstallation().sendSignalToRust();
+  Future startInstallation(GameStateProvider gameState, bool isUpdating) async {
+    StartGameInstallation(isUpdating: isUpdating).sendSignalToRust();
     gameInstallationState = GameInstallationState.checkingFile;
     notifyListeners();
 

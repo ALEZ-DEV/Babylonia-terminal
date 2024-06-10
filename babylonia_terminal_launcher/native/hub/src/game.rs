@@ -16,7 +16,7 @@ use crate::messages::{
 
 pub async fn listen_game_installation() {
     let mut receiver = StartGameInstallation::get_dart_signal_receiver();
-    while let Some(_) = receiver.recv().await {
+    while let Some(info) = receiver.recv().await {
         thread::spawn(move || {
             debug_print!("start downloading game...");
             tokio::runtime::Builder::new_current_thread()
@@ -24,6 +24,15 @@ pub async fn listen_game_installation() {
                 .build()
                 .unwrap()
                 .block_on(async {
+                    if info.message.is_updating {
+                        if let Err(e) = GameManager::update_game().await {
+                            ReportError {
+                                error_message: format!("Failed to start updating the game : {}", e),
+                            }
+                            .send_signal_to_dart();
+                        }
+                    }
+
                     let game_dir = GameState::get_config().await.config_dir;
 
                     match GameManager::install_game(

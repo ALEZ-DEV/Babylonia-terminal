@@ -8,7 +8,9 @@ message GameInstallationProgress {
 }
 
 // [RINF:DART-SIGNAL]
-message StartGameInstallation {}
+message StartGameInstallation {
+    bool isUpdating = 1;
+}
 
 // [RINF:RUST-SIGNAL]
 message NotifyGameStartDownloading {}

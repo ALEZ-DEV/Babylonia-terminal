@@ -15,11 +15,12 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final gameStateProvider = Provider.of<GameStateProvider>(context);
+
     return Stack(
       children: [
         const ShowBackground(),
-        Provider.of<GameStateProvider>(context).gameState !=
-                States.GameInstalled
+        gameStateProvider.gameState != States.GameInstalled
             ? const GameSteps()
             : Padding(
                 padding: const EdgeInsets.all(50.0),

@@ -35,6 +35,8 @@ class _InstallGame extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final gameStateProvider = Provider.of<GameStateProvider>(context);
+
     return Row(
       children: [
         const Expanded(
@@ -56,11 +58,16 @@ class _InstallGame extends StatelessWidget {
                   onPressed: () async {
                     Provider.of<Game>(context, listen: false).startInstallation(
                       Provider.of<GameStateProvider>(context, listen: false),
+                      gameStateProvider.isGameUpdating(),
                     );
                   },
-                  child: const Center(
-                    child: Text("Download"),
-                  ),
+                  child: gameStateProvider.isGameUpdating()
+                      ? const Center(
+                          child: Text("Update"),
+                        )
+                      : const Center(
+                          child: Text("Download"),
+                        ),
                 ),
               ),
             ],

@@ -1,5 +1,7 @@
 # How to compile the GUI version
 
+!! **Disclaimer :** this might not work on your steam deck, a pre-compiled binary or Flatpak version will be distributed in the future !!
+
 ## Requirement
 
 You need the [base](https://github.com/ALEZ-DEV/Babylonia-terminal?tab=readme-ov-file#requirement) requirement  

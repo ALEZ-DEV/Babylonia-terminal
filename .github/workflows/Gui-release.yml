@@ -1,0 +1,35 @@
+name: Gui-release
+
+on:
+  push:
+    tags:
+      - 'gui-*'
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  release:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_name: babylonia-terminal-${{ github.ref }}.tar.gz
+            asset_name: babylonia-terminal-${{ github.ref }}.tar.gz
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: flutter-actions/setup-flutter@v3
+    - name: Create release
+      run: |
+        cd babylonia_terminal_launcher
+        flutter build linux --release
+        cd build/linux/x64/release
+        tar -zcvf babylonia-terminal-${{ github.ref }}.tar.gz ./bundle
+    - name: Upload binary to release
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: babylonia_terminal_launcher/build/linux/x64/release/babylonia-terminal-${{ github.ref }}.tar.gz
+        asset_name: babylonia-terminal-${{ github.ref }}.tar.gz
+        tag: ${{ github.ref }}

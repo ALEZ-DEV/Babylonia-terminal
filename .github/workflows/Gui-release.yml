@@ -22,7 +22,9 @@ jobs:
     - uses: flutter-actions/setup-flutter@v3
     - name: Create release
       run: |
+        cargo install rinf
         cd babylonia_terminal_launcher
+        flutter create --platforms=linux .
         flutter build linux --release
         cd build/linux/x64/release
         tar -zcvf babylonia-terminal-${{ github.ref }}.tar.gz ./bundle

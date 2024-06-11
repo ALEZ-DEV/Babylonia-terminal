@@ -25,8 +25,8 @@ jobs:
         cargo install rinf
         cd babylonia_terminal_launcher/
         flutter create --platforms=linux .
-        sudo apt update
-        sudo apt install ninja-build libgtk-3-0 libblkid1 liblzma5
+        sudo apt-get update
+        sudo apt-get install ninja-build libgtk-3-0 libblkid1 liblzma5 libgtk-3-dev
     - name: Compile
       run: |
         cd babylonia_terminal_launcher/

@@ -20,14 +20,20 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - uses: flutter-actions/setup-flutter@v3
-    - name: Create release
+    - name: Setup environment
       run: |
         cargo install rinf
-        cd babylonia_terminal_launcher
+        cd babylonia_terminal_launcher/
         flutter create --platforms=linux .
+    - name: Compile
+      run: |
+        cd babylonia_terminal_launcher/
+        flutter pub get
+        rinf message
         flutter build linux --release
-        cd build/linux/x64/release
-        tar -zcvf babylonia-terminal-${{ github.ref }}.tar.gz ./bundle
+    - name: Create release
+      run: |
+        tar -zcvf babylonia-terminal-${{ github.ref }}.tar.gz babylonia_terminal_launcher/build/linux/x64/release/bundle
     - name: Upload binary to release
       uses: svenstaro/upload-release-action@v2
       with:

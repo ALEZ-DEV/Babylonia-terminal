@@ -13,8 +13,8 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            artifact_name: babylonia-terminal-${{ github.ref }}.tar.gz
-            asset_name: babylonia-terminal-${{ github.ref }}.tar.gz
+            artifact_name: babylonia-terminal-${{ github.ref_name }}.tar.gz
+            asset_name: babylonia-terminal-${{ github.ref_name }}.tar.gz
     name: Release
     runs-on: ubuntu-latest
     steps:
@@ -40,6 +40,6 @@ jobs:
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: babylonia_terminal_launcher/build/linux/x64/release/babylonia-terminal-${{ github.ref }}.tar.gz
-        asset_name: babylonia-terminal-${{ github.ref }}.tar.gz
+        file: babylonia_terminal_launcher/build/linux/x64/release/babylonia-terminal-${{ github.ref_name }}.tar.gz
+        asset_name: babylonia-terminal-${{ github.ref_name }}.tar.gz
         tag: ${{ github.ref }}

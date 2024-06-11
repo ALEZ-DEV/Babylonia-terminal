@@ -26,7 +26,7 @@ jobs:
         cd babylonia_terminal_launcher/
         flutter create --platforms=linux .
         sudo apt update
-        sudo apt install ninja-build
+        sudo apt install ninja-build libgtk-3-0 libblkid1 liblzma5
     - name: Compile
       run: |
         cd babylonia_terminal_launcher/

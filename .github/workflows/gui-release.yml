@@ -40,6 +40,6 @@ jobs:
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: babylonia-terminal-${{ github.event.ref_name }}.tar.gz
+        file: babylonia-terminal-${{ github.ref_name }}.tar.gz
         asset_name: babylonia-terminal-${{ github.ref_name }}.tar.gz
         tag: ${{ github.ref }}

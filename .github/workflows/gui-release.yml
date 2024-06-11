@@ -13,8 +13,8 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            artifact_name: babylonia-terminal-${{ github.ref_name }}.tar.gz
-            asset_name: babylonia-terminal-${{ github.ref_name }}.tar.gz
+            artifact_name: babylonia-terminal-${{ github.event.release.tag_name }}.tar.gz
+            asset_name: babylonia-terminal-${{ github.event.release.tag_name }}.tar.gz
     name: Release
     runs-on: ubuntu-latest
     steps:
@@ -35,11 +35,11 @@ jobs:
         flutter build linux --release
     - name: Create release
       run: |
-        tar -zcvf babylonia-terminal-${{ github.ref_name }}.tar.gz babylonia_terminal_launcher/build/linux/x64/release/bundle
+        tar -zcvf babylonia-terminal-${{ github.event.release.tag_name }}.tar.gz babylonia_terminal_launcher/build/linux/x64/release/bundle
     - name: Upload binary to release
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: babylonia-terminal-${{ github.ref_name }}.tar.gz
-        asset_name: babylonia-terminal-${{ github.ref_name }}.tar.gz
+        file: babylonia-terminal-${{ github.event.release.tag_name }}.tar.gz
+        asset_name: babylonia-terminal-${{ github.event.release.tag_name }}.tar.gz
         tag: ${{ github.ref }}

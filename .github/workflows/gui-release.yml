@@ -25,6 +25,8 @@ jobs:
         cargo install rinf
         cd babylonia_terminal_launcher/
         flutter create --platforms=linux .
+        sudo apt update
+        sudo apt install ninja-build
     - name: Compile
       run: |
         cd babylonia_terminal_launcher/

@@ -3,7 +3,7 @@ name = "babylonia-terminal-cli"
 version = "0.1.0"
 edition = "2021"
 authors = ["ALEZ-DEV <raidersfocus@gmail.com>"]
-description = "A launcher for a certain anime game "
+description = "A launcher to launch a certain anime game on linux"
 repository = "https://github.com/ALEZ-DEV/Babylonia-terminal"
 license = "LGPL-3.0-or-later"
 keywords = ["launcher", "game"]
@@ -16,6 +16,8 @@ name = "babylonia-terminal-cli"
 [dependencies]
 anyhow = "1.0.83"
 babylonia-terminal-sdk = { path = "./../babylonia-terminal-sdk" }
+clap = { version = "4.5.7", features = ["derive"] }
+derive = "1.0.0"
 dialoguer = "0.11.0"
 downloader = { git = "https://github.com/ALEZ-DEV/downloader" }   # version = "0.2.7",
 indicatif = "0.17.8"

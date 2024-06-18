@@ -8,14 +8,17 @@ use babylonia_terminal_sdk::{
     game_manager::GameManager,
     game_state::GameState,
 };
+use clap::Parser;
 use log::{debug, info, LevelFilter};
 use simple_logger::SimpleLogger;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use wincompatlib::prelude::*;
 
+mod arguments;
 pub mod reporter;
 pub mod utils;
 
+use crate::arguments::Args;
 use crate::reporter::DownloadReporter;
 
 #[tokio::main]
@@ -33,6 +36,9 @@ async fn main() {
     } else {
         simple_logger.with_level(LevelFilter::Info).init().unwrap();
     }
+
+    let args = Args::parse();
+    debug!("Launch option -> {:?}", args.options);
 
     let mut proton_component: Option<ProtonComponent> = None;
     let mut proton: Option<Proton> = None;

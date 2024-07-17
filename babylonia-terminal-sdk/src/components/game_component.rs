@@ -79,7 +79,7 @@ impl GameComponent {
                     match v {
                         Some(str) => {
                             if str == "done" {
-                                if let Ok(size) = current_size {
+                                if let Ok(_size) = current_size {
                                     progress.done();
                                 }
                                 break;

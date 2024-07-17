@@ -8,7 +8,7 @@ use tokio::{
 };
 
 use crate::{
-    game_state::GameState,
+    game_config::GameConfig,
     utils::{get_game_name, get_game_name_with_executable},
 };
 
@@ -82,9 +82,9 @@ pub async fn patch_game(game_dir: PathBuf) -> anyhow::Result<()> {
         ),
     }
 
-    let mut config = GameState::get_config().await;
+    let mut config = GameConfig::get_config().await;
     config.is_game_patched = true;
-    GameState::save_config(config).await?;
+    GameConfig::save_config(config).await?;
 
     Ok(())
 }

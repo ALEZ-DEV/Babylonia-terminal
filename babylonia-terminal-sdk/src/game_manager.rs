@@ -1,4 +1,9 @@
-use std::{path::PathBuf, sync::Arc};
+use std::{
+    io::{BufRead, BufReader},
+    path::PathBuf,
+    process::{Child, Command, Stdio},
+    sync::Arc,
+};
 
 use downloader::progress::Reporter;
 use log::{debug, info};
@@ -10,8 +15,8 @@ use crate::{
         component_downloader::ComponentDownloader, dxvk_component::DXVKComponent,
         game_component::GameComponent, proton_component::ProtonComponent,
     },
+    game_config::GameConfig,
     game_patcher,
-    game_state::GameState,
     utils::{get_game_name, get_game_name_with_executable, github_requester::GithubRequester},
 };
 
@@ -31,9 +36,9 @@ impl GameManager {
 
         wine_component.install(progress).await?;
 
-        let mut config = GameState::get_config().await;
+        let mut config = GameConfig::get_config().await;
         config.is_wine_installed = true;
-        GameState::save_config(config).await?;
+        GameConfig::save_config(config).await?;
 
         Ok(wine_component)
     }
@@ -52,9 +57,9 @@ impl GameManager {
 
         dxvk_component.install(progress).await?;
 
-        let mut config = GameState::get_config().await;
+        let mut config = GameConfig::get_config().await;
         config.is_dxvk_installed = true;
-        GameState::save_config(config).await?;
+        GameConfig::save_config(config).await?;
 
         Ok(())
     }
@@ -103,9 +108,9 @@ impl GameManager {
         wine_with_proton_prefix.install_font(Font::Webdings)?;
         notify_fonts_progress(10, &progress);
 
-        let mut config = GameState::get_config().await;
+        let mut config = GameConfig::get_config().await;
         config.is_font_installed = true;
-        GameState::save_config(config).await?;
+        GameConfig::save_config(config).await?;
 
         Ok(())
     }
@@ -124,9 +129,9 @@ impl GameManager {
             .wait()
             .expect("Something failed when waiting for the installation");
 
-        let mut config = GameState::get_config().await;
+        let mut config = GameConfig::get_config().await;
         config.is_dependecies_installed = true;
-        GameState::save_config(config).await?;
+        GameConfig::save_config(config).await?;
 
         Ok(())
     }
@@ -140,9 +145,9 @@ impl GameManager {
         let game_component = GameComponent::new(game_dir);
         game_component.install(Some(progress)).await?;
 
-        let mut config = GameState::get_config().await;
+        let mut config = GameConfig::get_config().await;
         config.is_game_installed = true;
-        GameState::save_config(config).await?;
+        GameConfig::save_config(config).await?;
 
         Ok(())
     }
@@ -150,10 +155,10 @@ impl GameManager {
     // this function just pass is_game_installed and is_game_patched to false,
     // so the launcher on the next iteration download the new file and delete the old one with the check process in the installation process
     pub async fn update_game() -> anyhow::Result<()> {
-        let mut config = GameState::get_config().await;
+        let mut config = GameConfig::get_config().await;
         config.is_game_installed = false;
         config.is_game_patched = false;
-        GameState::save_config(config).await?;
+        GameConfig::save_config(config).await?;
 
         Ok(())
     }
@@ -164,16 +169,74 @@ impl GameManager {
         Ok(())
     }
 
-    pub async fn start_game(proton: &Proton, game_dir: PathBuf) {
-        debug!("Wine version : {:?}", proton.wine().version().unwrap());
-        let mut child = proton
-            .run(
-                game_dir
-                    .join(get_game_name())
-                    .join(get_game_name_with_executable()),
+    pub async fn start_game(proton: &Proton, game_dir: PathBuf, options: Option<String>) {
+        let proton_version = proton.wine().version().unwrap();
+        let binary_path = game_dir
+            .join(get_game_name())
+            .join(get_game_name_with_executable());
+
+        debug!("Wine version : {:?}", proton_version);
+
+        let mut child = if let Some(custom_command) = options {
+            Self::run(proton, binary_path, custom_command)
+                .await
+                .unwrap()
+        } else {
+            if let Some(custom_command) = GameConfig::get_launch_options().await.unwrap() {
+                Self::run(proton, binary_path, custom_command)
+                    .await
+                    .unwrap()
+            } else {
+                debug!("Starting game without --options");
+                proton.run(binary_path).unwrap()
+            }
+        };
+
+        let stdout = child.stdout.take().unwrap();
+        let mut bufread = BufReader::new(stdout);
+        let mut buf = String::new();
+
+        while let Ok(n) = bufread.read_line(&mut buf) {
+            if n > 0 {
+                info!("[Wine {:?}] : {}", proton_version, buf.trim());
+                buf.clear();
+            } else {
+                break;
+            }
+        }
+    }
+
+    async fn run(
+        proton: &Proton,
+        binary_path: PathBuf,
+        custom_command: String,
+    ) -> Result<Child, std::io::Error> {
+        debug!("Starting game with --options -> {}", custom_command);
+        let tokens: Vec<&str> = custom_command.split_whitespace().collect();
+
+        // position of the %command%
+        let index = tokens
+            .iter()
+            .position(|&s| s == "%command%")
+            .expect("You forget to put %command% in your custom launch command");
+
+        Command::new(tokens.get(0).unwrap())
+            .args(&tokens[0..(index - 1)])
+            .arg(proton.python.as_os_str())
+            .arg(
+                GameConfig::get_config_directory()
+                    .await
+                    .join("proton")
+                    .join("proton"),
             )
-            .unwrap();
-        child.wait().expect("The game failed to run");
+            .arg("run")
+            .arg(binary_path)
+            .args(&tokens[(index + 1)..tokens.len()])
+            .envs(proton.get_envs())
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
     }
 }
 

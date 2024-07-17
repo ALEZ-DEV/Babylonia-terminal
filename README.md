@@ -26,7 +26,7 @@ You need Steam to be installed to run the game
 
 To install the cli version of the launcher, just start this command :
 
-```
+```bash
 cargo install --git https://github.com/ALEZ-DEV/Babylonia-terminal --bin
 ```
 
@@ -36,6 +36,30 @@ and you can just run it by doing :
 babylonia-terminal-cli
 ```
 If you have any issue installing it on Steam deck or any other distro, [go check the wiki](https://github.com/ALEZ-DEV/Babylonia-terminal/wiki)
+
+## Launch options
+
+If you want to wrap mangohud, gamescope, gamemoderun or any other process over the game, you can't just wrap the launcher for the wrapper to work, example : `mangohud babylonia-terminal-cli`.  
+The launcher has a parameter you can use to pass special launch options, you can pass options like this :  
+
+```bash
+# %command% will be replaced by the actual command that Babylonia-terminal will generate
+babylonia-terminal-cli --options "<custom launch command> %command%"
+```
+
+So for example, if I want to wrap the game with mangohud :  
+
+```bash
+babylonia-terminal-cli --options "mangohud %command%"
+```
+
+But start the game with the `--options` parameter every time is a bit annoying, so you can just run the command with `--set-options` instead the first time you want to setup the launch options :  
+
+```bash
+babylonia-terminal-cli --set-options "mangohud %command%"
+```
+
+and the next time you want to start the launcher, you will just need to start it with `babylonia-terminal-cli`  
 
 ## Special thank
 

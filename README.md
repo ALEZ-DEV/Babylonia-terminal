@@ -35,6 +35,7 @@ and you can just run it by doing :
 ```
 babylonia-terminal-cli
 ```
+If you have any issue installing it on Steam deck or any other distro, [go check the wiki](https://github.com/ALEZ-DEV/Babylonia-terminal/wiki)
 
 ## Special thank
 

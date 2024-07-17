@@ -49,12 +49,9 @@ pub async fn listen_game_installation() {
                 .unwrap()
                 .block_on(async {
                     if GameState::get_game_dir().await.is_none() {
-                        if let Err(e) = GameState::set_game_dir(Some(
-                            GameState::get_config_directory()
+                        if let Err(e) =
+                            GameState::set_game_dir(Some(GameState::get_config_directory().await))
                                 .await
-                                .join("babylonia-terminal-config"),
-                        ))
-                        .await
                         {
                             ReportError {
                                 error_message: format!("Failed to set new path : {}", e),

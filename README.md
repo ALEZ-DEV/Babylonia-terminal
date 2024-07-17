@@ -53,7 +53,7 @@ So for example, if I want to wrap the game with mangohud :
 babylonia-terminal-cli --options "mangohud %command%"
 ```
 
-But start the game with the `--options` parameter every time is a bit annoying, so you can just run the command with `--set-options` instead the first time you want to set the launch options :  
+But start the game with the `--options` parameter every time is a bit annoying, so you can just run the command with `--set-options` instead the first time you want to setup the launch options :  
 
 ```bash
 babylonia-terminal-cli --set-options "mangohud %command%"

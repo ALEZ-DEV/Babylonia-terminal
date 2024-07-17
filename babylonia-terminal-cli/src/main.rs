@@ -192,6 +192,7 @@ async fn main() {
         GameState::get_game_dir()
             .await
             .expect("Failed to start game, the game directory was not found"),
+        args.options,
     )
     .await;
 }

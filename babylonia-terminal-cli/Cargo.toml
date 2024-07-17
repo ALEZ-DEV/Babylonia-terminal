@@ -1,6 +1,6 @@
 [package]
 name = "babylonia-terminal-cli"
-version = "0.1.0"
+version = "0.1.2"
 edition = "2021"
 authors = ["ALEZ-DEV <raidersfocus@gmail.com>"]
 description = "A launcher for a certain anime game on linux"

@@ -5,6 +5,7 @@ use serde::Serialize;
 use tokio::fs::read_to_string;
 use tokio::io::AsyncWriteExt;
 
+use crate::game_state::GameConfig;
 use crate::game_state::GameState;
 
 // start data ---------------------------------------------------------------------
@@ -157,13 +158,13 @@ impl GameInfo {
     }
 
     async fn get_cache_file_path() -> PathBuf {
-        GameState::get_config_directory()
+        GameConfig::get_config_directory()
             .await
             .join("version-cache")
     }
 
     async fn save_in_cache(&self) -> anyhow::Result<()> {
-        let _ = tokio::fs::create_dir(GameState::get_config_directory().await).await;
+        let _ = tokio::fs::create_dir(GameConfig::get_config_directory().await).await;
         let mut file = tokio::fs::File::create(GameInfo::get_cache_file_path().await).await?;
 
         let content = serde_json::to_string(self)?;

@@ -4,6 +4,7 @@ pkgs.mkShell {
     rustup
     rustfmt
     clippy
+    rust-analyzer
     gcc
     pkg-config
   ];

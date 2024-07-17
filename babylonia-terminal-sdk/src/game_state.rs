@@ -32,6 +32,58 @@ pub struct GameConfig {
     pub is_game_patched: bool,
 }
 
+impl GameConfig {
+    pub async fn get_config_directory() -> PathBuf {
+        let path = home_dir().unwrap().join(".babylonia-terminal"); // I will try to change that to a dynamic one if people want to change the config dir
+
+        let _ = create_dir_all(path.clone()).await;
+
+        path
+    }
+
+    async fn get_config_file_path() -> PathBuf {
+        Self::get_config_directory()
+            .await
+            .join("babylonia-terminal-config")
+    }
+
+    pub async fn set_game_dir(path: Option<PathBuf>) -> anyhow::Result<()> {
+        let mut config = Self::get_config().await;
+        config.game_dir = path;
+        Self::save_config(config).await?;
+        Ok(())
+    }
+
+    pub async fn get_game_dir() -> Option<PathBuf> {
+        Self::get_config().await.game_dir
+    }
+
+    async fn try_get_config_file() -> anyhow::Result<File> {
+        let _ = tokio::fs::create_dir(Self::get_config_directory().await).await;
+
+        Ok(tokio::fs::File::create(Self::get_config_file_path().await).await?)
+    }
+
+    pub async fn save_config(config: Self) -> anyhow::Result<()> {
+        let mut file = Self::try_get_config_file().await?;
+        let content = serde_json::to_string(&config)?;
+        file.write_all(content.as_bytes()).await?;
+
+        Ok(())
+    }
+
+    pub async fn get_config() -> Self {
+        let content = match read_to_string(Self::get_config_file_path().await).await {
+            Err(_) => return Self::default(),
+            Ok(c) => c,
+        };
+        match serde_json::from_str::<Self>(&content) {
+            Ok(config) => return config,
+            Err(_) => return Self::default(),
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GameConfigPath {
     path: PathBuf,
@@ -53,58 +105,8 @@ impl Default for GameConfig {
 }
 
 impl GameState {
-    pub async fn get_config_directory() -> PathBuf {
-        let path = home_dir().unwrap().join(".babylonia-terminal"); // I will try to change that to a dynamic one if people want to change the config dir
-
-        let _ = create_dir_all(path.clone()).await;
-
-        path
-    }
-
-    async fn get_config_file_path() -> PathBuf {
-        GameState::get_config_directory()
-            .await
-            .join("babylonia-terminal-config")
-    }
-
-    pub async fn set_game_dir(path: Option<PathBuf>) -> anyhow::Result<()> {
-        let mut config = GameState::get_config().await;
-        config.game_dir = path;
-        GameState::save_config(config).await?;
-        Ok(())
-    }
-
-    pub async fn get_game_dir() -> Option<PathBuf> {
-        GameState::get_config().await.game_dir
-    }
-
-    async fn try_get_config_file() -> anyhow::Result<File> {
-        let _ = tokio::fs::create_dir(GameState::get_config_directory().await).await;
-
-        Ok(tokio::fs::File::create(GameState::get_config_file_path().await).await?)
-    }
-
-    pub async fn save_config(config: GameConfig) -> anyhow::Result<()> {
-        let mut file = GameState::try_get_config_file().await?;
-        let content = serde_json::to_string(&config)?;
-        file.write_all(content.as_bytes()).await?;
-
-        Ok(())
-    }
-
-    pub async fn get_config() -> GameConfig {
-        let content = match read_to_string(GameState::get_config_file_path().await).await {
-            Err(_) => return GameConfig::default(),
-            Ok(c) => c,
-        };
-        match serde_json::from_str::<GameConfig>(&content) {
-            Ok(config) => return config,
-            Err(_) => return GameConfig::default(),
-        }
-    }
-
     pub async fn get_current_state() -> anyhow::Result<Self> {
-        let config = GameState::get_config().await;
+        let config = GameConfig::get_config().await;
 
         if !config.is_wine_installed {
             return Ok(GameState::ProtonNotInstalled);

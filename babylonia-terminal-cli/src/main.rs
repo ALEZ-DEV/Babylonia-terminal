@@ -6,7 +6,7 @@ use babylonia_terminal_sdk::{
         proton_component::{ProtonComponent, PROTON_DEV, PROTON_REPO},
     },
     game_manager::GameManager,
-    game_state::GameState,
+    game_state::{GameConfig, GameState},
 };
 use clap::Parser;
 use log::{debug, info, LevelFilter};
@@ -52,7 +52,7 @@ async fn main() {
         let state = state_result.unwrap();
 
         if state != GameState::ProtonNotInstalled && proton == None {
-            let proton_component = ProtonComponent::new(GameState::get_config_directory().await);
+            let proton_component = ProtonComponent::new(GameConfig::get_config_directory().await);
             match proton_component.init_proton() {
                 Ok(p) => proton = Some(p),
                 Err(err) => panic!("{}", err),
@@ -77,7 +77,7 @@ async fn main() {
                 info!("Proton not installed, installing it...");
                 proton_component = Some(
                     GameManager::install_wine(
-                        GameState::get_config_directory().await,
+                        GameConfig::get_config_directory().await,
                         release,
                         Some(DownloadReporter::create(false)),
                     )
@@ -106,7 +106,7 @@ async fn main() {
                 debug!("{:?}", proton_component);
                 GameManager::install_dxvk(
                     &proton.clone().unwrap(),
-                    GameState::get_config_directory().await,
+                    GameConfig::get_config_directory().await,
                     release,
                     Some(DownloadReporter::create(false)),
                 )
@@ -130,10 +130,10 @@ async fn main() {
             }
             GameState::GameNotInstalled => {
                 info!("Game not installed, installing it...");
-                if GameState::get_game_dir().await.is_none() {
+                if GameConfig::get_game_dir().await.is_none() {
                     info!(
                         "You can choose where to put your game directory, (default '{}')",
-                        GameState::get_config_directory().await.to_str().unwrap(),
+                        GameConfig::get_config_directory().await.to_str().unwrap(),
                     );
                     info!("Please enter your wanted game directory : ");
                     let mut input = BufReader::new(tokio::io::stdin())
@@ -145,21 +145,21 @@ async fn main() {
                     let dir;
                     if let Some(i) = &mut input {
                         if i.is_empty() {
-                            dir = GameState::get_config_directory().await;
+                            dir = GameConfig::get_config_directory().await;
                         } else {
                             dir = PathBuf::from_str(i).expect("This is not a valid directory!\n Please restart the launcher and put a valid path.");
                         }
                     } else {
-                        dir = GameState::get_config_directory().await;
+                        dir = GameConfig::get_config_directory().await;
                     }
 
-                    GameState::set_game_dir(Some(dir)).await.expect(
+                    GameConfig::set_game_dir(Some(dir)).await.expect(
                         "Failed to save the game directory into the config file, please retry!",
                     );
                 }
 
                 GameManager::install_game(
-                    GameState::get_game_dir().await.unwrap(),
+                    GameConfig::get_game_dir().await.unwrap(),
                     DownloadReporter::create(false),
                 )
                 .await
@@ -174,7 +174,7 @@ async fn main() {
             }
             GameState::GameNotPatched => {
                 info!("Patching game...");
-                GameManager::patch_game(GameState::get_game_dir().await.unwrap())
+                GameManager::patch_game(GameConfig::get_game_dir().await.unwrap())
                     .await
                     .expect("Failed to patch the game");
                 info!("Game patched!");
@@ -189,7 +189,7 @@ async fn main() {
     debug!("{:?}", proton);
     GameManager::start_game(
         &proton.unwrap(),
-        GameState::get_game_dir()
+        GameConfig::get_game_dir()
             .await
             .expect("Failed to start game, the game directory was not found"),
         args.options,

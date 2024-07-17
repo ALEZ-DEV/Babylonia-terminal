@@ -11,7 +11,7 @@ use crate::{
         game_component::GameComponent, proton_component::ProtonComponent,
     },
     game_patcher,
-    game_state::GameState,
+    game_state::{GameConfig, GameState},
     utils::{get_game_name, get_game_name_with_executable, github_requester::GithubRequester},
 };
 
@@ -31,9 +31,9 @@ impl GameManager {
 
         wine_component.install(progress).await?;
 
-        let mut config = GameState::get_config().await;
+        let mut config = GameConfig::get_config().await;
         config.is_wine_installed = true;
-        GameState::save_config(config).await?;
+        GameConfig::save_config(config).await?;
 
         Ok(wine_component)
     }
@@ -52,9 +52,9 @@ impl GameManager {
 
         dxvk_component.install(progress).await?;
 
-        let mut config = GameState::get_config().await;
+        let mut config = GameConfig::get_config().await;
         config.is_dxvk_installed = true;
-        GameState::save_config(config).await?;
+        GameConfig::save_config(config).await?;
 
         Ok(())
     }
@@ -103,9 +103,9 @@ impl GameManager {
         wine_with_proton_prefix.install_font(Font::Webdings)?;
         notify_fonts_progress(10, &progress);
 
-        let mut config = GameState::get_config().await;
+        let mut config = GameConfig::get_config().await;
         config.is_font_installed = true;
-        GameState::save_config(config).await?;
+        GameConfig::save_config(config).await?;
 
         Ok(())
     }
@@ -124,9 +124,9 @@ impl GameManager {
             .wait()
             .expect("Something failed when waiting for the installation");
 
-        let mut config = GameState::get_config().await;
+        let mut config = GameConfig::get_config().await;
         config.is_dependecies_installed = true;
-        GameState::save_config(config).await?;
+        GameConfig::save_config(config).await?;
 
         Ok(())
     }
@@ -140,9 +140,9 @@ impl GameManager {
         let game_component = GameComponent::new(game_dir);
         game_component.install(Some(progress)).await?;
 
-        let mut config = GameState::get_config().await;
+        let mut config = GameConfig::get_config().await;
         config.is_game_installed = true;
-        GameState::save_config(config).await?;
+        GameConfig::save_config(config).await?;
 
         Ok(())
     }
@@ -150,10 +150,10 @@ impl GameManager {
     // this function just pass is_game_installed and is_game_patched to false,
     // so the launcher on the next iteration download the new file and delete the old one with the check process in the installation process
     pub async fn update_game() -> anyhow::Result<()> {
-        let mut config = GameState::get_config().await;
+        let mut config = GameConfig::get_config().await;
         config.is_game_installed = false;
         config.is_game_patched = false;
-        GameState::save_config(config).await?;
+        GameConfig::save_config(config).await?;
 
         Ok(())
     }
@@ -182,7 +182,7 @@ impl GameManager {
             Command::new(tokens.get(0).unwrap())
                 .args(&tokens[0..(index - 1)])
                 .arg(proton.python.as_os_str())
-                .arg(GameState::get_config_directory().await.join("proton").join("proton"))
+                .arg(GameConfig::get_config_directory().await.join("proton").join("proton"))
                 .arg("run")
                 .arg(exec_path)
                 .args(&tokens[(index + 1)..tokens.len()])

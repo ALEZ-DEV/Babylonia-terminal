@@ -17,6 +17,7 @@ pub struct GameConfig {
     pub game_dir: Option<PathBuf>,
     pub is_game_installed: bool,
     pub is_game_patched: bool,
+    pub launch_options: Option<String>,
 }
 
 impl GameConfig {
@@ -69,6 +70,17 @@ impl GameConfig {
             Err(_) => return Self::default(),
         }
     }
+
+    pub async fn set_launch_options(command: String) -> anyhow::Result<()> {
+        let mut config = Self::get_config().await;
+        config.launch_options = Some(command);
+        Self::save_config(config).await?;
+        Ok(())
+    }
+
+    pub async fn get_launch_options() -> anyhow::Result<Option<String>> {
+        Ok(Self::get_config().await.launch_options)
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -87,6 +99,7 @@ impl Default for GameConfig {
             game_dir: None,
             is_game_installed: false,
             is_game_patched: false,
+            launch_options: None,
         }
     }
 }

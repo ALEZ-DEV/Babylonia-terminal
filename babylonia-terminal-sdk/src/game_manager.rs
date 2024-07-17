@@ -1,4 +1,9 @@
-use std::{path::PathBuf, sync::Arc, process::{Command, Stdio}, io::{BufReader, BufRead}};
+use std::{
+    io::{BufRead, BufReader},
+    path::PathBuf,
+    process::{Command, Stdio},
+    sync::Arc,
+};
 
 use downloader::progress::Reporter;
 use log::{debug, info};
@@ -10,8 +15,8 @@ use crate::{
         component_downloader::ComponentDownloader, dxvk_component::DXVKComponent,
         game_component::GameComponent, proton_component::ProtonComponent,
     },
+    game_config::GameConfig,
     game_patcher,
-    game_state::{GameConfig, GameState},
     utils::{get_game_name, get_game_name_with_executable, github_requester::GithubRequester},
 };
 
@@ -167,22 +172,30 @@ impl GameManager {
     pub async fn start_game(proton: &Proton, game_dir: PathBuf, options: Option<String>) {
         let proton_version = proton.wine().version().unwrap();
         let exec_path = game_dir
-                    .join(get_game_name())
-                    .join(get_game_name_with_executable());
+            .join(get_game_name())
+            .join(get_game_name_with_executable());
 
         debug!("Wine version : {:?}", proton_version);
-        
+
         let mut child = if let Some(custom_command) = options {
             debug!("Starting game with --options -> {}", custom_command);
             let tokens: Vec<&str> = custom_command.split_whitespace().collect();
 
             // position of the %command%
-            let index = tokens.iter().position(|&s| s == "%command%").expect("You forget to put %command% in your custom launch command");
+            let index = tokens
+                .iter()
+                .position(|&s| s == "%command%")
+                .expect("You forget to put %command% in your custom launch command");
 
             Command::new(tokens.get(0).unwrap())
                 .args(&tokens[0..(index - 1)])
                 .arg(proton.python.as_os_str())
-                .arg(GameConfig::get_config_directory().await.join("proton").join("proton"))
+                .arg(
+                    GameConfig::get_config_directory()
+                        .await
+                        .join("proton")
+                        .join("proton"),
+                )
                 .arg("run")
                 .arg(exec_path)
                 .args(&tokens[(index + 1)..tokens.len()])
@@ -194,13 +207,9 @@ impl GameManager {
                 .unwrap()
         } else {
             debug!("Starting game without --options");
-            proton
-            .run(
-                exec_path,
-            )
-            .unwrap()
+            proton.run(exec_path).unwrap()
         };
-        
+
         let stdout = child.stdout.take().unwrap();
         let mut bufread = BufReader::new(stdout);
         let mut buf = String::new();

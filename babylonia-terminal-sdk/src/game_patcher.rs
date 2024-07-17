@@ -8,7 +8,7 @@ use tokio::{
 };
 
 use crate::{
-    game_state::{GameConfig, GameState},
+    game_config::GameConfig,
     utils::{get_game_name, get_game_name_with_executable},
 };
 

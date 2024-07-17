@@ -5,8 +5,7 @@ use serde::Serialize;
 use tokio::fs::read_to_string;
 use tokio::io::AsyncWriteExt;
 
-use crate::game_state::GameConfig;
-use crate::game_state::GameState;
+use crate::game_config::GameConfig;
 
 // start data ---------------------------------------------------------------------
 

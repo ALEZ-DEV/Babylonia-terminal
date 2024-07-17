@@ -1,6 +1,5 @@
 use std::{path::PathBuf, sync::Arc, process::{Command, Stdio}, io::{BufReader, BufRead}};
 
-use dirs::config_dir;
 use downloader::progress::Reporter;
 use log::{debug, info};
 use tokio::fs::create_dir_all;
@@ -12,7 +11,7 @@ use crate::{
         game_component::GameComponent, proton_component::ProtonComponent,
     },
     game_patcher,
-    game_state::{GameConfig, GameState},
+    game_state::GameState,
     utils::{get_game_name, get_game_name_with_executable, github_requester::GithubRequester},
 };
 
@@ -175,7 +174,7 @@ impl GameManager {
         
         let mut child = if let Some(custom_command) = options {
             debug!("Starting game with --options -> {}", custom_command);
-            let mut tokens: Vec<&str> = custom_command.split_whitespace().collect();
+            let tokens: Vec<&str> = custom_command.split_whitespace().collect();
 
             // position of the %command%
             let index = tokens.iter().position(|&s| s == "%command%").expect("You forget to put %command% in your custom launch command");

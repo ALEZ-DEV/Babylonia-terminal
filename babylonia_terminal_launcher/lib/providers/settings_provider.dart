@@ -11,6 +11,7 @@ class SettingsProvider with ChangeNotifier {
     _settings = await Settings.create();
     if (kDebugMode) {
       _settings.firstTime = true;
+      _settings.prefs.clear();
     }
     await Config.update();
   }

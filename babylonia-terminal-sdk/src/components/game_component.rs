@@ -1,16 +1,22 @@
 use std::fs as std_fs;
+use std::future;
 use std::path::PathBuf;
 use std::sync::Arc;
+use std::sync::Mutex;
+use std::thread;
 use std::time::Duration;
 use std::vec;
 
 use downloader::Downloader;
+use futures::future::join_all;
 use log::debug;
 use log::info;
 use tokio::fs::{create_dir_all, remove_file};
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::Receiver;
 use tokio::sync::mpsc::Sender;
+use tokio::sync::Semaphore;
+use tokio::task::JoinSet;
 use tokio::time::timeout;
 
 use super::component_downloader::ComponentDownloader;
@@ -36,28 +42,64 @@ impl GameComponent {
         resources: &Resources,
     ) -> anyhow::Result<Vec<Resource>> {
         info!("checking all files, this can take a while...");
-        let mut to_download: Vec<Resource> = vec![];
+        let to_download: Arc<Mutex<Vec<Resource>>> = Arc::new(Mutex::new(vec![]));
 
-        for r in &resources.resource {
-            let file_path = game_dir.join(r.dest.clone().strip_prefix("/").unwrap());
+        let threads_number = num_cpus::get();
+        debug!("Starting Md5 files check with {} threads", threads_number);
+        let mut handles = vec![];
+        let semaphore = Arc::new(Semaphore::new(threads_number));
 
-            if file_path.try_exists()? {
-                let blocking_file_path = file_path.clone();
-                let file =
-                    tokio::task::spawn_blocking(move || std_fs::File::open(blocking_file_path))
-                        .await??; // only the std::File is supported by chksum_md5, that's why I block
-                let digest = chksum_md5::chksum(file)?;
+        let chunks = resources.resource.chunks(threads_number);
 
-                if digest.to_hex_lowercase() != r.md5 {
-                    to_download.push(r.clone());
-                    remove_file(file_path).await?;
+        for chunked_resources in chunks {
+            let to_download_ref = to_download.clone();
+            let cloned_resources = chunked_resources.to_owned();
+            let game_dir = game_dir.clone();
+            let semaphore = semaphore.clone();
+
+            let handle = tokio::task::spawn(async move {
+                let _permit = semaphore.acquire().await;
+
+                for resource_to_check in cloned_resources {
+                    let file_path =
+                        game_dir.join(resource_to_check.dest.clone().strip_prefix("/").unwrap());
+
+                    if file_path.try_exists().unwrap() {
+                        let blocking_file_path = file_path.clone();
+                        let file = tokio::task::spawn_blocking(move || {
+                            std_fs::File::open(blocking_file_path)
+                        })
+                        .await
+                        .unwrap()
+                        .unwrap(); // only the std::File is supported by chksum_md5, that's why I block
+                        let digest = chksum_md5::chksum(file)
+                            .expect("Failed to check the checksum of the file");
+
+                        if digest.to_hex_lowercase() != resource_to_check.md5 {
+                            to_download_ref
+                                .lock()
+                                .as_mut()
+                                .unwrap()
+                                .push(resource_to_check.clone());
+                            remove_file(file_path).await.unwrap();
+                        }
+                    } else {
+                        to_download_ref
+                            .lock()
+                            .as_mut()
+                            .unwrap()
+                            .push(resource_to_check.clone());
+                    }
                 }
-            } else {
-                to_download.push(r.clone());
-            }
+            });
+            handles.push(handle);
         }
 
-        Ok(to_download)
+        join_all(handles).await;
+
+        Ok(Arc::try_unwrap(to_download)
+            .expect("There is multiple references of this Vector")
+            .into_inner()?)
     }
 
     fn update_progress<P: downloader::progress::Reporter + 'static>(

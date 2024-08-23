@@ -7,9 +7,12 @@ use std::thread;
 use std::time::Duration;
 use std::vec;
 
+use downloader::progress::Reporter;
 use downloader::Downloader;
+use downloader::Progress;
 use futures::future::join_all;
 use log::debug;
+use log::error;
 use log::info;
 use tokio::fs::{create_dir_all, remove_file};
 use tokio::sync::mpsc;
@@ -157,25 +160,30 @@ impl ComponentDownloader for GameComponent {
     ) -> anyhow::Result<std::path::PathBuf> {
         let game_info = kuro_prod_api::GameInfo::get_info().await?;
         let resources = game_info.fetch_resources().await?;
+
+        let threads_number = num_cpus::get();
+
         let mut downloader = Downloader::builder()
             .download_folder(output_dir)
-            .parallel_requests(5)
+            .parallel_requests(threads_number as u16)
             .build()?;
 
         let checked_resources =
             GameComponent::check_and_get_resources_to_download(output_dir, &resources).await?;
         let (tx, rx): (Sender<&str>, Receiver<&str>) = mpsc::channel(100);
 
+        let mut global_reporter = None;
+
         if let Some(p) = progress {
-            GameComponent::update_progress(
-                p,
-                resources.get_max_size_resources(),
-                output_dir.clone(),
-                rx,
-            );
+            let max_size: u64 = checked_resources.iter().map(|r| r.size as u64).sum();
+
+            //GameComponent::update_progress(p, max_size, output_dir.clone(), rx);
+
+            global_reporter = Some(Arc::new(Mutex::new(GlobalReporter::new(p, max_size))));
+            global_reporter.clone().unwrap().lock().unwrap().setup();
         }
 
-        for chunk_resource in checked_resources.chunks(5) {
+        for chunk_resource in checked_resources.chunks(threads_number) {
             let mut output_path: Vec<PathBuf> = vec![];
 
             for path in chunk_resource
@@ -211,6 +219,10 @@ impl ComponentDownloader for GameComponent {
                     );
                     dl.check_file_name = false;
 
+                    if let Some(gr) = global_reporter.clone() {
+                        dl = dl.progress(Arc::new(FileReporter::new(gr)));
+                    }
+
                     dl
                 })
                 .collect::<Vec<downloader::Download>>();
@@ -219,6 +231,10 @@ impl ComponentDownloader for GameComponent {
         }
 
         let _ = tx.send("done").await;
+
+        if let Some(gr) = global_reporter {
+            gr.lock().unwrap().done();
+        }
 
         Ok(output_dir.clone())
     }
@@ -229,4 +245,78 @@ impl ComponentDownloader for GameComponent {
     ) -> anyhow::Result<()> {
         anyhow::bail!("How did you run this function??!!")
     }
+}
+
+struct GlobalReporter<P: downloader::progress::Reporter + 'static> {
+    progress: Arc<P>,
+    pub to_download_max_size: u64,
+    current_progress: Mutex<u64>,
+}
+
+impl<P: downloader::progress::Reporter + 'static> GlobalReporter<P> {
+    pub fn new(progress: Arc<P>, max_size: u64) -> Self {
+        Self {
+            progress,
+            to_download_max_size: max_size,
+            current_progress: Mutex::new(0),
+        }
+    }
+
+    pub fn setup(&self) {
+        self.progress.setup(Some(self.to_download_max_size), "");
+    }
+
+    pub fn update(&self, new_value: u64, old_value: u64) {
+        let mut current_progress = self.current_progress.lock().unwrap();
+        let current = current_progress.clone() + new_value - old_value;
+        *current_progress = current;
+        self.progress.progress(current);
+    }
+
+    pub fn done(&self) {
+        self.progress.done();
+    }
+}
+
+struct FileReporter<P: downloader::progress::Reporter + 'static> {
+    global_reporter: Arc<Mutex<GlobalReporter<P>>>,
+    max_progress: Mutex<u64>,
+    old_current: Mutex<u64>,
+}
+
+impl<P: downloader::progress::Reporter + 'static> FileReporter<P> {
+    pub fn new(global_reporter: Arc<Mutex<GlobalReporter<P>>>) -> Self {
+        Self {
+            global_reporter,
+            max_progress: Mutex::new(0),
+            old_current: Mutex::new(0),
+        }
+    }
+}
+
+impl<P: downloader::progress::Reporter + 'static> Reporter for FileReporter<P> {
+    fn setup(&self, max_progress: Option<u64>, _: &str) {
+        if let Some(value) = max_progress {
+            let mut max_progress_guard = self.max_progress.lock().unwrap();
+            *max_progress_guard = value;
+        } else {
+            error!("Failed to set max_progress for the `FileReporter` struct");
+        }
+    }
+
+    fn progress(&self, current: u64) {
+        let p = self.global_reporter.lock().unwrap();
+        let max_progress = self.max_progress.lock().unwrap().clone();
+        let mut old_current_guard = self.old_current.lock().unwrap();
+        let old_current = old_current_guard.clone();
+
+        *old_current_guard = current;
+
+        //debug!("current : {}, old current : {}", current, old_current);
+        p.update(current, old_current);
+    }
+
+    fn set_message(&self, _: &str) {}
+
+    fn done(&self) {}
 }

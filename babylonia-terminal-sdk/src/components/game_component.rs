@@ -1,26 +1,16 @@
 use std::fs as std_fs;
-use std::future;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::Mutex;
-use std::thread;
-use std::time::Duration;
 use std::vec;
 
 use downloader::progress::Reporter;
 use downloader::Downloader;
-use downloader::Progress;
 use futures::future::join_all;
 use log::debug;
-use log::error;
 use log::info;
 use tokio::fs::{create_dir_all, remove_file};
-use tokio::sync::mpsc;
-use tokio::sync::mpsc::Receiver;
-use tokio::sync::mpsc::Sender;
 use tokio::sync::Semaphore;
-use tokio::task::JoinSet;
-use tokio::time::timeout;
 
 use super::component_downloader::ComponentDownloader;
 use crate::utils::get_game_name;
@@ -104,38 +94,6 @@ impl GameComponent {
             .expect("There is multiple references of this Vector")
             .into_inner()?)
     }
-
-    fn update_progress<P: downloader::progress::Reporter + 'static>(
-        progress: Arc<P>,
-        max_size: u64,
-        game_dir: PathBuf,
-        mut rx: Receiver<&'static str>,
-    ) {
-        tokio::spawn(async move {
-            progress.setup(Some(max_size.to_owned()), "");
-
-            loop {
-                let current_size = fs_extra::dir::get_size(game_dir.clone());
-                if let Ok(size) = current_size {
-                    progress.progress(size);
-                }
-
-                if let Ok(v) = timeout(Duration::from_millis(250), rx.recv()).await {
-                    match v {
-                        Some(str) => {
-                            if str == "done" {
-                                if let Ok(_size) = current_size {
-                                    progress.done();
-                                }
-                                break;
-                            }
-                        }
-                        _ => {}
-                    }
-                }
-            }
-        });
-    }
 }
 
 impl GithubRequester for GameComponent {
@@ -170,14 +128,11 @@ impl ComponentDownloader for GameComponent {
 
         let checked_resources =
             GameComponent::check_and_get_resources_to_download(output_dir, &resources).await?;
-        let (tx, rx): (Sender<&str>, Receiver<&str>) = mpsc::channel(100);
 
         let mut global_reporter = None;
 
         if let Some(p) = progress {
             let max_size: u64 = checked_resources.iter().map(|r| r.size as u64).sum();
-
-            //GameComponent::update_progress(p, max_size, output_dir.clone(), rx);
 
             global_reporter = Some(Arc::new(Mutex::new(GlobalReporter::new(p, max_size))));
             global_reporter.clone().unwrap().lock().unwrap().setup();
@@ -230,8 +185,6 @@ impl ComponentDownloader for GameComponent {
             downloader.async_download(&to_download).await?;
         }
 
-        let _ = tx.send("done").await;
-
         if let Some(gr) = global_reporter {
             gr.lock().unwrap().done();
         }
@@ -280,7 +233,6 @@ impl<P: downloader::progress::Reporter + 'static> GlobalReporter<P> {
 
 struct FileReporter<P: downloader::progress::Reporter + 'static> {
     global_reporter: Arc<Mutex<GlobalReporter<P>>>,
-    max_progress: Mutex<u64>,
     old_current: Mutex<u64>,
 }
 
@@ -288,31 +240,21 @@ impl<P: downloader::progress::Reporter + 'static> FileReporter<P> {
     pub fn new(global_reporter: Arc<Mutex<GlobalReporter<P>>>) -> Self {
         Self {
             global_reporter,
-            max_progress: Mutex::new(0),
             old_current: Mutex::new(0),
         }
     }
 }
 
 impl<P: downloader::progress::Reporter + 'static> Reporter for FileReporter<P> {
-    fn setup(&self, max_progress: Option<u64>, _: &str) {
-        if let Some(value) = max_progress {
-            let mut max_progress_guard = self.max_progress.lock().unwrap();
-            *max_progress_guard = value;
-        } else {
-            error!("Failed to set max_progress for the `FileReporter` struct");
-        }
-    }
+    fn setup(&self, _: Option<u64>, _: &str) {}
 
     fn progress(&self, current: u64) {
         let p = self.global_reporter.lock().unwrap();
-        let max_progress = self.max_progress.lock().unwrap().clone();
         let mut old_current_guard = self.old_current.lock().unwrap();
         let old_current = old_current_guard.clone();
 
         *old_current_guard = current;
 
-        //debug!("current : {}, old current : {}", current, old_current);
         p.update(current, old_current);
     }
 

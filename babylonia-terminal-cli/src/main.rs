@@ -35,5 +35,5 @@ async fn main() {
             .expect("Failed to save launch options into the config file");
     }
 
-    game::run(args.options).await;
+    game::run(args.options, args.logs).await;
 }

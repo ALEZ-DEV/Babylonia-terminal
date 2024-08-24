@@ -12,4 +12,8 @@ pub struct Args {
     /// command one time to set your launch options to the configuration
     #[arg(long)]
     pub set_options: Option<String>,
+
+    /// Show the logs direcly to the stdout of your terminal
+    #[arg(long, default_value = "false")]
+    pub logs: bool,
 }

@@ -16,7 +16,7 @@ use wincompatlib::prelude::*;
 
 use crate::{reporter::DownloadReporter, utils};
 
-pub async fn run(launch_options: Option<String>) {
+pub async fn run(launch_options: Option<String>, show_logs: bool) {
     let mut proton_component: Option<ProtonComponent> = None;
     let mut proton: Option<Proton> = None;
 
@@ -170,6 +170,7 @@ pub async fn run(launch_options: Option<String>) {
             .await
             .expect("Failed to start game, the game directory was not found"),
         launch_options,
+        show_logs,
     )
     .await;
 }

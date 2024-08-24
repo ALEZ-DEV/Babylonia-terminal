@@ -2,12 +2,15 @@ use std::{
     io::{BufRead, BufReader},
     path::PathBuf,
     process::{Child, Command, Stdio},
-    sync::Arc,
+    sync::{Arc, Mutex},
 };
 
 use downloader::progress::Reporter;
 use log::{debug, info};
-use tokio::fs::create_dir_all;
+use tokio::{
+    fs::{create_dir_all, remove_file, File, OpenOptions},
+    io::AsyncWriteExt,
+};
 use wincompatlib::prelude::*;
 
 use crate::{
@@ -169,7 +172,12 @@ impl GameManager {
         Ok(())
     }
 
-    pub async fn start_game(proton: &Proton, game_dir: PathBuf, options: Option<String>) {
+    pub async fn start_game(
+        proton: &Proton,
+        game_dir: PathBuf,
+        options: Option<String>,
+        show_logs: bool,
+    ) {
         let proton_version = proton.wine().version().unwrap();
         let binary_path = game_dir
             .join(get_game_name())
@@ -192,18 +200,105 @@ impl GameManager {
             }
         };
 
-        let stdout = child.stdout.take().unwrap();
-        let mut bufread = BufReader::new(stdout);
-        let mut buf = String::new();
+        let log_stdout = Arc::new(Mutex::new(None));
+        let log_stderr = Arc::new(Mutex::new(None));
 
-        while let Ok(n) = bufread.read_line(&mut buf) {
-            if n > 0 {
-                info!("[Wine {:?}] : {}", proton_version, buf.trim());
-                buf.clear();
-            } else {
-                break;
-            }
+        if show_logs {
+            let stderr = child.stderr.take().unwrap();
+            let stdout = child.stdout.take().unwrap();
+
+            let log_stdout_ref = log_stdout.clone();
+            let log_stderr_ref = log_stderr.clone();
+
+            tokio::task::spawn(async move {
+                let bufread = BufReader::new(stdout);
+                let mut stdout_save = String::new();
+                let _: Vec<_> = bufread
+                    .lines()
+                    .inspect(|s| {
+                        if let Ok(str) = s {
+                            info!("[Proton] > {}", str);
+                            stdout_save.push_str(str);
+                        }
+                    })
+                    .collect();
+                *log_stdout_ref.lock().unwrap() = Some(stdout_save);
+            });
+            tokio::task::spawn(async move {
+                let bufread = BufReader::new(stderr);
+                let mut stderr_save = String::new();
+                let _: Vec<_> = bufread
+                    .lines()
+                    .inspect(|s| {
+                        if let Ok(str) = s {
+                            info!("[Proton] > {}", str);
+                            stderr_save.push_str(str);
+                        }
+                    })
+                    .collect();
+                *log_stderr_ref.lock().unwrap() = Some(stderr_save);
+            });
         }
+
+        let output = child
+            .wait_with_output()
+            .expect("Failed to wait for the process");
+
+        let log_file_path = GameConfig::get_config_directory().await.join("game.log");
+        if log_file_path.exists() {
+            remove_file(log_file_path.clone())
+                .await
+                .expect("Failed to remove old log file");
+        }
+        File::create(log_file_path.clone())
+            .await
+            .expect("Failed to create build file");
+
+        let mut log_file = OpenOptions::new()
+            .write(true)
+            .append(true)
+            .open(log_file_path)
+            .await
+            .expect("Failed to open the log file");
+
+        log_file
+            .write_all("--- stdout ---\n".as_bytes())
+            .await
+            .expect("Failed to write the output to the log file");
+
+        let log_stdout_value = log_stdout.lock().unwrap();
+        let v;
+        let to_write = if log_stdout_value.is_some() {
+            v = log_stdout_value.clone().unwrap();
+            v.as_bytes()
+        } else {
+            &output.stdout
+        };
+
+        log_file
+            .write_all(to_write)
+            .await
+            .expect("Failed to write the output to the log file");
+
+        log_file
+            .write_all("--- stderr ---\n".as_bytes())
+            .await
+            .expect("Failed to write the output to the log file");
+
+        let log_stderr_value = log_stderr.lock().unwrap();
+        let v;
+        let to_write = if log_stderr_value.is_some() {
+            debug!("test");
+            v = log_stderr_value.clone().unwrap();
+            v.as_bytes()
+        } else {
+            &output.stderr
+        };
+
+        log_file
+            .write_all(to_write)
+            .await
+            .expect("Failed to write the output to the log file");
     }
 
     async fn run(
@@ -233,6 +328,7 @@ impl GameManager {
             .arg(binary_path)
             .args(&tokens[(index + 1)..tokens.len()])
             .envs(proton.get_envs())
+            .env("PROTON_LOG", "1")
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())

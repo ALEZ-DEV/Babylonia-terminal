@@ -186,17 +186,16 @@ impl GameManager {
         debug!("Wine version : {:?}", proton_version);
 
         let mut child = if let Some(custom_command) = options {
-            Self::run(proton, binary_path, custom_command)
+            Self::run(proton, binary_path, Some(custom_command))
                 .await
                 .unwrap()
         } else {
             if let Some(custom_command) = GameConfig::get_launch_options().await.unwrap() {
-                Self::run(proton, binary_path, custom_command)
+                Self::run(proton, binary_path, Some(custom_command))
                     .await
                     .unwrap()
             } else {
-                debug!("Starting game without --options");
-                proton.run(binary_path).unwrap()
+                Self::run(proton, binary_path, None).await.unwrap()
             }
         };
 
@@ -304,29 +303,47 @@ impl GameManager {
     async fn run(
         proton: &Proton,
         binary_path: PathBuf,
-        custom_command: String,
+        custom_command: Option<String>,
     ) -> Result<Child, std::io::Error> {
-        debug!("Starting game with --options -> {}", custom_command);
-        let tokens: Vec<&str> = custom_command.split_whitespace().collect();
+        let mut command: Vec<&str> = vec![];
 
-        // position of the %command%
-        let index = tokens
-            .iter()
-            .position(|&s| s == "%command%")
-            .expect("You forget to put %command% in your custom launch command");
+        let proton_path = GameConfig::get_config_directory()
+            .await
+            .join("proton")
+            .join("proton");
 
-        Command::new(tokens.get(0).unwrap())
-            .args(&tokens[0..(index - 1)])
-            .arg(proton.python.as_os_str())
-            .arg(
-                GameConfig::get_config_directory()
-                    .await
-                    .join("proton")
-                    .join("proton"),
-            )
-            .arg("run")
-            .arg(binary_path)
-            .args(&tokens[(index + 1)..tokens.len()])
+        command.push(proton.python.to_str().unwrap());
+        command.push(proton_path.to_str().unwrap());
+        command.push("run");
+        command.push(binary_path.to_str().unwrap());
+
+        let launch_option;
+        if custom_command.is_some() {
+            launch_option = custom_command.unwrap();
+            debug!("Starting game with --options -> {}", launch_option.clone());
+            let tokens: Vec<&str> = launch_option.split_whitespace().collect();
+
+            // position of the %command%
+            let index = tokens
+                .iter()
+                .position(|&s| s == "%command%")
+                .expect("You forget to put %command% in your custom launch command");
+
+            let start_command = tokens[0..index].to_vec();
+            let mut end_command = tokens[(index + 1)..tokens.len()].to_vec();
+
+            start_command.iter().rev().for_each(|str| {
+                command.insert(0, str);
+            });
+            command.append(&mut end_command);
+        } else {
+            debug!("Starting game without --options");
+        }
+
+        debug!("Command preview -> {}", command.join(" "));
+
+        Command::new(command[0])
+            .args(&command[1..command.len()])
             .envs(proton.get_envs())
             .env("PROTON_LOG", "1")
             .stdin(Stdio::piped())

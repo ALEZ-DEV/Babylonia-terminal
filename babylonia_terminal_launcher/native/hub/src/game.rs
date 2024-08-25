@@ -1,8 +1,6 @@
 use std::thread;
 
-use babylonia_terminal_sdk::{
-    components::proton_component::ProtonComponent, game_manager::GameManager, game_state::GameState,
-};
+use babylonia_terminal_sdk::{game_config::GameConfig, game_manager::GameManager};
 use rinf::debug_print;
 use tokio_with_wasm::tokio;
 
@@ -10,36 +8,44 @@ use crate::{
     messages::{
         error::ReportError,
         steps::game::{
-            GameInstallationProgress, GameStopped, NotifyGameStartDownloading,
-            NotifyGameStartPatching, NotifyGameSuccessfullyInstalled, RunGame,
-            StartGameInstallation,
+            GameInstallationProgress, GameStopped, NotifyGameStartPatching,
+            NotifyGameSuccessfullyInstalled, RunGame, StartGameInstallation,
         },
     },
     proton::get_proton,
 };
 
 pub async fn listen_game_running() {
-    let mut receiver = RunGame::get_dart_signal_receiver();
-    while let Some(_) = receiver.recv().await {
-        let proton = get_proton().await;
-        let game_dir = GameState::get_game_dir().await;
-        if game_dir.is_none() {
-            ReportError {
-                error_message: "Failed to start game, the game directory was not found".to_string(),
-            }
-            .send_signal_to_dart();
-            GameStopped {}.send_signal_to_dart();
-            continue;
-        }
+    let mut receiver = RunGame::get_dart_signal_receiver().unwrap();
+    thread::spawn(move || {
+        tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap()
+            .block_on(async {
+                while let Some(_) = receiver.recv().await {
+                    let proton = get_proton().await;
+                    let game_dir = GameConfig::get_game_dir().await;
+                    if game_dir.is_none() {
+                        ReportError {
+                            error_message: "Failed to start game, the game directory was not found"
+                                .to_string(),
+                        }
+                        .send_signal_to_dart();
+                        GameStopped {}.send_signal_to_dart();
+                        continue;
+                    }
 
-        GameManager::start_game(&proton, game_dir.unwrap()).await;
+                    GameManager::start_game(&proton, game_dir.unwrap(), None, false).await;
 
-        GameStopped {}.send_signal_to_dart();
-    }
+                    GameStopped {}.send_signal_to_dart();
+                }
+            })
+    });
 }
 
 pub async fn listen_game_installation() {
-    let mut receiver = StartGameInstallation::get_dart_signal_receiver();
+    let mut receiver = StartGameInstallation::get_dart_signal_receiver().unwrap();
     while let Some(info) = receiver.recv().await {
         thread::spawn(move || {
             debug_print!("start downloading game...");
@@ -48,9 +54,9 @@ pub async fn listen_game_installation() {
                 .build()
                 .unwrap()
                 .block_on(async {
-                    if GameState::get_game_dir().await.is_none() {
+                    if GameConfig::get_game_dir().await.is_none() {
                         if let Err(e) =
-                            GameState::set_game_dir(Some(GameState::get_config_directory().await))
+                            GameConfig::set_game_dir(Some(GameConfig::get_config_directory().await))
                                 .await
                         {
                             ReportError {
@@ -69,7 +75,7 @@ pub async fn listen_game_installation() {
                         }
                     }
 
-                    let game_dir = GameState::get_game_dir().await;
+                    let game_dir = GameConfig::get_game_dir().await;
                     if game_dir.is_none() {
                         ReportError {
                             error_message: "Failed to get the game directory".to_string(),

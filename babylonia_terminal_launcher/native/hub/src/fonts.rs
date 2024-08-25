@@ -1,8 +1,6 @@
 use std::thread;
 
-use babylonia_terminal_sdk::{
-    components::proton_component::ProtonComponent, game_manager::GameManager, game_state::GameState,
-};
+use babylonia_terminal_sdk::game_manager::GameManager;
 use tokio_with_wasm::tokio;
 
 use crate::{
@@ -16,7 +14,7 @@ use crate::{
 };
 
 pub async fn listen_fonts_installation() {
-    let mut receiver = StartFontsInstallation::get_dart_signal_receiver();
+    let mut receiver = StartFontsInstallation::get_dart_signal_receiver().unwrap();
     while let Some(_) = receiver.recv().await {
         let proton = get_proton().await;
 

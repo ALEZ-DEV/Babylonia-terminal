@@ -1,12 +1,9 @@
 use std::thread;
 
 use babylonia_terminal_sdk::{
-    components::{
-        dxvk_component::{DXVK_DEV, DXVK_REPO},
-        proton_component::ProtonComponent,
-    },
+    components::dxvk_component::{DXVK_DEV, DXVK_REPO},
+    game_config::GameConfig,
     game_manager::GameManager,
-    game_state::GameState,
     utils::github_requester::{GithubRelease, GithubRequester},
 };
 use tokio_with_wasm::tokio;
@@ -24,7 +21,7 @@ use crate::{
 };
 
 pub async fn listen_dxvk_installation() {
-    let mut receiver = StartDxvkInstallation::get_dart_signal_receiver();
+    let mut receiver = StartDxvkInstallation::get_dart_signal_receiver().unwrap();
     while let Some(info) = receiver.recv().await {
         let releases: Result<Vec<GithubRelease>, _> =
             GithubInfo::get_github_releases(DXVK_DEV, DXVK_REPO).await;
@@ -59,7 +56,7 @@ pub async fn listen_dxvk_installation() {
                 .block_on(async {
                     match GameManager::install_dxvk(
                         &proton,
-                        GameState::get_config().await.config_dir,
+                        GameConfig::get_config().await.config_dir,
                         release_index.unwrap(),
                         Some(DownloadReporter::create()),
                     )

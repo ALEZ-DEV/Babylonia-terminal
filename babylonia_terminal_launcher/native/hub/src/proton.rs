@@ -1,15 +1,11 @@
 use std::thread;
 
 use babylonia_terminal_sdk::{
-    components::{
-        component_downloader::ComponentDownloader,
-        proton_component::{ProtonComponent, PROTON_DEV, PROTON_REPO},
-    },
+    components::proton_component::{ProtonComponent, PROTON_DEV, PROTON_REPO},
+    game_config::GameConfig,
     game_manager::GameManager,
-    game_state::GameState,
     utils::github_requester::{GithubRelease, GithubRequester},
 };
-use rinf::debug_print;
 use tokio_with_wasm::tokio::{self, sync::OnceCell};
 use wincompatlib::wine::bundle::proton::Proton;
 
@@ -29,7 +25,7 @@ static PROTON: OnceCell<Proton> = OnceCell::const_new();
 pub async fn get_proton() -> Proton {
     PROTON
         .get_or_init(|| async {
-            let proton_component = ProtonComponent::new(GameState::get_config().await.config_dir);
+            let proton_component = ProtonComponent::new(GameConfig::get_config().await.config_dir);
             let proton = proton_component.init_proton();
             if let Err(ref e) = proton {
                 ReportError {
@@ -44,7 +40,7 @@ pub async fn get_proton() -> Proton {
 }
 
 pub async fn listen_proton_installation() {
-    let mut receiver = StartProtonInstallation::get_dart_signal_receiver();
+    let mut receiver = StartProtonInstallation::get_dart_signal_receiver().unwrap();
     while let Some(info) = receiver.recv().await {
         let releases: Result<Vec<GithubRelease>, _> =
             GithubInfo::get_github_releases(PROTON_DEV, PROTON_REPO).await;
@@ -76,7 +72,7 @@ pub async fn listen_proton_installation() {
                 .unwrap()
                 .block_on(async {
                     match GameManager::install_wine(
-                        GameState::get_config().await.config_dir,
+                        GameConfig::get_config().await.config_dir,
                         release_index.unwrap(),
                         Some(DownloadReporter::create()),
                     )

@@ -24,7 +24,7 @@ impl GameStateMessage {
 }
 
 pub async fn listen_game_state() {
-    let mut receiver = AskGameState::get_dart_signal_receiver();
+    let mut receiver = AskGameState::get_dart_signal_receiver().unwrap();
     while let Some(_) = receiver.recv().await {
         let result_state = GameState::get_current_state().await;
         match result_state {

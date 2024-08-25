@@ -12,8 +12,6 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   MediaKit.ensureInitialized();
 
-
-
   final SettingsProvider settings = SettingsProvider();
   await settings.init();
 

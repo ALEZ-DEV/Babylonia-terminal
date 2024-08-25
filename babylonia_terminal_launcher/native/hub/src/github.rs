@@ -21,7 +21,7 @@ impl GithubRequester for GithubInfo {
 }
 
 pub async fn listen_proton_version() {
-    let mut receiver = AskProtonVersions::get_dart_signal_receiver();
+    let mut receiver = AskProtonVersions::get_dart_signal_receiver().unwrap();
     while let Some(_) = receiver.recv().await {
         let releases: Result<Vec<GithubRelease>, _> =
             GithubInfo::get_github_releases(PROTON_DEV, PROTON_REPO).await;
@@ -39,7 +39,7 @@ pub async fn listen_proton_version() {
 }
 
 pub async fn listen_dxvk_version() {
-    let mut receiver = AskDxvkVersions::get_dart_signal_receiver();
+    let mut receiver = AskDxvkVersions::get_dart_signal_receiver().unwrap();
     while let Some(_) = receiver.recv().await {
         let releases: Result<Vec<GithubRelease>, _> =
             GithubInfo::get_github_releases(DXVK_DEV, DXVK_REPO).await;

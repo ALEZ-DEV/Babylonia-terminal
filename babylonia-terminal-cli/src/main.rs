@@ -30,7 +30,7 @@ async fn main() {
     debug!("Launch option -> {:?}", args.options);
 
     if let Some(command) = args.set_options {
-        GameConfig::set_launch_options(command)
+        GameConfig::set_launch_options(Some(command))
             .await
             .expect("Failed to save launch options into the config file");
     }

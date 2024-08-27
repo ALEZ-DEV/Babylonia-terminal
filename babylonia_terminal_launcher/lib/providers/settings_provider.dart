@@ -45,4 +45,12 @@ class SettingsProvider with ChangeNotifier {
   set backgroundId(int? value) {
     _settings.backgroundId = value;
   }
+
+  String? get launchOptions {
+    return _settings.launchOptions;
+  }
+
+  set launchOptions(String? value) {
+    _settings.launchOptions = value;
+  }
 }

@@ -23,4 +23,24 @@ class Config {
       _isLoadingConfig = false;
     }
   }
+
+  static bool _isLoadingGetLaunchOptions = false;
+
+  static Future<String?> getLaunchOptions() async {
+    if (!_isLoadingGetLaunchOptions) {
+      _isLoadingGetLaunchOptions = true;
+      GetLaunchOptionsInput().sendSignalToRust();
+      final stream = GetLaunchOptionsOutput.rustSignalStream;
+
+      await for (final rustSignal in stream) {
+        _isLoadingGetLaunchOptions = false;
+        return rustSignal.message.launchOptions;
+      }
+    }
+    return null;
+  }
+
+  static void setLaunchOptions(String? newLaunchOptions) {
+    SetLaunchOptionsInput(launchOptions: newLaunchOptions).sendSignalToRust();
+  }
 }

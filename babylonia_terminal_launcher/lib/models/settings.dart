@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import './config.dart';
+
 enum BackgroundType {
   contain,
   fill,
@@ -14,12 +16,18 @@ enum BackgroundType {
 
 class Settings {
   final SharedPreferences prefs;
+  String? _launchOptions;
 
-  Settings({required this.prefs});
+  Settings({required this.prefs, required String? launchOptions})
+      : _launchOptions = launchOptions;
 
   static Future<Settings> create() async {
     final prefs = await SharedPreferences.getInstance();
-    return Settings(prefs: prefs);
+    final launchOptions = await Config.getLaunchOptions();
+    return Settings(
+      prefs: prefs,
+      launchOptions: launchOptions,
+    );
   }
 
   String firstTimeKey = 'first_time';
@@ -29,6 +37,15 @@ class Settings {
 
   set firstTime(bool? value) {
     prefs.setBool(firstTimeKey, value!);
+  }
+
+  String? get launchOptions {
+    return _launchOptions;
+  }
+
+  set launchOptions(String? value) {
+    Config.setLaunchOptions(value);
+    _launchOptions = value;
   }
 
   BackgroundType? _backgroundType;

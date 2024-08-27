@@ -16,6 +16,8 @@ async fn main() {
     //config
     tokio::spawn(game_state::listen_game_state());
     tokio::spawn(config::listen_config());
+    tokio::spawn(config::listen_get_launch_options());
+    tokio::spawn(config::listen_set_launch_options());
 
     //github
     tokio::spawn(github::listen_proton_version());
@@ -28,6 +30,6 @@ async fn main() {
     tokio::spawn(dependencies::listen_dependecies_installation());
     tokio::spawn(game::listen_game_installation());
 
-    // game
+    //game
     tokio::spawn(game::listen_game_running());
 }

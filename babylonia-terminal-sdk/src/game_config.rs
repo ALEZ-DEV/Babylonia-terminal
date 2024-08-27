@@ -71,9 +71,9 @@ impl GameConfig {
         }
     }
 
-    pub async fn set_launch_options(command: String) -> anyhow::Result<()> {
+    pub async fn set_launch_options(command: Option<String>) -> anyhow::Result<()> {
         let mut config = Self::get_config().await;
-        config.launch_options = Some(command);
+        config.launch_options = command;
         Self::save_config(config).await?;
         Ok(())
     }

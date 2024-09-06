@@ -27,14 +27,6 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
     return Center(
       child: Column(
         children: [
-          const Center(
-            child: Text(
-              'General',
-              style: TextStyle(
-                fontSize: 36,
-              ),
-            ),
-          ),
           Padding(
             padding: const EdgeInsets.all(15.0),
             child: SizedBox(
@@ -42,7 +34,6 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
                 headline: const Text('Launch options'),
                 child: TextFormField(
                   initialValue: launchOptions,
-                  //controller: textFieldController,
                   decoration: InputDecoration(
                     labelText:
                         'Your custom launch options, E.G. : mangohud %command%',

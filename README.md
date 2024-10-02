@@ -11,6 +11,12 @@ For now, there is only a cli version of the launcher, but a gui one is on my rad
 If you have any issue with the launcher, don't hesitate to open an [issue](https://github.com/ALEZ-DEV/Babylonia-terminal/issues)!
 
 ## GUI Version
+<details>
+    <summary>Screenshot</summary>
+    <img src="./docs/Screenshot1.png"/><br>
+    <img src="./docs/Screenshot2.png" alt="Screenshot 2"/><br>
+    <img src="./docs/Screenshot3.png" alt="Screenshot 3"/><br>
+</details>
 
 The GUI version is now usable but not totally stable and lack of some functionnality, but you can try to [compile it](https://github.com/ALEZ-DEV/Babylonia-terminal/tree/master/babylonia_terminal_launcher) (A pre compiled binary will be soon distributed)  
 Be aware this version can have some bugs, don't hesitate to open an [issue](https://github.com/ALEZ-DEV/Babylonia-terminal/issues) if this happen!

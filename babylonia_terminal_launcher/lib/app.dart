@@ -110,61 +110,74 @@ class _MenuState extends State<Menu> {
 
     return ChangeNotifierProvider(
       create: (context) => Game(),
-      child: Scaffold(
-        drawer: Drawer(
-          child: ListView(
-            children: items,
-          ),
-        ),
-        appBar: AppBar(
-          title: const Text("Babylonia Terminal"),
-          centerTitle: true,
-          actions: [
-            Padding(
-              padding: const EdgeInsets.only(right: 14.0),
-              child: YaruWindowControl(
-                type: YaruWindowControlType.minimize,
-                platform: YaruWindowControlPlatform.yaru,
-                onTap: () async {
-                  final state = await window.state();
-                  if (state.isMinimizable ?? false) window.minimize();
-                },
+      child: Stack(
+        children: [
+          Scaffold(
+            drawer: Drawer(
+              child: ListView(
+                children: items,
               ),
             ),
-            StreamBuilder<YaruWindowState>(
-              stream: window.states(),
-              builder: (context, snapshot) {
-                final state = snapshot.data;
-                return Padding(
+            appBar: AppBar(
+              title: const Text("Babylonia Terminal"),
+              centerTitle: true,
+              actions: [
+                Padding(
                   padding: const EdgeInsets.only(right: 14.0),
                   child: YaruWindowControl(
-                    type: (state?.isMinimizable ?? false)
-                        ? YaruWindowControlType.maximize
-                        : YaruWindowControlType.restore,
+                    type: YaruWindowControlType.minimize,
                     platform: YaruWindowControlPlatform.yaru,
                     onTap: () async {
-                      (state?.isMinimizable ?? false)
-                          ? window.maximize()
-                          : window.restore();
+                      final state = await window.state();
+                      if (state.isMinimizable ?? false) window.minimize();
                     },
                   ),
-                );
-              },
+                ),
+                StreamBuilder<YaruWindowState>(
+                  stream: window.states(),
+                  builder: (context, snapshot) {
+                    final state = snapshot.data;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 14.0),
+                      child: YaruWindowControl(
+                        type: (state?.isMinimizable ?? false)
+                            ? YaruWindowControlType.maximize
+                            : YaruWindowControlType.restore,
+                        platform: YaruWindowControlPlatform.yaru,
+                        onTap: () async {
+                          (state?.isMinimizable ?? false)
+                              ? window.maximize()
+                              : window.restore();
+                        },
+                      ),
+                    );
+                  },
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(right: 10.0),
+                  child: YaruWindowControl(
+                    type: YaruWindowControlType.close,
+                    platform: YaruWindowControlPlatform.yaru,
+                    onTap: () async {
+                      final state = await window.state();
+                      if (state.isClosable ?? false) window.close();
+                    },
+                  ),
+                ),
+              ],
             ),
-            Padding(
-              padding: const EdgeInsets.only(right: 10.0),
-              child: YaruWindowControl(
-                type: YaruWindowControlType.close,
-                platform: YaruWindowControlPlatform.yaru,
-                onTap: () async {
-                  final state = await window.state();
-                  if (state.isClosable ?? false) window.close();
-                },
+            body: Screens.getCurrent(_selectedIndex),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(right: 115.0, left: 60.0),
+            child: GestureDetector(
+              onPanStart: (_) => window.drag(),
+              child: const SizedBox(
+                height: 60,
               ),
             ),
-          ],
-        ),
-        body: Screens.getCurrent(_selectedIndex),
+          ),
+        ],
       ),
     );
   }

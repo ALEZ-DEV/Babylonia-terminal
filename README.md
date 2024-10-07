@@ -18,7 +18,7 @@ If you have any issue with the launcher, don't hesitate to open an [issue](https
     <img src="./docs/Screenshot3.png" alt="Screenshot 3"/><br>
 </details>
 
-The GUI version is now usable but not totally stable and lack of some functionnality, but you can try to [compile it](https://github.com/ALEZ-DEV/Babylonia-terminal/tree/master/babylonia_terminal_launcher) or installing it via [Flatpak](https://github.com/ALEZ-DEV/Babylonia-terminal/wiki/Flatpak#installing-babylonia-terminal-via-flatpak) 
+The GUI version is now usable but not totally stable and lack of some functionnality, but you can try to [compile it](https://github.com/ALEZ-DEV/Babylonia-terminal/tree/master/babylonia_terminal_launcher) or installing it via [Flatpak](https://github.com/ALEZ-DEV/Babylonia-terminal/wiki/Flatpak#installing-babylonia-terminal-via-flatpak)  
 Be aware this version can have some bugs, don't hesitate to open an [issue](https://github.com/ALEZ-DEV/Babylonia-terminal/issues) if this happen!
 
 ## Requirement

@@ -53,6 +53,7 @@ dependencies:
   media_kit: ^1.1.11
   media_kit_video: ^1.2.5
   media_kit_libs_video: ^1.0.5
+  yaru_window: ^0.2.1
 
   #dependency_overrides:
   #  media_kit:

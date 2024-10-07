@@ -790,7 +790,7 @@ packages:
     source: hosted
     version: "4.1.0"
   yaru_window:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: yaru_window
       sha256: c9d16f78962652ad71aa160ab0a1e2e5924359439303394f980fd00eefc905eb

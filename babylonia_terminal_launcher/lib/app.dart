@@ -106,6 +106,8 @@ class _MenuState extends State<Menu> {
       ),
     );
 
+    final window = YaruWindow.of(context);
+
     return ChangeNotifierProvider(
       create: (context) => Game(),
       child: Scaffold(
@@ -117,6 +119,50 @@ class _MenuState extends State<Menu> {
         appBar: AppBar(
           title: const Text("Babylonia Terminal"),
           centerTitle: true,
+          actions: [
+            Padding(
+              padding: const EdgeInsets.only(right: 14.0),
+              child: YaruWindowControl(
+                type: YaruWindowControlType.minimize,
+                platform: YaruWindowControlPlatform.yaru,
+                onTap: () async {
+                  final state = await window.state();
+                  if (state.isMinimizable ?? false) window.minimize();
+                },
+              ),
+            ),
+            StreamBuilder<YaruWindowState>(
+              stream: window.states(),
+              builder: (context, snapshot) {
+                final state = snapshot.data;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 14.0),
+                  child: YaruWindowControl(
+                    type: (state?.isMinimizable ?? false)
+                        ? YaruWindowControlType.maximize
+                        : YaruWindowControlType.restore,
+                    platform: YaruWindowControlPlatform.yaru,
+                    onTap: () async {
+                      (state?.isMinimizable ?? false)
+                          ? window.maximize()
+                          : window.restore();
+                    },
+                  ),
+                );
+              },
+            ),
+            Padding(
+              padding: const EdgeInsets.only(right: 10.0),
+              child: YaruWindowControl(
+                type: YaruWindowControlType.close,
+                platform: YaruWindowControlPlatform.yaru,
+                onTap: () async {
+                  final state = await window.state();
+                  if (state.isClosable ?? false) window.close();
+                },
+              ),
+            ),
+          ],
         ),
         body: Screens.getCurrent(_selectedIndex),
       ),

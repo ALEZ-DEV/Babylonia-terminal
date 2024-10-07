@@ -43,7 +43,8 @@ app.*.map.json
 /android/app/release
 
 # Ignore platforms
-/linux
+/linux/*
+!/linux/my_application.cc
 
 # Misc
 /test

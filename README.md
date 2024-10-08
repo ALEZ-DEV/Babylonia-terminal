@@ -10,14 +10,14 @@
 |-|-|
 |<img src="./docs/Screenshot1.png"/>|<img src="./docs/Screenshot2.png" alt="Screenshot 2"/>|
 
-### This launcher download, install your favorite anime game and it's dependencies for you!
+### This launcher downloads and installs your favorite anime game and its dependencies for you!
 For now, there is only a cli version of the launcher, but a gui one is on my radar, so stay tuned!  
-If you have any issue with the launcher, don't hesitate to open an [issue](https://github.com/ALEZ-DEV/Babylonia-terminal/issues)!
+If you have any issues with the launcher, don't hesitate to open an [issue](https://github.com/ALEZ-DEV/Babylonia-terminal/issues)!
 
 ## Installation
 
 > [!IMPORTANT]  
-> The Graphical version is in alpha, expect breaking change and bugs as said [here](https://github.com/ALEZ-DEV/Babylonia-terminal#gui-version)
+> The Graphical version is in alpha, expect breaking changes and bugs as said [here](https://github.com/ALEZ-DEV/Babylonia-terminal#gui-version)
 
 | CLI version | Graphical version |
 |-|-|
@@ -26,13 +26,13 @@ If you have any issue with the launcher, don't hesitate to open an [issue](https
 
 ## GUI Version
 
-The GUI version is now usable but not totally stable and lack of some functionnality, but you can try to [compile it](https://github.com/ALEZ-DEV/Babylonia-terminal/tree/master/babylonia_terminal_launcher) or installing it via [Flatpak](https://github.com/ALEZ-DEV/Babylonia-terminal/wiki/Installation#installing-via-flatpak)  
+The GUI version is now usable but not totally stable lacks some functionality, but you can try to [compile it](https://github.com/ALEZ-DEV/Babylonia-terminal/tree/master/babylonia_terminal_launcher) or install it via [Flatpak](https://github.com/ALEZ-DEV/Babylonia-terminal/wiki/Installation#installing-via-flatpak)  
 Be aware this version can have some bugs, don't hesitate to open an [issue](https://github.com/ALEZ-DEV/Babylonia-terminal/issues) if this happen!
 
 ## CLI Version
 
 To see how to use it, go to the [CLI specific](https://github.com/ALEZ-DEV/Babylonia-terminal/wiki/CLI-Specific) section of the [wiki](https://github.com/ALEZ-DEV/Babylonia-terminal/wiki)
 
-## Special thank
+## Special Thanks
 
-Thank to [krypt0nn](https://github.com/krypt0nn) to made the [wincompatlib](https://github.com/krypt0nn/wincompatlib) library!
+Thanks to [krypt0nn](https://github.com/krypt0nn) who made the [wincompatlib](https://github.com/krypt0nn/wincompatlib) library!

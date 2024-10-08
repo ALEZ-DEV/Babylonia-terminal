@@ -6,20 +6,13 @@
     <h1>Babylonia Terminal</h1>
 </div>
 
+| Default | Official animated background |
+|-|-|
+|<img src="./docs/Screenshot1.png"/>|<img src="./docs/Screenshot2.png" alt="Screenshot 2"/>|
+
 ### This launcher download, install your favorite anime game and it's dependencies for you!
 For now, there is only a cli version of the launcher, but a gui one is on my radar, so stay tuned!  
 If you have any issue with the launcher, don't hesitate to open an [issue](https://github.com/ALEZ-DEV/Babylonia-terminal/issues)!
-
-## GUI Version
-<details>
-    <summary>Screenshot</summary>
-    <img src="./docs/Screenshot1.png"/><br>
-    <img src="./docs/Screenshot2.png" alt="Screenshot 2"/><br>
-    <img src="./docs/Screenshot3.png" alt="Screenshot 3"/><br>
-</details>
-
-The GUI version is now usable but not totally stable and lack of some functionnality, but you can try to [compile it](https://github.com/ALEZ-DEV/Babylonia-terminal/tree/master/babylonia_terminal_launcher) or installing it via [Flatpak](https://github.com/ALEZ-DEV/Babylonia-terminal/wiki/Flatpak#installing-babylonia-terminal-via-flatpak)  
-Be aware this version can have some bugs, don't hesitate to open an [issue](https://github.com/ALEZ-DEV/Babylonia-terminal/issues) if this happen!
 
 ## Requirement
 
@@ -30,42 +23,22 @@ You need Steam to be installed to run the game
 
 ## Installation
 
-To install the cli version of the launcher, just start this command :
+> [!IMPORTANT]  
+> The Graphical version is in alpha, expect breaking change and bugs as said [here](https://github.com/ALEZ-DEV/Babylonia-terminal#gui-version)
 
-```bash
-cargo install --git https://github.com/ALEZ-DEV/Babylonia-terminal --bin
-```
+| CLI version | Graphical version |
+|-|-|
+| [See installation instruction](https://github.com/ALEZ-DEV/Babylonia-terminal/wiki/Installation#installing-cli-version) | [Flatpak](https://github.com/ALEZ-DEV/Babylonia-terminal/wiki/Installation#installing-via-flatpak) |
+|| [Compile it yourself](https://github.com/ALEZ-DEV/Babylonia-terminal/tree/master/babylonia_terminal_launcher) |
 
-and you can just run it by doing :
+## GUI Version
 
-```
-babylonia-terminal-cli
-```
-If you have any issue installing it on Steam deck or any other distro, [go check the wiki](https://github.com/ALEZ-DEV/Babylonia-terminal/wiki)
+The GUI version is now usable but not totally stable and lack of some functionnality, but you can try to [compile it](https://github.com/ALEZ-DEV/Babylonia-terminal/tree/master/babylonia_terminal_launcher) or installing it via [Flatpak](https://github.com/ALEZ-DEV/Babylonia-terminal/wiki/Installation#installing-via-flatpak)  
+Be aware this version can have some bugs, don't hesitate to open an [issue](https://github.com/ALEZ-DEV/Babylonia-terminal/issues) if this happen!
 
-## Launch options
+## CLI Version
 
-If you want to wrap mangohud, gamescope, gamemoderun or any other process over the game, you can't just wrap the launcher for the wrapper to work, example : `mangohud babylonia-terminal-cli`.  
-The launcher has a parameter you can use to pass special launch options, you can pass options like this :  
-
-```bash
-# %command% will be replaced by the actual command that Babylonia-terminal will generate
-babylonia-terminal-cli --options "<custom launch command> %command%"
-```
-
-So for example, if I want to wrap the game with mangohud :  
-
-```bash
-babylonia-terminal-cli --options "mangohud %command%"
-```
-
-But start the game with the `--options` parameter every time is a bit annoying, so you can just run the command with `--set-options` instead the first time you want to setup the launch options :  
-
-```bash
-babylonia-terminal-cli --set-options "mangohud %command%"
-```
-
-and the next time you want to start the launcher, you will just need to start it with `babylonia-terminal-cli`  
+To see how to use it, go to the [CLI specific](https://github.com/ALEZ-DEV/Babylonia-terminal/wiki/CLI-Specific) section of the [wiki](https://github.com/ALEZ-DEV/Babylonia-terminal/wiki)
 
 ## Special thank
 

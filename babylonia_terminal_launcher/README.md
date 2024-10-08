@@ -1,10 +1,10 @@
 # How to compile the GUI version
 
-!! **Disclaimer :** this might not work on your steam deck, a pre-compiled binary or Flatpak version will be distributed in the future !!
+!! **Disclaimer :** this might not work on your steam deck, a Flatpak version is distributed, [see instruction on how to install it!](https://github.com/ALEZ-DEV/Babylonia-terminal/wiki/Installation#installing-via-flatpak)
 
 ## Requirement
 
-You need the [base](https://github.com/ALEZ-DEV/Babylonia-terminal?tab=readme-ov-file#requirement) requirement  
+You need the [base](https://github.com/ALEZ-DEV/Babylonia-terminal/wiki/Compilation-requirement) requirement  
 You will need [Flutter](https://flutter.dev/) in order to compile the GUI version  
 Install [Rinf](https://github.com/cunarist/rinf) with **Cargo** :
 
@@ -25,6 +25,11 @@ First generate all the necessary messages :
 
 ```bash
 rinf message
+```
+Generate all the necessary linux file for compilation :
+
+```bash
+flutter create --platform=linux .
 ```
 
 Then compile the project : 

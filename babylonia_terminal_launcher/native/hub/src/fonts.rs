@@ -28,7 +28,7 @@ pub async fn listen_fonts_installation() {
                         .await
                     {
                         Err(e) => ReportError {
-                            error_message: format!("Failed to install DXVK : {}", e),
+                            error_message: format!("Failed to install fonts : {}", e),
                         }
                         .send_signal_to_dart(),
                         Ok(_) => NotifyFontsSuccessfullyInstalled {}.send_signal_to_dart(),

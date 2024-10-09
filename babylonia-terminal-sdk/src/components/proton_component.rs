@@ -106,16 +106,31 @@ impl ProtonComponent {
 
     pub fn init_proton(&self) -> Result<wincompatlib::prelude::Proton, String> {
         let prefix = self.path.parent().unwrap().join("data");
-        let steam_location = dirs::home_dir().unwrap().join(".steam/steam");
-        if !steam_location.exists() {
-            debug!("Can't find steam installation");
-            return Err(String::from_str("We can't find your steam installation, please install steam in '~/.steam/steam' or specify your steam installation").unwrap());
-        }
+
         let mut proton =
             wincompatlib::prelude::Proton::new(self.path.clone(), Some(prefix.clone()));
+        let steam_location = Self::get_steam_location()?;
         proton.steam_client_path = Some(steam_location);
         proton.init_prefix(Some(prefix)).unwrap();
 
         Ok(proton)
+    }
+
+    fn get_steam_location() -> Result<PathBuf, String> {
+        let location_to_check = [
+            dirs::home_dir().unwrap().join(".steam/steam"),
+            dirs::home_dir()
+                .unwrap()
+                .join("/.var/app/com.valvesoftware.Steam/steam"), // for the flatpak version of steam
+        ];
+
+        for location in location_to_check {
+            if location.exists() {
+                return Ok(location);
+            }
+        }
+
+        debug!("Can't find steam installation");
+        Err(String::from_str("We can't find your steam installation, please install steam in '~/.steam/steam' or specify your steam installation").unwrap())
     }
 }

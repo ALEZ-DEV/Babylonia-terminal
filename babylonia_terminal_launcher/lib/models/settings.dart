@@ -30,13 +30,22 @@ class Settings {
     );
   }
 
-  String firstTimeKey = 'first_time';
+  final String _firstTimeKey = 'first_time';
   bool? get firstTime {
-    return prefs.getBool(firstTimeKey);
+    return prefs.getBool(_firstTimeKey);
   }
 
   set firstTime(bool? value) {
-    prefs.setBool(firstTimeKey, value!);
+    prefs.setBool(_firstTimeKey, value!);
+  }
+
+  final String _lastVersionKey = 'last_version';
+  String? get lastVersion {
+    return prefs.getString(_lastVersionKey);
+  }
+
+  set lastVersion(String? value) {
+    prefs.setString(_lastVersionKey, value!);
   }
 
   String? get launchOptions {
@@ -49,14 +58,14 @@ class Settings {
   }
 
   BackgroundType? _backgroundType;
-  String backgroundTypeKey = 'background_type';
+  final String _backgroundTypeKey = 'background_type';
 
   BackgroundType get selectedBackgroundType {
-    final bt = prefs.getString(backgroundTypeKey);
+    final bt = prefs.getString(_backgroundTypeKey);
     if (bt == null) {
       _backgroundType = BackgroundType.disable;
       prefs.setString(
-        backgroundTypeKey,
+        _backgroundTypeKey,
         getStringNameOfBackgroundType(_backgroundType!),
       );
     } else {
@@ -69,7 +78,7 @@ class Settings {
   set selectedBackgroundType(BackgroundType selectedBackground) {
     _backgroundType = selectedBackground;
     prefs.setString(
-      backgroundTypeKey,
+      _backgroundTypeKey,
       getStringNameOfBackgroundType(selectedBackground),
     );
   }

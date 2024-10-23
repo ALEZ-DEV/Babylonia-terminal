@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:yaru/yaru.dart';
 
@@ -7,6 +8,8 @@ import './screens/setup_screen.dart';
 import './providers/providers.dart';
 import './models/error_reporter.dart';
 import './models/game.dart';
+import './models/release_notice.dart';
+import './widgets/release_notice_widget.dart';
 
 class BabyloniaLauncher extends StatelessWidget {
   BabyloniaLauncher(
@@ -58,6 +61,26 @@ class Menu extends StatefulWidget {
 
 class _MenuState extends State<Menu> {
   int _selectedIndex = 0;
+
+  @override
+  void didChangeDependencies() async {
+    final provider = Provider.of<SettingsProvider>(context, listen: false);
+    final pkgsInfo = await PackageInfo.fromPlatform();
+    final currentVersion = pkgsInfo.version;
+    if (provider.lastVersion != currentVersion) {
+      final releaseInfo = await ReleaseNoticeInfo.getInfo(currentVersion);
+
+      showDialog<void>(
+        context: context,
+        builder: (context) =>
+            ReleaseNotice(currentVersion: currentVersion, info: releaseInfo),
+      );
+
+      provider.lastVersion = currentVersion;
+    }
+
+    super.didChangeDependencies();
+  }
 
   @override
   Widget build(BuildContext context) {

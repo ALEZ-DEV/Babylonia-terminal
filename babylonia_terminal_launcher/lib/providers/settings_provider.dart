@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 
 import './../models/settings.dart';
 import './../models/config.dart';
@@ -27,6 +26,18 @@ class SettingsProvider with ChangeNotifier {
   set firstTime(bool value) {
     _settings.firstTime = value;
     notifyListeners();
+  }
+
+  String get lastVersion {
+    final result = _settings.lastVersion;
+    if (result == null) {
+      return '';
+    }
+    return result;
+  }
+
+  set lastVersion(String value) {
+    _settings.lastVersion = value;
   }
 
   set setSelectedBackgroundType(BackgroundType selectedBackground) {

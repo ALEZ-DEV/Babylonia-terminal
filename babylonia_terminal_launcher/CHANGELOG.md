@@ -13,5 +13,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Notice for new release
 
-[unreleased]: https://github.com/olivierlacan/keep-a-changelog/compare/0.1.1...HEAD
-[0.1.1]: https://github.com/olivierlacan/keep-a-changelog/compare/0.1.1
+[unreleased]: https://github.com/ALEZ-DEV/Babylonia-terminal/compare/0.1.1...HEAD
+[0.1.1]: https://github.com/ALEZ-DEV/Babylonia-terminal/compare/0.1.1

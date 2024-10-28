@@ -75,41 +75,17 @@ impl GameManager {
             .wine()
             .clone()
             .with_prefix(proton.wine().prefix.parent().unwrap());
+
+        let max = 1;
+
         if let Some(p) = &progress {
-            p.setup(Some(10), "");
+            p.setup(Some(max), "");
         }
 
-        notify_fonts_progress(0, &progress);
+        notify_fonts_progress(0, max, &progress);
 
         wine_with_proton_prefix.install_font(Font::Arial)?;
-        notify_fonts_progress(1, &progress);
-
-        wine_with_proton_prefix.install_font(Font::Andale)?;
-        notify_fonts_progress(2, &progress);
-
-        wine_with_proton_prefix.install_font(Font::Courier)?;
-        notify_fonts_progress(3, &progress);
-
-        wine_with_proton_prefix.install_font(Font::ComicSans)?;
-        notify_fonts_progress(4, &progress);
-
-        wine_with_proton_prefix.install_font(Font::Georgia)?;
-        notify_fonts_progress(5, &progress);
-
-        wine_with_proton_prefix.install_font(Font::Impact)?;
-        notify_fonts_progress(6, &progress);
-
-        wine_with_proton_prefix.install_font(Font::Times)?;
-        notify_fonts_progress(7, &progress);
-
-        wine_with_proton_prefix.install_font(Font::Trebuchet)?;
-        notify_fonts_progress(8, &progress);
-
-        wine_with_proton_prefix.install_font(Font::Verdana)?;
-        notify_fonts_progress(9, &progress);
-
-        wine_with_proton_prefix.install_font(Font::Webdings)?;
-        notify_fonts_progress(10, &progress);
+        notify_fonts_progress(1, max, &progress);
 
         let mut config = GameConfig::get_config().await;
         config.is_font_installed = true;
@@ -353,11 +329,11 @@ impl GameManager {
     }
 }
 
-fn notify_fonts_progress<P>(nbr: u64, progress: &Option<Arc<P>>)
+fn notify_fonts_progress<P>(nbr: u64, max: u64, progress: &Option<Arc<P>>)
 where
     P: Reporter + 'static,
 {
-    info!("{}", format!("{}/10 font installed", nbr));
+    info!("{}", format!("{}/{} font installed", nbr, max));
     if let Some(p) = progress {
         p.progress(nbr);
     }

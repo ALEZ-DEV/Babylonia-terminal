@@ -7,9 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] - 2024-10-28
+
 ### Changed
 
-- Only install Arial font from now on
+- Only install Arial font from now on instead of the whole corefonts library
 
 ## [0.1.1] - 2024-10-23
 

@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Only install Arial font from now on instead of the whole corefonts library
 
+### Added
+
+- Added gamescope path library to the flatpak version of the launcher
+
 ## [0.1.1] - 2024-10-23
 
 ### Added

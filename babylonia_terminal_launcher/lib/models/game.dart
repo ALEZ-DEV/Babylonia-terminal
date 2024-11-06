@@ -22,20 +22,16 @@ class Game with ChangeNotifier {
 
   Int64 currentProgress = Int64(0);
   Int64 maxProgress = Int64(0);
+  Int64 currentSpeed = Int64(0);
 
   Future startInstallation(GameStateProvider gameState, bool isUpdating) async {
     StartGameInstallation(isUpdating: isUpdating).sendSignalToRust();
     gameInstallationState = GameInstallationState.checkingFile;
     notifyListeners();
 
-    //final downloadStream = NotifyGameStartDownloading.rustSignalStream;
-    //await for (final _ in downloadStream) {
-    //  gameInstallationState = GameInstallationState.downloading;
-    //  notifyListeners();
-    //  break;
-    //}
-
     final downloadProgresStream = GameInstallationProgress.rustSignalStream;
+    DateTime waitUntil = DateTime.now().add(const Duration(seconds: 1));
+    Int64 lastProgress = Int64(0);
     await for (final rustSignal in downloadProgresStream) {
       if (gameInstallationState == GameInstallationState.checkingFile) {
         gameInstallationState = GameInstallationState.downloading;
@@ -43,7 +39,22 @@ class Game with ChangeNotifier {
 
       currentProgress = rustSignal.message.current;
       maxProgress = rustSignal.message.max;
-      print("progress current : $currentProgress / $maxProgress");
+
+      if (waitUntil.isBefore(DateTime.now())) {
+        if (currentSpeed == 0) {
+          currentSpeed = currentProgress;
+          lastProgress = currentProgress;
+        } else {
+          currentSpeed = currentProgress - lastProgress;
+          lastProgress = currentProgress;
+          print('currentProgress -> $currentProgress');
+          print('lastProgress -> $lastProgress');
+          print('currentSpeed -> ${currentSpeed.toInt() / 1048576} MiB/s');
+        }
+
+        waitUntil = DateTime.now().add(Duration(seconds: 1));
+      }
+
       notifyListeners();
 
       if (currentProgress >= maxProgress) {
@@ -51,7 +62,6 @@ class Game with ChangeNotifier {
       }
     }
 
-    print("patching game...");
     gameInstallationState = GameInstallationState.patching;
     notifyListeners();
 

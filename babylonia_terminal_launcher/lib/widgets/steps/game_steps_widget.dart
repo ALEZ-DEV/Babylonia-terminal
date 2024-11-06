@@ -107,9 +107,10 @@ class _DownloadingGame extends StatelessWidget {
     final provider = Provider.of<Game>(context);
     final pourcent =
         (provider.currentProgress.toInt() / provider.maxProgress.toInt()) * 100;
-    //1024^3 = 1073741824 
+    //1024^3 = 1073741824
     final currentGb = provider.currentProgress.toInt() / 1073741824;
     final maxGb = provider.maxProgress.toInt() / 1073741824;
+    final currentSpeed = provider.currentSpeed.toInt() / 1048576;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 40.0),
@@ -119,7 +120,7 @@ class _DownloadingGame extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(bottom: 8.0),
             child: Text(
-              "${currentGb.toStringAsFixed(2)} / ${maxGb.toStringAsFixed(2)} GiB (${pourcent.toStringAsFixed(2)}%)",
+              "${currentGb.toStringAsFixed(2)} / ${maxGb.toStringAsFixed(2)} GiB (${pourcent.toStringAsFixed(2)}%) - ${currentSpeed.toStringAsFixed(2)}MiB/s",
             ),
           ),
           YaruLinearProgressIndicator(

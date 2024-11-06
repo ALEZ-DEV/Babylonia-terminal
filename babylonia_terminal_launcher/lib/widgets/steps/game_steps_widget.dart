@@ -120,7 +120,7 @@ class _DownloadingGame extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(bottom: 8.0),
             child: Text(
-              "${currentGb.toStringAsFixed(2)} / ${maxGb.toStringAsFixed(2)} GiB (${pourcent.toStringAsFixed(2)}%) - ${currentSpeed.toStringAsFixed(2)}MiB/s",
+              "${currentGb.toStringAsFixed(2)} / ${maxGb.toStringAsFixed(2)} GiB (${pourcent.toStringAsFixed(2)}%) - ${currentSpeed.toStringAsFixed(2)} MiB/s",
             ),
           ),
           YaruLinearProgressIndicator(

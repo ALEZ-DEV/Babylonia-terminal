@@ -1,14 +1,17 @@
 use babylonia_terminal_sdk::game_config::GameConfig;
+use babylonia_terminal_sdk::utils;
 use clap::Parser;
-use log::{debug, LevelFilter};
+use log::{debug, info, LevelFilter};
 use simple_logger::SimpleLogger;
 
 mod arguments;
+mod commands;
 pub mod game;
 pub mod reporter;
 pub mod utils;
 
 use crate::arguments::Args;
+use crate::commands::Commands;
 
 #[tokio::main]
 async fn main() {
@@ -29,11 +32,19 @@ async fn main() {
     let args = Args::parse();
     debug!("Launch option -> {:?}", args.options);
 
-    if let Some(command) = args.set_options {
-        GameConfig::set_launch_options(Some(command))
-            .await
-            .expect("Failed to save launch options into the config file");
+    match args.command {
+        Some(Commands::SetLaunchOptions { launch_options }) => {
+            GameConfig::set_launch_options(Some(launch_options))
+                .await
+                .expect("Failed to save launch options into the config file");
+            info!("Successfully updated launch options!");
+        }
+        Some(Commands::SetGamePath { new_game_directory }) => {
+            utils::fs::move_all_file_in_dir(
+                "~/.babylonia-terminal/PGR",
+                "~/.babylonia-terminal/PGR",
+            );
+        }
+        None => game::run(args.options, args.logs).await,
     }
-
-    game::run(args.options, args.logs).await;
 }

@@ -7,7 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Changed "Gb" (which ordinarily would be Gigabits) to "GiB" in the download progress
+### Added
+
+- You now see the download speed when downloading the game (in MiB/s)
+
+### Changed
+
+- "Gb" (which ordinarily would be Gigabits) to "GiB" in the download progress
 
 ## [0.1.2] - 2024-10-28
 

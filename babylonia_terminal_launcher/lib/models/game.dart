@@ -47,12 +47,9 @@ class Game with ChangeNotifier {
         } else {
           currentSpeed = currentProgress - lastProgress;
           lastProgress = currentProgress;
-          print('currentProgress -> $currentProgress');
-          print('lastProgress -> $lastProgress');
-          print('currentSpeed -> ${currentSpeed.toInt() / 1048576} MiB/s');
         }
 
-        waitUntil = DateTime.now().add(Duration(seconds: 1));
+        waitUntil = DateTime.now().add(const Duration(seconds: 1));
       }
 
       notifyListeners();

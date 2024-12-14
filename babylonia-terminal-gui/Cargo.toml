@@ -1,0 +1,11 @@
+[package]
+name = "babylonia-terminal-gui"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+babylonia-terminal-sdk = { path = "./../babylonia-terminal-sdk" }
+anyhow = "1.0.94"
+log = "0.4.22"
+relm4 = "0.9.1"
+relm4-components = "0.9.1"

@@ -16,4 +16,8 @@ pub struct Args {
     /// Show the logs direcly to the stdout of your terminal
     #[arg(long, default_value = "false")]
     pub logs: bool,
+
+    /// Launch the GUI version
+    #[arg(long, default_value = "false")]
+    pub gui: bool,
 }

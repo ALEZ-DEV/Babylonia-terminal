@@ -4,8 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-babylonia-terminal-cli = { path = "./../babylonia-terminal-cli" }
 babylonia-terminal-gui = { path = "./../babylonia-terminal-gui" }
+babylonia-terminal-cli = { path = "./../babylonia-terminal-cli" }
 log = "0.4.22"
 simple_logger = "5.0.0"
 tokio = { version = "1.37.0", features = ["full"] }

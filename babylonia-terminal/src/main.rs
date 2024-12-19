@@ -1,17 +1,8 @@
-use babylonia_terminal_sdk::game_config::GameConfig;
 use clap::Parser;
-use log::{debug, LevelFilter};
+use log::LevelFilter;
 use simple_logger::SimpleLogger;
 
-mod arguments;
-pub mod game;
-pub mod reporter;
-pub mod utils;
-
-use crate::arguments::Args;
-
-#[tokio::main]
-async fn main() {
+fn main() {
     let simple_logger = SimpleLogger::new()
         .with_module_level("hyper", LevelFilter::Off)
         .with_module_level("hyper_util", LevelFilter::Off)
@@ -26,14 +17,11 @@ async fn main() {
         simple_logger.with_level(LevelFilter::Info).init().unwrap();
     }
 
-    let args = Args::parse();
-    debug!("Launch option -> {:?}", args.options);
+    let args = babylonia_terminal_cli::arguments::Args::parse();
 
-    if let Some(command) = args.set_options {
-        GameConfig::set_launch_options(Some(command))
-            .await
-            .expect("Failed to save launch options into the config file");
+    if args.gui {
+        babylonia_terminal_gui::run();
+    } else {
+        babylonia_terminal_cli::run();
     }
-
-    game::run(args.options, args.logs).await;
 }

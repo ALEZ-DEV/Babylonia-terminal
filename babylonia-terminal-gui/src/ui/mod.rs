@@ -4,6 +4,7 @@ use crate::manager;
 use babylonia_terminal_sdk::game_state::GameState;
 
 use relm4::{
+    adw::{self, ApplicationWindow},
     gtk::{
         self,
         prelude::{BoxExt, ButtonExt, GtkWindowExt, OrientableExt, WidgetExt},
@@ -12,6 +13,8 @@ use relm4::{
     prelude::{AsyncComponentParts, SimpleAsyncComponent},
     view, Component, RelmApp, RelmWidgetExt, WorkerController,
 };
+
+use crate::APP_RESOURCE_PATH;
 
 pub fn run(app: RelmApp<MainWindowMsg>) {
     app.run_async::<MainWindow>(None);
@@ -50,11 +53,16 @@ impl SimpleAsyncComponent for MainWindow {
 
     view! {
         #[root]
-        gtk::Window {
+        adw::ApplicationWindow {
             gtk::Box {
                 set_orientation: gtk::Orientation::Vertical,
-                set_spacing: 5,
-                set_margin_all: 5,
+
+                adw::HeaderBar,
+
+                gtk::Image {
+                    set_resource: Some(&format!("{APP_RESOURCE_PATH}/icons/hicolor/scalable/apps/icon.png")),
+                    set_height_request: 256,
+                },
 
                 #[name(start_button)]
                 gtk::Button {

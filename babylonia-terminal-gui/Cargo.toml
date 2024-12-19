@@ -7,6 +7,9 @@ edition = "2021"
 babylonia-terminal-sdk = { path = "./../babylonia-terminal-sdk" }
 anyhow = "1.0.94"
 log = "0.4.22"
-relm4 = "0.9.1"
 relm4-components = "0.9.1"
 wincompatlib = "0.7.5"
+relm4 = { version = "0.9.1", features = ["libadwaita"] }
+
+[build-dependencies]
+glib-build-tools = "0.20.0"

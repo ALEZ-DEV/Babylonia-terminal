@@ -46,6 +46,7 @@
             cargo-watch
             rust-analyzer
             gtk4
+            libadwaita
           ];
 
           env = {

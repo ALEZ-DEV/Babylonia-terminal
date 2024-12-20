@@ -4,7 +4,11 @@ use crate::manager;
 use babylonia_terminal_sdk::game_state::GameState;
 
 use relm4::{
-    adw::{self, ApplicationWindow},
+    adw::{
+        self,
+        prelude::{PreferencesGroupExt, PreferencesPageExt},
+        ApplicationWindow,
+    },
     gtk::{
         self,
         prelude::{BoxExt, ButtonExt, GtkWindowExt, OrientableExt, WidgetExt},
@@ -59,20 +63,43 @@ impl SimpleAsyncComponent for MainWindow {
 
                 adw::HeaderBar,
 
-                gtk::Image {
-                    set_resource: Some(&format!("{APP_RESOURCE_PATH}/icons/hicolor/scalable/apps/icon.png")),
-                    set_height_request: 256,
-                },
+                gtk::Box {
+                    set_orientation: gtk::Orientation::Vertical,
+                    set_vexpand: true,
+                    set_margin_horizontal: 50,
+                    set_valign: gtk::Align::Center,
 
-                #[name(start_button)]
-                gtk::Button {
-                    #[watch]
-                    set_sensitive: !model.is_game_running,
-                    set_label: "Start game",
-                    connect_clicked[sender = model.game_handler.sender().clone()] => move |_| {
-                        sender.send(manager::HandleGameProcessMsg::RunGame).unwrap();
+                    adw::PreferencesPage {
+                        add = &adw::PreferencesGroup {
+                            gtk::Picture {
+                                set_resource: Some(&format!("{APP_RESOURCE_PATH}/icons/hicolor/scalable/apps/icon.png")),
+                                set_vexpand: true,
+                            },
+
+                            gtk::Label {
+                                set_label: "Babylonia Terminal",
+                                set_margin_top: 24,
+                                add_css_class: "title-1",
+                            },
+                        },
+
+                        add = &adw::PreferencesGroup {
+                            gtk::Button {
+                                set_css_classes: &["suggested-action", "pill"],
+
+                                set_label: "Start game",
+                                set_hexpand: false,
+                                set_width_request: 200,
+
+                                #[watch]
+                                set_sensitive: !model.is_game_running,
+                                connect_clicked[sender = model.game_handler.sender().clone()] => move |_| {
+                                    sender.send(manager::HandleGameProcessMsg::RunGame).unwrap();
+                                },
+                            },
+                        }
                     },
-                },
+                }
             }
         }
     }

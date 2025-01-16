@@ -8,6 +8,7 @@ mod manager;
 mod ui;
 
 pub const APP_RESOURCE_PATH: &str = "/moe/celica/babylonia-terminal";
+pub const IS_DEVEL: bool = cfg!(debug_assertions);
 
 pub fn run() {
     debug!("Start GUI!");

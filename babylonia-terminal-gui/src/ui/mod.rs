@@ -1,6 +1,6 @@
 use std::convert::identity;
 
-use crate::manager;
+use crate::{manager, IS_DEVEL};
 use babylonia_terminal_sdk::game_state::GameState;
 
 use log::debug;
@@ -68,6 +68,8 @@ impl SimpleAsyncComponent for MainWindow {
     view! {
         #[root]
         adw::ApplicationWindow {
+            add_css_class?: IS_DEVEL.then_some("devel"),
+
             gtk::Box {
                 set_orientation: gtk::Orientation::Vertical,
 
@@ -131,25 +133,38 @@ impl SimpleAsyncComponent for MainWindow {
                     #[wrap(Some)]
                     set_sidebar = &gtk::Box {
                         set_orientation: gtk::Orientation::Vertical,
+                        set_width_request: 250,
+                        set_margin_all: 10,
 
-                        gtk::ListBox {
-                            set_width_request: 250,
-                            set_margin_all: 10,
+                        gtk::Picture {
+                            set_resource: Some(&format!("{APP_RESOURCE_PATH}/icons/hicolor/scalable/apps/icon.png")),
+                            set_hexpand: true,
+                            set_margin_horizontal: 30,
+                            set_margin_top: 30,
+                            set_margin_bottom: 10,
+                        },
 
-                            append = &gtk::Button {
-                                set_margin_vertical: 5,
-                                set_label: "Item 1",
-                            },
+                        gtk::Label {
+                            set_label: "Babylonia Terminal",
+                            set_margin_top: 12,
+                            add_css_class: "title-1",
+                            set_margin_horizontal: 30,
+                            set_margin_bottom: 10,
+                        },
 
-                            append = &gtk::Button {
-                                set_margin_vertical: 5,
-                                set_label: "Item 2"
-                            },
+                        gtk::Button {
+                            set_margin_vertical: 5,
+                            set_label: "Item 1",
+                        },
 
-                            append = &gtk::Button {
-                                set_margin_vertical: 5,
-                                set_label: "Item 3",
-                            },
+                        gtk::Button {
+                            set_margin_vertical: 5,
+                            set_label: "Item 2"
+                        },
+
+                        gtk::Button {
+                            set_margin_vertical: 5,
+                            set_label: "Item 3",
                         },
                     },
                 },

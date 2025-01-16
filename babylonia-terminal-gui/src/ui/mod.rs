@@ -3,6 +3,7 @@ use std::convert::identity;
 use crate::manager;
 use babylonia_terminal_sdk::game_state::GameState;
 
+use log::debug;
 use relm4::{
     adw::{
         self,
@@ -20,6 +21,8 @@ use relm4::{
     },
     view, Component, ComponentController, Controller, RelmApp, RelmWidgetExt, WorkerController,
 };
+
+use libadwaita::OverlaySplitView;
 
 use crate::APP_RESOURCE_PATH;
 
@@ -68,36 +71,10 @@ impl SimpleAsyncComponent for MainWindow {
             gtk::Box {
                 set_orientation: gtk::Orientation::Vertical,
 
-                adw::Flap {
+                OverlaySplitView {
                     #[watch]
-                    set_reveal_flap: model.is_menu_visible,
-                    set_margin_all: 0,
-                    set_fold_policy: adw::FlapFoldPolicy::Auto,
-
-                    #[wrap(Some)]
-                    set_flap = &gtk::Box {
-                        set_orientation: gtk::Orientation::Vertical,
-
-                        gtk::ListBox {
-                            set_width_request: 250,
-                            set_margin_all: 10,
-
-                            append = &gtk::Button {
-                                set_margin_vertical: 5,
-                                set_label: "Item 1",
-                            },
-
-                            append = &gtk::Button {
-                                set_margin_vertical: 5,
-                                set_label: "Item 2"
-                            },
-
-                            append = &gtk::Button {
-                                set_margin_vertical: 5,
-                                set_label: "Item 3",
-                            },
-                        },
-                    },
+                    set_show_sidebar: model.is_menu_visible,
+                    set_collapsed: true,
 
                     #[wrap(Some)]
                     set_content = &gtk::Box {
@@ -105,7 +82,7 @@ impl SimpleAsyncComponent for MainWindow {
 
                         adw::HeaderBar {
                             pack_start = &gtk::Button {
-                                set_label: "Menu",
+                                set_icon_name: "open-menu-symbolic",
                                 connect_clicked => MainWindowMsg::ToggleMenuVisibility,
                             },
                         },
@@ -149,8 +126,46 @@ impl SimpleAsyncComponent for MainWindow {
                                 },
                             },
                         },
-                    }
+                    },
+
+                    #[wrap(Some)]
+                    set_sidebar = &gtk::Box {
+                        set_orientation: gtk::Orientation::Vertical,
+
+                        gtk::ListBox {
+                            set_width_request: 250,
+                            set_margin_all: 10,
+
+                            append = &gtk::Button {
+                                set_margin_vertical: 5,
+                                set_label: "Item 1",
+                            },
+
+                            append = &gtk::Button {
+                                set_margin_vertical: 5,
+                                set_label: "Item 2"
+                            },
+
+                            append = &gtk::Button {
+                                set_margin_vertical: 5,
+                                set_label: "Item 3",
+                            },
+                        },
+                    },
                 },
+
+                //adw::Flap {
+                //    #[watch]
+                //    set_reveal_flap: model.is_menu_visible,
+                //    set_margin_all: 0,
+                //    set_fold_policy: adw::FlapFoldPolicy::Auto,
+
+                //    #[wrap(Some)]
+                //    set_flap =
+
+                //    #[wrap(Some)]
+                //    set_content =
+                //},
             }
         }
     }

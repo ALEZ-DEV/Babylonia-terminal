@@ -10,6 +10,7 @@ log = "0.4.22"
 relm4-components = "0.9.1"
 wincompatlib = "0.7.5"
 relm4 = { version = "0.9.1", features = ["libadwaita"] }
+libadwaita = { version = "0.7.1", features = ["v1_4"] }
 
 [build-dependencies]
 glib-build-tools = "0.20.0"

@@ -70,6 +70,7 @@ dependencies = [
  "anyhow",
  "babylonia-terminal-sdk",
  "glib-build-tools",
+ "libadwaita",
  "log",
  "relm4",
  "relm4-components",

@@ -26,6 +26,8 @@ use libadwaita::OverlaySplitView;
 
 use crate::APP_RESOURCE_PATH;
 
+mod pages;
+
 pub fn run(app: RelmApp<MainWindowMsg>) {
     app.run_async::<MainWindow>(None);
 }
@@ -39,6 +41,7 @@ pub enum MainWindowMsg {
 
 struct MainWindow {
     game_state: GameState,
+    setup_page: AsyncController<pages::steps::SetupPage>,
     game_handler: WorkerController<manager::HandleGameProcess>,
     is_game_running: bool,
     is_menu_visible: bool,
@@ -46,13 +49,20 @@ struct MainWindow {
 
 impl MainWindow {
     fn new(game_state: GameState, sender: &relm4::AsyncComponentSender<Self>) -> Self {
+        let setup_page = pages::steps::SetupPage::builder()
+            .launch(game_state.clone())
+            .forward(sender.input_sender(), identity);
+
+        let game_handler = manager::HandleGameProcess::builder()
+            .detach_worker(())
+            .forward(sender.input_sender(), identity);
+
         MainWindow {
             game_state,
+            setup_page,
+            game_handler,
             is_menu_visible: false,
             is_game_running: false,
-            game_handler: manager::HandleGameProcess::builder()
-                .detach_worker(())
-                .forward(sender.input_sender(), identity),
         }
     }
 }
@@ -68,6 +78,8 @@ impl SimpleAsyncComponent for MainWindow {
     view! {
         #[root]
         adw::ApplicationWindow {
+            set_default_size: (700, 560),
+
             add_css_class?: IS_DEVEL.then_some("devel"),
 
             gtk::Box {
@@ -85,6 +97,10 @@ impl SimpleAsyncComponent for MainWindow {
                         adw::HeaderBar {
                             pack_start = &gtk::Button {
                                 set_icon_name: "open-menu-symbolic",
+
+                                #[watch]
+                                set_visible: model.game_state == GameState::GameInstalled,
+
                                 connect_clicked => MainWindowMsg::ToggleMenuVisibility,
                             },
                         },
@@ -94,6 +110,9 @@ impl SimpleAsyncComponent for MainWindow {
                             set_vexpand: true,
                             set_margin_horizontal: 50,
                             set_valign: gtk::Align::Center,
+
+                            #[watch]
+                            set_visible: model.game_state == GameState::GameInstalled,
 
                             adw::PreferencesPage {
                                 add = &adw::PreferencesGroup {
@@ -128,6 +147,14 @@ impl SimpleAsyncComponent for MainWindow {
                                 },
                             },
                         },
+
+                        gtk::Box {
+                            set_orientation: gtk::Orientation::Vertical,
+
+                            set_visible: model.game_state != GameState::GameInstalled,
+
+                            model.setup_page.widget(),
+                        }
                     },
 
                     #[wrap(Some)]
@@ -168,19 +195,6 @@ impl SimpleAsyncComponent for MainWindow {
                         },
                     },
                 },
-
-                //adw::Flap {
-                //    #[watch]
-                //    set_reveal_flap: model.is_menu_visible,
-                //    set_margin_all: 0,
-                //    set_fold_policy: adw::FlapFoldPolicy::Auto,
-
-                //    #[wrap(Some)]
-                //    set_flap =
-
-                //    #[wrap(Some)]
-                //    set_content =
-                //},
             }
         }
     }

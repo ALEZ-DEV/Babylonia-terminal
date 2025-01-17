@@ -1,6 +1,6 @@
 use crate::{game_config::GameConfig, utils::kuro_prod_api::GameInfo};
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub enum GameState {
     ProtonNotInstalled,
     DXVKNotInstalled,

@@ -5,24 +5,15 @@ use babylonia_terminal_sdk::game_state::GameState;
 
 use log::debug;
 use relm4::{
-    adw::{
-        self,
-        prelude::{PreferencesGroupExt, PreferencesPageExt},
-        ApplicationWindow,
-    },
-    gtk::{
-        self,
-        prelude::{BoxExt, ButtonExt, GtkWindowExt, OrientableExt, WidgetExt},
-    },
+    self,
+    gtk::{self, prelude::*},
     loading_widgets::LoadingWidgets,
-    prelude::{
-        AsyncComponent, AsyncComponentController, AsyncComponentParts, AsyncController,
-        SimpleAsyncComponent,
-    },
-    view, Component, ComponentController, Controller, RelmApp, RelmWidgetExt, WorkerController,
+    prelude::*,
+    *,
 };
 
-use libadwaita::OverlaySplitView;
+use adw::prelude::*;
+use libadwaita as adw;
 
 use crate::APP_RESOURCE_PATH;
 
@@ -85,7 +76,7 @@ impl SimpleAsyncComponent for MainWindow {
             gtk::Box {
                 set_orientation: gtk::Orientation::Vertical,
 
-                OverlaySplitView {
+                adw::OverlaySplitView {
                     #[watch]
                     set_show_sidebar: model.is_menu_visible,
                     set_collapsed: true,

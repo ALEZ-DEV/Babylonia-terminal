@@ -2,6 +2,4 @@ set_github_env.sh
 
 babylonia-terminal-cli/TDData-data.db
 babylonia-terminal-cli/backtrace.txt
-babylonia-terminal-cli/target
-babylonia-terminal-gui/target
-babylonia-terminal/target
+target

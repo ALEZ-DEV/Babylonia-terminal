@@ -17,7 +17,7 @@ use libadwaita as adw;
 
 use crate::APP_RESOURCE_PATH;
 
-mod pages;
+pub mod pages;
 
 pub fn run(app: RelmApp<MainWindowMsg>) {
     app.run_async::<MainWindow>(None);
@@ -28,6 +28,7 @@ pub enum MainWindowMsg {
     ToggleMenuVisibility,
     SelectPage,
     SetIsGameRunning(bool),
+    UpdateGameState,
 }
 
 struct MainWindow {
@@ -103,7 +104,7 @@ impl SimpleAsyncComponent for MainWindow {
                             set_valign: gtk::Align::Center,
 
                             #[watch]
-                            set_visible: model.game_state == GameState::GameInstalled,
+                            set_visible: model.game_state.is_environment_ready(),
 
                             adw::PreferencesPage {
                                 add = &adw::PreferencesGroup {
@@ -142,7 +143,7 @@ impl SimpleAsyncComponent for MainWindow {
                         gtk::Box {
                             set_orientation: gtk::Orientation::Vertical,
 
-                            set_visible: model.game_state != GameState::GameInstalled,
+                            set_visible: !model.game_state.is_environment_ready(),
 
                             model.setup_page.widget(),
                         }
@@ -236,6 +237,9 @@ impl SimpleAsyncComponent for MainWindow {
             MainWindowMsg::ToggleMenuVisibility => self.is_menu_visible = !self.is_menu_visible,
             MainWindowMsg::SelectPage => println!("Tried to select a new page"),
             MainWindowMsg::SetIsGameRunning(value) => self.is_game_running = value,
+            MainWindowMsg::UpdateGameState => {
+                self.game_state = GameState::get_current_state().await.unwrap();
+            }
         }
     }
 }

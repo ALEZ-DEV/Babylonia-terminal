@@ -46,4 +46,11 @@ impl GameState {
 
         Ok(GameState::GameInstalled)
     }
+
+    pub fn is_environment_ready(&self) -> bool {
+        self == &GameState::GameNotInstalled
+            || self == &GameState::GameNeedUpdate
+            || self == &GameState::GameNotPatched
+            || self == &GameState::GameInstalled
+    }
 }

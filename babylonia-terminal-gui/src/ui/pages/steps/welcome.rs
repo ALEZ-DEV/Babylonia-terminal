@@ -78,7 +78,9 @@ impl SimpleComponent for WelcomePage {
 
     fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>) {
         match message {
-            WelcomePageMsg::Next => sender.output(SetupPageMsg::UpdateGameState).unwrap(),
+            WelcomePageMsg::Next => sender
+                .output(SetupPageMsg::GoToChooseGameDirectoryPage)
+                .unwrap(),
         }
     }
 }

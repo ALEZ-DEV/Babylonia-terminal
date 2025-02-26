@@ -1,6 +1,7 @@
 use std::convert::identity;
 
-use babylonia_terminal_sdk::game_state::GameState;
+use babylonia_terminal_sdk::{game_config::GameConfig, game_state::GameState};
+use choose_game_directory::ChooseGameDirectoryPage;
 use download_components::DownloadComponentsPage;
 use libadwaita::prelude::{OrientableExt, WidgetExt};
 use relm4::{
@@ -14,17 +15,21 @@ use welcome::WelcomePage;
 
 use crate::ui::MainWindowMsg;
 
-mod download_components;
+mod choose_game_directory;
+pub mod download_components;
 mod welcome;
 
 #[derive(Debug)]
 pub enum SetupPageMsg {
-    UpdateGameState,
+    GoToChooseGameDirectoryPage,
+    GoToDownloadComponentPage,
+    Finish,
 }
 
 pub struct SetupPage {
     game_state: GameState,
     welcome_page: Controller<welcome::WelcomePage>,
+    choose_game_directory_page: AsyncController<choose_game_directory::ChooseGameDirectoryPage>,
     download_components_page: AsyncController<download_components::DownloadComponentsPage>,
 
     carousel: adw::Carousel,
@@ -42,6 +47,8 @@ impl SimpleAsyncComponent for SetupPage {
         #[root]
         gtk::Box {
             set_orientation: gtk::Orientation::Vertical,
+            set_hexpand: true,
+            set_vexpand: true,
 
             #[local_ref]
             carousel -> adw::Carousel {
@@ -50,6 +57,7 @@ impl SimpleAsyncComponent for SetupPage {
                 set_allow_scroll_wheel: false,
 
                 append = model.welcome_page.widget(),
+                append = model.choose_game_directory_page.widget(),
                 append = model.download_components_page.widget(),
             },
 
@@ -68,8 +76,11 @@ impl SimpleAsyncComponent for SetupPage {
         let welcome_page = WelcomePage::builder()
             .launch(())
             .forward(sender.input_sender(), identity);
-        let download_components_page = DownloadComponentsPage::builder()
+        let choose_game_directory_page = ChooseGameDirectoryPage::builder()
             .launch(())
+            .forward(sender.input_sender(), identity);
+        let download_components_page = DownloadComponentsPage::builder()
+            .launch(game_state.clone())
             .forward(sender.input_sender(), identity);
 
         let carousel = adw::Carousel::new();
@@ -78,6 +89,7 @@ impl SimpleAsyncComponent for SetupPage {
 
         let model = SetupPage {
             welcome_page,
+            choose_game_directory_page,
             download_components_page,
             game_state,
             carousel: carousel.clone(),
@@ -88,24 +100,20 @@ impl SimpleAsyncComponent for SetupPage {
     }
 
     async fn update(&mut self, message: Self::Input, sender: AsyncComponentSender<Self>) {
-        match message {
-            SetupPageMsg::UpdateGameState => {
-                self.game_state = GameState::get_current_state().await.unwrap()
-            } // TODO: delete this unwrap()
-        }
+        self.game_state = GameState::get_current_state().await.unwrap(); // TODO: delete this unwrap()
 
-        match self.game_state {
-            GameState::ProtonNotInstalled => {
+        match message {
+            SetupPageMsg::GoToChooseGameDirectoryPage => {
+                self.carousel
+                    .scroll_to(self.choose_game_directory_page.widget(), true);
+            }
+            SetupPageMsg::GoToDownloadComponentPage => {
                 self.carousel
                     .scroll_to(self.download_components_page.widget(), true);
             }
-            GameState::DXVKNotInstalled => todo!(),
-            GameState::FontNotInstalled => todo!(),
-            GameState::DependecieNotInstalled => todo!(),
-            GameState::GameNotInstalled => todo!(),
-            GameState::GameNeedUpdate => todo!(),
-            GameState::GameNotPatched => todo!(),
-            GameState::GameInstalled => todo!(),
+            SetupPageMsg::Finish => {
+                sender.output(MainWindowMsg::UpdateGameState);
+            }
         }
     }
 }

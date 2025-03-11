@@ -143,6 +143,7 @@ impl SimpleAsyncComponent for MainWindow {
                         gtk::Box {
                             set_orientation: gtk::Orientation::Vertical,
 
+                            #[watch]
                             set_visible: !model.game_state.is_environment_ready(),
 
                             model.setup_page.widget(),
@@ -210,6 +211,8 @@ impl SimpleAsyncComponent for MainWindow {
 
         let widgets = view_output!();
 
+        debug!("current GameState : {:?}", model.game_state);
+
         AsyncComponentParts { model, widgets }
     }
 
@@ -239,6 +242,10 @@ impl SimpleAsyncComponent for MainWindow {
             MainWindowMsg::SetIsGameRunning(value) => self.is_game_running = value,
             MainWindowMsg::UpdateGameState => {
                 self.game_state = GameState::get_current_state().await.unwrap();
+                debug!(
+                    "is_environment_ready : {}",
+                    self.game_state.is_environment_ready()
+                );
             }
         }
     }

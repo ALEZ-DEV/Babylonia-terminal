@@ -4,7 +4,8 @@ use babylonia_terminal_sdk::{
     components::proton_component::ProtonComponent, game_config::GameConfig,
     game_manager::GameManager, utils::github_requester::GithubRelease,
 };
-use log::error;
+use downloader::download;
+use log::{debug, error};
 use relm4::{
     tokio::{self, sync::OnceCell},
     Worker,
@@ -117,6 +118,13 @@ impl Worker for HandleComponentInstallation {
                         let _ = sender.output(
                             download_components::DownloadComponentsMsg::UpdateProgressBarMsg(
                                 String::from("Starting download for proton"),
+                                Some(String::from("Unpacking and initializing proton")),
+                            ),
+                        );
+
+                        let _ = sender.output(
+                            download_components::DownloadComponentsMsg::UpdateCurrentlyInstalling(
+                                download_components::CurrentlyInstalling::Proton,
                             ),
                         );
 
@@ -132,17 +140,39 @@ impl Worker for HandleComponentInstallation {
                             GameConfig::get_config_directory().await
                         };
 
-                        GameManager::install_wine(game_dir, proton_release, Some(progress_bar))
+                        GameManager::install_wine(game_dir.clone(), proton_release, Some(progress_bar.clone()))
                             .await;
 
-                        let _ = sender.output(
-                            download_components::DownloadComponentsMsg::UpdateProgressBarMsg(
-                                String::from("Unpacking proton"),
-                            ),
-                        );
+                        let _ = sender
+                            .output(download_components::DownloadComponentsMsg::UpdateProgressBarMsg(String::from("Starting download for DXVK"), Some(String::from("Installing DXVK"))));
+
+                        let _ = sender.output(download_components::DownloadComponentsMsg::UpdateCurrentlyInstalling(download_components::CurrentlyInstalling::DXVK));
+
+                        let _ = sender.output(download_components::DownloadComponentsMsg::UpdateDownloadedComponentName(String::from("DXVK")));
+
+                        GameManager::install_dxvk(&get_proton().await, game_dir, dxvk_release, Some(progress_bar.clone())).await;
 
                         let _ = sender
-                            .output(download_components::DownloadComponentsMsg::UpdateGameState);
+                            .output(download_components::DownloadComponentsMsg::UpdateProgressBarMsg(String::from("Downloading and installing fonts"), Some(String::from("Fonts installed"))));
+
+                        let _ = sender.output(download_components::DownloadComponentsMsg::UpdateCurrentlyInstalling(download_components::CurrentlyInstalling::Fonts));
+
+                        let _ = sender.output(download_components::DownloadComponentsMsg::UpdateDownloadedComponentName(String::from("fonts")));
+
+                        GameManager::install_font(&get_proton().await, Some(progress_bar.clone())).await;
+
+                        let _ = sender
+                            .output(download_components::DownloadComponentsMsg::UpdateProgressBarMsg(String::from("Download and installing denpendecies"), None));
+
+                        let _ = sender.output(download_components::DownloadComponentsMsg::UpdateCurrentlyInstalling(download_components::CurrentlyInstalling::Denpendecies));
+
+                        let _ = sender.output(download_components::DownloadComponentsMsg::UpdateDownloadedComponentName(String::from("denpendecies")));
+
+                        GameManager::install_dependencies(&get_proton().await).await;
+
+                        debug!("Finished to installing the components!");
+
+                        let _ = sender.output(download_components::DownloadComponentsMsg::Finish);
                     });
             }
         }

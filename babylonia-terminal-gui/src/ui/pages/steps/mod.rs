@@ -80,7 +80,7 @@ impl SimpleAsyncComponent for SetupPage {
             .launch(())
             .forward(sender.input_sender(), identity);
         let download_components_page = DownloadComponentsPage::builder()
-            .launch(game_state.clone())
+            .launch(())
             .forward(sender.input_sender(), identity);
 
         let carousel = adw::Carousel::new();

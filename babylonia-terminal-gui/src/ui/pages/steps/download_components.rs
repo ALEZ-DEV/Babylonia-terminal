@@ -6,9 +6,12 @@ use babylonia_terminal_sdk::{
         proton_component::{self, ProtonComponent},
     },
     game_state::GameState,
-    utils::github_requester::{GithubRelease, GithubRequester},
+    utils::{
+        github_requester::{GithubRelease, GithubRequester},
+        kuro_prod_api::CurrentGameInfo,
+    },
 };
-use log::{error, info};
+use log::{debug, error, info};
 use relm4::{
     self,
     gtk::{self, prelude::*},
@@ -25,18 +28,25 @@ use super::SetupPageMsg;
 
 #[derive(Debug)]
 pub enum DownloadComponentsMsg {
-    Next,
-    UpdateGameState,
     UpdateProgressBar((u64, u64)), // current and max_progress
-    UpdateProgressBarMsg(String),
+    UpdateProgressBarMsg(String, Option<String>), // current msg and when done msg
+    ShowDoneMsg,
     UpdateDownloadedComponentName(String),
+    UpdateCurrentlyInstalling(CurrentlyInstalling),
+    Finish,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub enum CurrentlyInstalling {
+    None,
+    Proton,
+    DXVK,
+    Fonts,
+    Denpendecies,
 }
 
 #[derive(Debug)]
 pub struct DownloadComponentsPage {
-    //state
-    game_state: GameState,
-
     // widgets
     proton_combo: adw::ComboRow,
     dxvk_combo: adw::ComboRow,
@@ -54,9 +64,10 @@ pub struct DownloadComponentsPage {
     show_progress_bar: bool,
 
     // download part
-    is_installing: bool,
     installation_handler: WorkerController<manager::HandleComponentInstallation>,
     downloaded_component_name: String,
+    currently_installing: CurrentlyInstalling,
+    msg_when_done: Option<String>,
 }
 
 #[relm4::component(async, pub)]
@@ -65,7 +76,7 @@ impl SimpleAsyncComponent for DownloadComponentsPage {
 
     type Output = SetupPageMsg;
 
-    type Init = GameState;
+    type Init = ();
 
     view! {
         #[root]
@@ -73,7 +84,7 @@ impl SimpleAsyncComponent for DownloadComponentsPage {
             adw::PreferencesPage {
                 set_hexpand: true,
                 #[watch]
-                set_visible: !model.is_installing,
+                set_visible: model.currently_installing == CurrentlyInstalling::None,
 
                 add = &adw::PreferencesGroup {
                     set_valign: gtk::Align::Center,
@@ -124,7 +135,7 @@ impl SimpleAsyncComponent for DownloadComponentsPage {
                         set_hexpand: false,
                         set_width_request: 200,
 
-                        connect_clicked => DownloadComponentsMsg::Next,
+                        connect_clicked => DownloadComponentsMsg::UpdateCurrentlyInstalling(CurrentlyInstalling::Proton),
                     },
                 },
             },
@@ -132,7 +143,7 @@ impl SimpleAsyncComponent for DownloadComponentsPage {
             adw::PreferencesPage {
                 set_hexpand: true,
                 #[watch]
-                set_visible: model.is_installing,
+                set_visible: model.currently_installing != CurrentlyInstalling::None,
 
                 add = &adw::PreferencesGroup {
                     set_valign: gtk::Align::Center,
@@ -149,21 +160,72 @@ impl SimpleAsyncComponent for DownloadComponentsPage {
                     set_vexpand: true,
 
                     adw::ActionRow {
+                        set_title: "Proton",
                         #[watch]
-                        set_title: match &model.selected_proton_version {
+                        set_subtitle: match &model.selected_proton_version {
                             Some(release) => &release.tag_name,
                             None => "WTF??!! there's no proton version found ????",
                         },
-                        set_subtitle: "Proton version",
 
                         #[watch]
-                        set_icon_name: if model.game_state == GameState::ProtonNotInstalled { Some("emblem-ok-symbolic") } else { Some("process-working") },
+                        set_icon_name: if model.currently_installing == CurrentlyInstalling::Proton { Some("process-working") } else { Some("emblem-ok-symbolic") },
 
                         add_prefix = &gtk::Spinner {
                             set_spinning: true,
 
                             #[watch]
-                            set_visible: model.game_state == GameState::ProtonNotInstalled,
+                            set_visible: model.currently_installing == CurrentlyInstalling::Proton,
+                        }
+                    },
+
+                    adw::ActionRow {
+                        set_title: "DXVK",
+                        #[watch]
+                        set_subtitle: match &model.selected_dxvk_version {
+                            Some(release) => &release.tag_name,
+                            None => "WTF??!! there's no proton version found ????",
+                        },
+
+                        #[watch]
+                        set_icon_name: if model.currently_installing == CurrentlyInstalling::DXVK { Some("process-working") } else { Some("emblem-ok-symbolic") },
+
+                        add_prefix = &gtk::Spinner {
+                            set_spinning: true,
+
+                            #[watch]
+                            set_visible: model.currently_installing == CurrentlyInstalling::DXVK,
+                        }
+                    },
+
+                    adw::ActionRow {
+                        #[watch]
+                        set_title: "Fonts",
+                        set_subtitle: "Arial",
+
+                        #[watch]
+                        set_icon_name: if model.currently_installing == CurrentlyInstalling::Fonts { Some("process-working") } else { Some("emblem-ok-symbolic") },
+
+                        add_prefix = &gtk::Spinner {
+                            set_spinning: true,
+
+                            #[watch]
+                            set_visible: model.currently_installing == CurrentlyInstalling::Fonts,
+                        }
+                    },
+
+                    adw::ActionRow {
+                        #[watch]
+                        set_title: "vcrun2022",
+                        set_subtitle: "Denpendecies",
+
+                        #[watch]
+                        set_icon_name: if model.currently_installing == CurrentlyInstalling::Denpendecies { Some("process-working") } else { Some("emblem-ok-symbolic") },
+
+                        add_prefix = &gtk::Spinner {
+                            set_spinning: true,
+
+                            #[watch]
+                            set_visible: model.currently_installing == CurrentlyInstalling::Denpendecies,
                         }
                     }
                 },
@@ -171,6 +233,8 @@ impl SimpleAsyncComponent for DownloadComponentsPage {
                 add = &adw::PreferencesGroup {
                     set_valign: gtk::Align::Center,
                     set_vexpand: true,
+
+                    set_visible: model.currently_installing != CurrentlyInstalling::Fonts && model.currently_installing != CurrentlyInstalling::Denpendecies,
 
                     gtk::ProgressBar {
                         #[watch]
@@ -186,7 +250,7 @@ impl SimpleAsyncComponent for DownloadComponentsPage {
     }
 
     async fn init(
-        game_state: Self::Init,
+        _: Self::Init,
         root: Self::Root,
         sender: AsyncComponentSender<Self>,
     ) -> AsyncComponentParts<Self> {
@@ -203,8 +267,6 @@ impl SimpleAsyncComponent for DownloadComponentsPage {
                 .unwrap(); //TODO: remove unwrap()
 
         let model = DownloadComponentsPage {
-            game_state,
-
             proton_combo: adw::ComboRow::new(),
             dxvk_combo: adw::ComboRow::new(),
 
@@ -218,11 +280,12 @@ impl SimpleAsyncComponent for DownloadComponentsPage {
             fraction: 0.0,
             show_progress_bar: false,
 
-            is_installing: false,
             installation_handler: manager::HandleComponentInstallation::builder()
                 .detach_worker(())
                 .forward(sender.input_sender(), identity),
             downloaded_component_name: String::new(),
+            currently_installing: CurrentlyInstalling::None,
+            msg_when_done: None,
         };
 
         let proton_combo = &model.proton_combo;
@@ -235,34 +298,8 @@ impl SimpleAsyncComponent for DownloadComponentsPage {
 
     async fn update(&mut self, message: Self::Input, sender: AsyncComponentSender<Self>) -> () {
         match message {
-            DownloadComponentsMsg::Next => {
-                if !self.is_installing {
-                    self.is_installing = true;
-
-                    let proton_index = self.proton_combo.selected() as usize;
-                    let dxvk_index = self.dxvk_combo.selected() as usize;
-
-                    let proton_release = self.proton_versions[proton_index].clone();
-                    let dxvk_release = self.dxvk_versions[dxvk_index].clone();
-
-                    self.selected_proton_version = Some(proton_release);
-                    self.selected_dxvk_version = Some(dxvk_release);
-                    let _ = self.installation_handler.sender().send(
-                        manager::HandleComponentInstallationMsg::StartInstallation((
-                            proton_index,
-                            dxvk_index,
-                            self.progress_bar_reporter.clone(),
-                        )),
-                    );
-                } else {
-                    let _ = sender.output(SetupPageMsg::Finish);
-                }
-            }
             DownloadComponentsMsg::UpdateDownloadedComponentName(name) => {
                 self.downloaded_component_name = name;
-            }
-            DownloadComponentsMsg::UpdateGameState => {
-                self.game_state = GameState::get_current_state().await.unwrap();
             }
             DownloadComponentsMsg::UpdateProgressBar((current, max_progress)) => {
                 self.fraction = if current == 0 {
@@ -277,9 +314,42 @@ impl SimpleAsyncComponent for DownloadComponentsPage {
                     self.fraction * 100.0
                 );
             }
-            DownloadComponentsMsg::UpdateProgressBarMsg(message) => {
+            DownloadComponentsMsg::UpdateProgressBarMsg(message, message_when_done) => {
                 self.progress_bar_message = message;
+                self.msg_when_done = message_when_done;
             }
+            DownloadComponentsMsg::ShowDoneMsg => {
+                if let Some(msg) = self.msg_when_done.clone() {
+                    self.progress_bar_message = msg;
+                }
+            }
+            DownloadComponentsMsg::UpdateCurrentlyInstalling(currently_installing) => {
+                self.currently_installing = currently_installing;
+            }
+            DownloadComponentsMsg::Finish => {
+                let _ = sender.output(SetupPageMsg::Finish);
+            }
+        }
+
+        if self.selected_proton_version.is_none()
+            && self.selected_dxvk_version.is_none()
+            && self.currently_installing != CurrentlyInstalling::None
+        {
+            let proton_index = self.proton_combo.selected() as usize;
+            let dxvk_index = self.dxvk_combo.selected() as usize;
+
+            let proton_release = self.proton_versions[proton_index].clone();
+            let dxvk_release = self.dxvk_versions[dxvk_index].clone();
+
+            self.selected_proton_version = Some(proton_release);
+            self.selected_dxvk_version = Some(dxvk_release);
+            let _ = self.installation_handler.sender().send(
+                manager::HandleComponentInstallationMsg::StartInstallation((
+                    proton_index,
+                    dxvk_index,
+                    self.progress_bar_reporter.clone(),
+                )),
+            );
         }
     }
 }
@@ -324,7 +394,7 @@ impl downloader::progress::Reporter for DownloadComponentProgressBarReporter {
     fn set_message(&self, message: &str) {}
 
     fn done(&self) {
-        self.sender.input(DownloadComponentsMsg::Next);
+        self.sender.input(DownloadComponentsMsg::ShowDoneMsg);
         let mut guard = self.private.lock().unwrap();
         *guard = None;
     }

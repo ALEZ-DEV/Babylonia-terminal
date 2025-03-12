@@ -1,5 +1,6 @@
 use std::{convert::identity, usize};
 
+use arboard::Clipboard;
 use babylonia_terminal_sdk::{
     components::{
         dxvk_component::{self, DXVKComponent},
@@ -22,7 +23,7 @@ use relm4::{
 use adw::prelude::*;
 use libadwaita as adw;
 
-use crate::{manager, ui::MainWindowMsg};
+use crate::{manager, ui::MAIN_WINDOW};
 
 use super::SetupPageMsg;
 
@@ -33,7 +34,9 @@ pub enum DownloadComponentsMsg {
     ShowDoneMsg,
     UpdateDownloadedComponentName(String),
     UpdateCurrentlyInstalling(CurrentlyInstalling),
+    ShowError(String), // error message
     Finish,
+    Quit,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -50,6 +53,7 @@ pub struct DownloadComponentsPage {
     // widgets
     proton_combo: adw::ComboRow,
     dxvk_combo: adw::ComboRow,
+    //error_dialog: Controller<CopyDialog>,
 
     // values
     proton_versions: Vec<GithubRelease>,
@@ -136,6 +140,16 @@ impl SimpleAsyncComponent for DownloadComponentsPage {
                         set_width_request: 200,
 
                         connect_clicked => DownloadComponentsMsg::UpdateCurrentlyInstalling(CurrentlyInstalling::Proton),
+                    },
+
+                    gtk::Button {
+                        set_css_classes: &["suggested-action", "pill"],
+
+                        set_label: "Test dialog",
+                        set_hexpand: false,
+                        set_width_request: 200,
+
+                        connect_clicked => DownloadComponentsMsg::ShowError(String::from("Test dialog")),
                     },
                 },
             },
@@ -269,7 +283,12 @@ impl SimpleAsyncComponent for DownloadComponentsPage {
         let model = DownloadComponentsPage {
             proton_combo: adw::ComboRow::new(),
             dxvk_combo: adw::ComboRow::new(),
-
+            //error_dialog: CopyDialog::builder()
+            //    .transient_for(&root)
+            //    .launch(())
+            //    .forward(sender.input_sender(), move |msg| match msg {
+            //        DialogOutput::Close => DownloadComponentsMsg::Quit,
+            //    }),
             proton_versions: proton_releases,
             dxvk_versions: dxvk_releases,
             selected_proton_version: None,
@@ -326,9 +345,32 @@ impl SimpleAsyncComponent for DownloadComponentsPage {
             DownloadComponentsMsg::UpdateCurrentlyInstalling(currently_installing) => {
                 self.currently_installing = currently_installing;
             }
+            DownloadComponentsMsg::ShowError(message) => {
+                let dialog = unsafe {
+                    adw::MessageDialog::new(
+                        MAIN_WINDOW.as_ref(),
+                        Some("Error while downloading components"),
+                        Some(&message),
+                    )
+                };
+
+                dialog.add_response("close", "Close");
+                dialog.add_response("copy", "Copy");
+
+                dialog.set_response_appearance("copy", adw::ResponseAppearance::Suggested);
+
+                dialog.connect_response(Some("copy"), move |_, _| {
+                    if let Err(err) = Clipboard::new().unwrap().set_text(&message.clone()) {
+                        error!("Failed to copy the error to the clipboard : {}", err);
+                    }
+                });
+
+                dialog.present();
+            }
             DownloadComponentsMsg::Finish => {
                 let _ = sender.output(SetupPageMsg::Finish);
             }
+            DownloadComponentsMsg::Quit => relm4::main_application().quit(),
         }
 
         if self.selected_proton_version.is_none()

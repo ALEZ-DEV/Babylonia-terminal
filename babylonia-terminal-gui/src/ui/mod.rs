@@ -8,6 +8,7 @@ use relm4::{
     self,
     gtk::{self, prelude::*},
     loading_widgets::LoadingWidgets,
+    once_cell::sync::OnceCell,
     prelude::*,
     *,
 };
@@ -18,6 +19,8 @@ use libadwaita as adw;
 use crate::APP_RESOURCE_PATH;
 
 pub mod pages;
+
+pub static mut MAIN_WINDOW: Option<adw::ApplicationWindow> = None;
 
 pub fn run(app: RelmApp<MainWindowMsg>) {
     app.run_async::<MainWindow>(None);
@@ -69,7 +72,7 @@ impl SimpleAsyncComponent for MainWindow {
 
     view! {
         #[root]
-        adw::ApplicationWindow {
+        main_window = adw::ApplicationWindow {
             set_default_size: (700, 560),
 
             add_css_class?: IS_DEVEL.then_some("devel"),
@@ -210,6 +213,10 @@ impl SimpleAsyncComponent for MainWindow {
         }
 
         let widgets = view_output!();
+
+        unsafe {
+            MAIN_WINDOW = Some(widgets.main_window.clone());
+        }
 
         debug!("current GameState : {:?}", model.game_state);
 

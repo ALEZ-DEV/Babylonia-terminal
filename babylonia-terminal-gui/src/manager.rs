@@ -14,7 +14,10 @@ use wincompatlib::prelude::Proton;
 
 use crate::ui::{
     self,
-    pages::steps::{self, download_components},
+    pages::steps::{
+        self,
+        download_components::{self, DownloadComponentsPageWidgets},
+    },
 };
 
 static PROTON: OnceCell<Proton> = OnceCell::const_new();
@@ -140,8 +143,9 @@ impl Worker for HandleComponentInstallation {
                             GameConfig::get_config_directory().await
                         };
 
-                        GameManager::install_wine(game_dir.clone(), proton_release, Some(progress_bar.clone()))
-                            .await;
+                        if let Err(error) = GameManager::install_wine(game_dir.clone(), proton_release, Some(progress_bar.clone())).await {
+                            sender.output(download_components::DownloadComponentsMsg::ShowError(format!("Failed to install proton : {}", error))).unwrap();
+                        }
 
                         let _ = sender
                             .output(download_components::DownloadComponentsMsg::UpdateProgressBarMsg(String::from("Starting download for DXVK"), Some(String::from("Installing DXVK"))));
@@ -150,7 +154,9 @@ impl Worker for HandleComponentInstallation {
 
                         let _ = sender.output(download_components::DownloadComponentsMsg::UpdateDownloadedComponentName(String::from("DXVK")));
 
-                        GameManager::install_dxvk(&get_proton().await, game_dir, dxvk_release, Some(progress_bar.clone())).await;
+                        if let Err(error) = GameManager::install_dxvk(&get_proton().await, game_dir, dxvk_release, Some(progress_bar.clone())).await {
+                            sender.output(download_components::DownloadComponentsMsg::ShowError(format!("Failed to install DXVK : {}", error))).unwrap();
+                        }
 
                         let _ = sender
                             .output(download_components::DownloadComponentsMsg::UpdateProgressBarMsg(String::from("Downloading and installing fonts"), Some(String::from("Fonts installed"))));
@@ -159,7 +165,9 @@ impl Worker for HandleComponentInstallation {
 
                         let _ = sender.output(download_components::DownloadComponentsMsg::UpdateDownloadedComponentName(String::from("fonts")));
 
-                        GameManager::install_font(&get_proton().await, Some(progress_bar.clone())).await;
+                        if let Err(error) = GameManager::install_font(&get_proton().await, Some(progress_bar.clone())).await {
+                            sender.output(download_components::DownloadComponentsMsg::ShowError(format!("Failed to install fonts : {}", error))).unwrap();
+                        }
 
                         let _ = sender
                             .output(download_components::DownloadComponentsMsg::UpdateProgressBarMsg(String::from("Download and installing denpendecies"), None));
@@ -168,7 +176,10 @@ impl Worker for HandleComponentInstallation {
 
                         let _ = sender.output(download_components::DownloadComponentsMsg::UpdateDownloadedComponentName(String::from("denpendecies")));
 
-                        GameManager::install_dependencies(&get_proton().await).await;
+                        if let Err(error) = GameManager::install_dependencies(&get_proton().await).await {
+                            sender.output(download_components::DownloadComponentsMsg::ShowError(format!("Failed to install dependencies : {}", error))).unwrap();
+
+                        }
 
                         debug!("Finished to installing the components!");
 

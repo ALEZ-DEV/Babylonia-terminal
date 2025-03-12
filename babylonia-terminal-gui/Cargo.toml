@@ -13,6 +13,7 @@ relm4 = { version = "0.9.1", features = ["libadwaita"] }
 libadwaita = { version = "0.7.1", features = ["v1_4"] }
 downloader = { git = "https://github.com/ALEZ-DEV/downloader" }   # version = "0.2.7",
 rfd = "0.15.2"
+arboard = { version = "3.4.1", features = ["wayland-data-control"] }
 
 [build-dependencies]
 glib-build-tools = "0.20.0"

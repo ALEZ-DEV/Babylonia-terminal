@@ -145,6 +145,7 @@ impl Worker for HandleComponentInstallation {
 
                         if let Err(error) = GameManager::install_wine(game_dir.clone(), proton_release, Some(progress_bar.clone())).await {
                             sender.output(download_components::DownloadComponentsMsg::ShowError(format!("Failed to install proton : {}", error))).unwrap();
+                            return;
                         }
 
                         let _ = sender
@@ -156,6 +157,7 @@ impl Worker for HandleComponentInstallation {
 
                         if let Err(error) = GameManager::install_dxvk(&get_proton().await, game_dir, dxvk_release, Some(progress_bar.clone())).await {
                             sender.output(download_components::DownloadComponentsMsg::ShowError(format!("Failed to install DXVK : {}", error))).unwrap();
+                            return;
                         }
 
                         let _ = sender
@@ -167,6 +169,7 @@ impl Worker for HandleComponentInstallation {
 
                         if let Err(error) = GameManager::install_font(&get_proton().await, Some(progress_bar.clone())).await {
                             sender.output(download_components::DownloadComponentsMsg::ShowError(format!("Failed to install fonts : {}", error))).unwrap();
+                            return;
                         }
 
                         let _ = sender
@@ -178,7 +181,7 @@ impl Worker for HandleComponentInstallation {
 
                         if let Err(error) = GameManager::install_dependencies(&get_proton().await).await {
                             sender.output(download_components::DownloadComponentsMsg::ShowError(format!("Failed to install dependencies : {}", error))).unwrap();
-
+                            return;
                         }
 
                         debug!("Finished to installing the components!");

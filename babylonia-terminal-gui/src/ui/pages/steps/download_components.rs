@@ -141,16 +141,6 @@ impl SimpleAsyncComponent for DownloadComponentsPage {
 
                         connect_clicked => DownloadComponentsMsg::UpdateCurrentlyInstalling(CurrentlyInstalling::Proton),
                     },
-
-                    gtk::Button {
-                        set_css_classes: &["suggested-action", "pill"],
-
-                        set_label: "Test dialog",
-                        set_hexpand: false,
-                        set_width_request: 200,
-
-                        connect_clicked => DownloadComponentsMsg::ShowError(String::from("Test dialog")),
-                    },
                 },
             },
 
@@ -283,12 +273,7 @@ impl SimpleAsyncComponent for DownloadComponentsPage {
         let model = DownloadComponentsPage {
             proton_combo: adw::ComboRow::new(),
             dxvk_combo: adw::ComboRow::new(),
-            //error_dialog: CopyDialog::builder()
-            //    .transient_for(&root)
-            //    .launch(())
-            //    .forward(sender.input_sender(), move |msg| match msg {
-            //        DialogOutput::Close => DownloadComponentsMsg::Quit,
-            //    }),
+
             proton_versions: proton_releases,
             dxvk_versions: dxvk_releases,
             selected_proton_version: None,

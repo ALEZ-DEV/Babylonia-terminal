@@ -6,7 +6,8 @@ use babylonia_terminal_sdk::game_state::GameState;
 use log::debug;
 use relm4::{
     self,
-    gtk::{self, prelude::*},
+    component::AsyncConnector,
+    gtk::{self, prelude::*, Widget},
     loading_widgets::LoadingWidgets,
     once_cell::sync::OnceCell,
     prelude::*,
@@ -29,16 +30,16 @@ pub fn run(app: RelmApp<MainWindowMsg>) {
 #[derive(Debug)]
 pub enum MainWindowMsg {
     ToggleMenuVisibility,
-    SelectPage,
-    SetIsGameRunning(bool),
+    SelectPage(Pages),
     UpdateGameState,
 }
 
 struct MainWindow {
     game_state: GameState,
     setup_page: AsyncController<pages::steps::SetupPage>,
-    game_handler: WorkerController<manager::HandleGameProcess>,
-    is_game_running: bool,
+    game_page: AsyncController<pages::game::GamePage>,
+    about_page: AsyncConnector<pages::about::AboutPage>,
+    current_page: Pages,
     is_menu_visible: bool,
 }
 
@@ -48,18 +49,27 @@ impl MainWindow {
             .launch(game_state.clone())
             .forward(sender.input_sender(), identity);
 
-        let game_handler = manager::HandleGameProcess::builder()
-            .detach_worker(())
+        let game_page = pages::game::GamePage::builder()
+            .launch(())
             .forward(sender.input_sender(), identity);
+
+        let about_page = pages::about::AboutPage::builder().launch(());
 
         MainWindow {
             game_state,
             setup_page,
-            game_handler,
+            game_page,
+            about_page,
+            current_page: Pages::GamePage,
             is_menu_visible: false,
-            is_game_running: false,
         }
     }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+enum Pages {
+    GamePage,
+    AboutPage,
 }
 
 #[relm4::component(async)]
@@ -94,7 +104,7 @@ impl SimpleAsyncComponent for MainWindow {
                                 set_icon_name: "open-menu-symbolic",
 
                                 #[watch]
-                                set_visible: model.game_state == GameState::GameInstalled,
+                                set_visible: model.game_state.is_environment_ready(),
 
                                 connect_clicked => MainWindowMsg::ToggleMenuVisibility,
                             },
@@ -109,37 +119,24 @@ impl SimpleAsyncComponent for MainWindow {
                             #[watch]
                             set_visible: model.game_state.is_environment_ready(),
 
-                            adw::PreferencesPage {
-                                add = &adw::PreferencesGroup {
-                                    gtk::Picture {
-                                        set_resource: Some(&format!("{APP_RESOURCE_PATH}/icons/hicolor/scalable/apps/icon.png")),
-                                        set_vexpand: true,
-                                    },
+                            gtk::Box {
+                                set_orientation: gtk::Orientation::Vertical,
+                                set_vexpand: true,
 
-                                    gtk::Label {
-                                        set_label: "Babylonia Terminal",
-                                        set_margin_top: 24,
-                                        add_css_class: "title-1",
-                                    },
-                                },
+                                #[watch]
+                                set_visible: model.current_page == Pages::GamePage,
 
-                                add = &adw::PreferencesGroup {
-                                    set_margin_vertical: 48,
+                                model.game_page.widget(),
+                            },
 
-                                    gtk::Button {
-                                        set_css_classes: &["suggested-action", "pill"],
+                            gtk::Box {
+                                set_orientation: gtk::Orientation::Vertical,
+                                set_vexpand: true,
 
-                                        set_label: "Start game",
-                                        set_hexpand: false,
-                                        set_width_request: 200,
+                                #[watch]
+                                set_visible: model.current_page == Pages::AboutPage,
 
-                                        #[watch]
-                                        set_sensitive: !model.is_game_running,
-                                        connect_clicked[sender = model.game_handler.sender().clone()] => move |_| {
-                                            sender.send(manager::HandleGameProcessMsg::RunGame).unwrap();
-                                        },
-                                    },
-                                },
+                                model.about_page.widget(),
                             },
                         },
 
@@ -177,17 +174,23 @@ impl SimpleAsyncComponent for MainWindow {
 
                         gtk::Button {
                             set_margin_vertical: 5,
-                            set_label: "Item 1",
+                            set_label: "Game",
+
+                            connect_clicked => MainWindowMsg::SelectPage(Pages::GamePage),
                         },
 
                         gtk::Button {
                             set_margin_vertical: 5,
-                            set_label: "Item 2"
+                            set_label: "Settings",
+
+                            connect_clicked => MainWindowMsg::SelectPage(Pages::GamePage),
                         },
 
                         gtk::Button {
                             set_margin_vertical: 5,
-                            set_label: "Item 3",
+                            set_label: "About",
+
+                            connect_clicked => MainWindowMsg::SelectPage(Pages::AboutPage),
                         },
                     },
                 },
@@ -245,8 +248,10 @@ impl SimpleAsyncComponent for MainWindow {
     async fn update(&mut self, message: Self::Input, _sender: relm4::AsyncComponentSender<Self>) {
         match message {
             MainWindowMsg::ToggleMenuVisibility => self.is_menu_visible = !self.is_menu_visible,
-            MainWindowMsg::SelectPage => println!("Tried to select a new page"),
-            MainWindowMsg::SetIsGameRunning(value) => self.is_game_running = value,
+            MainWindowMsg::SelectPage(page) => {
+                self.current_page = page;
+                self.is_menu_visible = false;
+            }
             MainWindowMsg::UpdateGameState => {
                 self.game_state = GameState::get_current_state().await.unwrap();
                 debug!(

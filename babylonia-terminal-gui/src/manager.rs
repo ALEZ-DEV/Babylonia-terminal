@@ -58,7 +58,7 @@ impl Worker for HandleGameProcess {
 
     type Input = HandleGameProcessMsg;
 
-    type Output = ui::MainWindowMsg;
+    type Output = ui::pages::game::GamePageMsg;
 
     fn init(_init: Self::Init, _sender: relm4::ComponentSender<Self>) -> Self {
         Self
@@ -72,9 +72,9 @@ impl Worker for HandleGameProcess {
                     .build()
                     .unwrap()
                     .block_on(async {
-                        sender.output(ui::MainWindowMsg::SetIsGameRunning(true));
+                        sender.output(ui::pages::game::GamePageMsg::SetIsGameRunning(true));
                         run_game().await;
-                        sender.output(ui::MainWindowMsg::SetIsGameRunning(false));
+                        sender.output(ui::pages::game::GamePageMsg::SetIsGameRunning(false));
                     });
             }
         }

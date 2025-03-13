@@ -238,15 +238,37 @@ impl SimpleAsyncComponent for DownloadComponentsPage {
                     set_valign: gtk::Align::Center,
                     set_vexpand: true,
 
-                    set_visible: model.currently_installing != CurrentlyInstalling::Fonts && model.currently_installing != CurrentlyInstalling::Denpendecies,
-
                     gtk::ProgressBar {
                         #[watch]
                         set_fraction: model.fraction,
 
                         #[watch]
+                        set_visible: model.currently_installing != CurrentlyInstalling::Fonts && model.currently_installing != CurrentlyInstalling::Denpendecies,
+
+                        #[watch]
                         set_text: Some(&model.progress_bar_message),
                         set_show_text: true,
+                    },
+
+                    gtk::Box {
+                        set_valign: gtk::Align::Center,
+                        set_orientation: gtk::Orientation::Horizontal,
+
+                        gtk::Label {
+                            #[watch]
+                            set_visible: model.currently_installing == CurrentlyInstalling::Fonts || model.currently_installing == CurrentlyInstalling::Denpendecies,
+
+                            #[watch]
+                            set_label: &model.progress_bar_message,
+                            add_css_class: "title-3",
+                        },
+
+                        gtk::Spinner {
+                            set_spinning: true,
+
+                            #[watch]
+                            set_visible: model.currently_installing == CurrentlyInstalling::Fonts || model.currently_installing == CurrentlyInstalling::Denpendecies,
+                        }
                     }
                 }
             },
@@ -306,17 +328,24 @@ impl SimpleAsyncComponent for DownloadComponentsPage {
                 self.downloaded_component_name = name;
             }
             DownloadComponentsMsg::UpdateProgressBar((current, max_progress)) => {
-                self.fraction = if current == 0 {
-                    0.0
-                } else {
-                    current as f64 / max_progress as f64
-                };
+                if self.currently_installing != CurrentlyInstalling::Fonts
+                    && self.currently_installing != CurrentlyInstalling::Denpendecies
+                {
+                    self.fraction = if current == 0 {
+                        0.0
+                    } else {
+                        current as f64 / max_progress as f64
+                    };
 
-                self.progress_bar_message = format!(
-                    "Downloading {} : {:.2}%",
-                    self.downloaded_component_name,
-                    self.fraction * 100.0
-                );
+                    self.progress_bar_message = format!(
+                        "Downloading {} : {:.2}%",
+                        self.downloaded_component_name,
+                        self.fraction * 100.0
+                    );
+                } else {
+                    self.progress_bar_message =
+                        format!("Downloading {}", self.downloaded_component_name);
+                }
             }
             DownloadComponentsMsg::UpdateProgressBarMsg(message, message_when_done) => {
                 self.progress_bar_message = message;

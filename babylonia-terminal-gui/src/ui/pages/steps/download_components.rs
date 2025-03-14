@@ -251,7 +251,7 @@ impl SimpleAsyncComponent for DownloadComponentsPage {
                     },
 
                     gtk::Box {
-                        set_valign: gtk::Align::Center,
+                        set_halign: gtk::Align::Center,
                         set_orientation: gtk::Orientation::Horizontal,
 
                         gtk::Label {
@@ -265,6 +265,7 @@ impl SimpleAsyncComponent for DownloadComponentsPage {
 
                         gtk::Spinner {
                             set_spinning: true,
+                            set_margin_start: 24,
 
                             #[watch]
                             set_visible: model.currently_installing == CurrentlyInstalling::Fonts || model.currently_installing == CurrentlyInstalling::Denpendecies,

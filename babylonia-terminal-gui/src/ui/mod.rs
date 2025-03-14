@@ -4,6 +4,7 @@ use crate::{manager, IS_DEVEL};
 use babylonia_terminal_sdk::game_state::GameState;
 
 use log::debug;
+use pages::game::GamePageMsg;
 use relm4::{
     self,
     component::AsyncConnector,
@@ -51,7 +52,7 @@ impl MainWindow {
             .forward(sender.input_sender(), identity);
 
         let game_page = pages::game::GamePage::builder()
-            .launch(())
+            .launch(game_state.clone())
             .forward(sender.input_sender(), identity);
 
         let about_page = pages::about::AboutPage::builder().launch(());
@@ -269,6 +270,7 @@ impl SimpleAsyncComponent for MainWindow {
             }
             MainWindowMsg::UpdateGameState => {
                 self.game_state = GameState::get_current_state().await.unwrap();
+                self.game_page.sender().send(GamePageMsg::UpdateGameState);
                 debug!(
                     "is_environment_ready : {}",
                     self.game_state.is_environment_ready()

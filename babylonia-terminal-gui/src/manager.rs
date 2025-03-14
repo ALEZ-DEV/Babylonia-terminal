@@ -14,9 +14,12 @@ use wincompatlib::prelude::Proton;
 
 use crate::ui::{
     self,
-    pages::steps::{
+    pages::{
         self,
-        download_components::{self, DownloadComponentsPageWidgets},
+        steps::{
+            self,
+            download_components::{self, DownloadComponentsPageWidgets},
+        },
     },
 };
 
@@ -51,6 +54,7 @@ pub enum HandleGameProcessMsg {
     RunGame,
 }
 
+#[derive(Debug)]
 pub struct HandleGameProcess;
 
 impl Worker for HandleGameProcess {
@@ -75,6 +79,114 @@ impl Worker for HandleGameProcess {
                         sender.output(ui::pages::game::GamePageMsg::SetIsGameRunning(true));
                         run_game().await;
                         sender.output(ui::pages::game::GamePageMsg::SetIsGameRunning(false));
+                    });
+            }
+        }
+    }
+}
+
+#[derive(Debug)]
+pub enum HandleGameInstallationMsg {
+    StartInstallation(Arc<pages::game::ProgressBarGameInstallationReporter>),
+    StartPatch,
+    StartUpdate(Arc<pages::game::ProgressBarGameInstallationReporter>),
+}
+
+#[derive(Debug)]
+pub struct HandleGameInstallation;
+
+impl Worker for HandleGameInstallation {
+    type Init = ();
+
+    type Input = HandleGameInstallationMsg;
+
+    type Output = pages::game::GamePageMsg;
+
+    fn init(init: Self::Init, sender: relm4::ComponentSender<Self>) -> Self {
+        Self
+    }
+
+    fn update(&mut self, message: Self::Input, sender: relm4::ComponentSender<Self>) {
+        match message {
+            HandleGameInstallationMsg::StartInstallation(progress_bar) => {
+                tokio::runtime::Builder::new_current_thread()
+                    .enable_all()
+                    .build()
+                    .unwrap()
+                    .block_on(async {
+                        sender.output(pages::game::GamePageMsg::SetIsDownloading(true));
+
+                        let game_dir = if let Some(dir) = GameConfig::get_config().await.game_dir {
+                            dir
+                        } else {
+                            GameConfig::get_config_directory().await
+                        };
+
+                        if let Err(error) = GameManager::install_game(game_dir, progress_bar).await
+                        {
+                            sender.output(pages::game::GamePageMsg::ShowError(format!(
+                                "Error while downloading the game : {}",
+                                error
+                            )));
+                        };
+
+                        sender.output(pages::game::GamePageMsg::SetIsDownloading(false));
+                    });
+            }
+            HandleGameInstallationMsg::StartPatch => {
+                tokio::runtime::Builder::new_current_thread()
+                    .enable_all()
+                    .build()
+                    .unwrap()
+                    .block_on(async {
+                        sender.output(pages::game::GamePageMsg::SetIsPatching(true));
+
+                        let game_dir = if let Some(dir) = GameConfig::get_config().await.game_dir {
+                            dir
+                        } else {
+                            GameConfig::get_config_directory().await
+                        };
+
+                        if let Err(error) = GameManager::patch_game(game_dir).await {
+                            sender.output(pages::game::GamePageMsg::ShowError(format!(
+                                "Error while patching the game : {}",
+                                error
+                            )));
+                        };
+
+                        sender.output(pages::game::GamePageMsg::SetIsPatching(false));
+                    });
+            }
+            HandleGameInstallationMsg::StartUpdate(progress_bar) => {
+                tokio::runtime::Builder::new_current_thread()
+                    .enable_all()
+                    .build()
+                    .unwrap()
+                    .block_on(async {
+                        sender.output(pages::game::GamePageMsg::SetIsDownloading(true));
+
+                        if let Err(error) = GameManager::update_game().await {
+                            sender.output(pages::game::GamePageMsg::ShowError(format!(
+                                "Error while updating the game : {}",
+                                error
+                            )));
+                        };
+
+                        let game_dir = if let Some(dir) = GameConfig::get_config().await.game_dir {
+                            dir
+                        } else {
+                            GameConfig::get_config_directory().await
+                        };
+
+                        if let Err(error) = GameManager::install_game(game_dir, progress_bar).await
+                        {
+                            sender.output(pages::game::GamePageMsg::ShowError(format!(
+                                "Error while updating the game : {}",
+                                error
+                            )));
+                        };
+
+                        sender.output(pages::game::GamePageMsg::SetIsDownloading(true));
                     });
             }
         }

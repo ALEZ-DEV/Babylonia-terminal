@@ -38,6 +38,7 @@ struct MainWindow {
     game_state: GameState,
     setup_page: AsyncController<pages::steps::SetupPage>,
     game_page: AsyncController<pages::game::GamePage>,
+    settings_page: AsyncConnector<pages::settings::SettingsPage>,
     about_page: AsyncConnector<pages::about::AboutPage>,
     current_page: Pages,
     is_menu_visible: bool,
@@ -55,10 +56,13 @@ impl MainWindow {
 
         let about_page = pages::about::AboutPage::builder().launch(());
 
+        let settings_page = pages::settings::SettingsPage::builder().launch(());
+
         MainWindow {
             game_state,
             setup_page,
             game_page,
+            settings_page,
             about_page,
             current_page: Pages::GamePage,
             is_menu_visible: false,
@@ -69,6 +73,7 @@ impl MainWindow {
 #[derive(Debug, PartialEq, Eq)]
 enum Pages {
     GamePage,
+    SettingsPage,
     AboutPage,
 }
 
@@ -134,6 +139,16 @@ impl SimpleAsyncComponent for MainWindow {
                                 set_vexpand: true,
 
                                 #[watch]
+                                set_visible: model.current_page == Pages::SettingsPage,
+
+                                model.settings_page.widget(),
+                            },
+
+                            gtk::Box {
+                                set_orientation: gtk::Orientation::Vertical,
+                                set_vexpand: true,
+
+                                #[watch]
                                 set_visible: model.current_page == Pages::AboutPage,
 
                                 model.about_page.widget(),
@@ -183,7 +198,7 @@ impl SimpleAsyncComponent for MainWindow {
                             set_margin_vertical: 5,
                             set_label: "Settings",
 
-                            connect_clicked => MainWindowMsg::SelectPage(Pages::GamePage),
+                            connect_clicked => MainWindowMsg::SelectPage(Pages::SettingsPage),
                         },
 
                         gtk::Button {

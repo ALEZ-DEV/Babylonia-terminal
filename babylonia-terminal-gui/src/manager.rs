@@ -39,14 +39,16 @@ pub async fn get_proton() -> Proton {
         .clone()
 }
 
-pub async fn run_game() {
+pub async fn run_game() -> anyhow::Result<()> {
     let proton = get_proton().await;
-    let game_dir = GameConfig::get_game_dir().await;
+    let game_dir = GameConfig::get_config().await.game_dir;
     if game_dir.is_none() {
-        error!("Failed to start game, the game directory was not found")
+        anyhow::bail!("Failed to start game, the game directory was not found");
     }
 
-    GameManager::start_game(&proton, game_dir.unwrap(), None, false).await;
+    GameManager::start_game(&proton, game_dir.unwrap(), None, false).await?;
+
+    Ok(())
 }
 
 #[derive(Debug)]
@@ -77,7 +79,12 @@ impl Worker for HandleGameProcess {
                     .unwrap()
                     .block_on(async {
                         sender.output(ui::pages::game::GamePageMsg::SetIsGameRunning(true));
-                        run_game().await;
+                        if let Err(error) = run_game().await {
+                            sender.output(pages::game::GamePageMsg::ShowError(format!(
+                                "Unable to start game : {}",
+                                error
+                            )));
+                        };
                         sender.output(ui::pages::game::GamePageMsg::SetIsGameRunning(false));
                     });
             }
@@ -131,6 +138,7 @@ impl Worker for HandleGameInstallation {
                         };
 
                         sender.output(pages::game::GamePageMsg::SetIsDownloading(false));
+                        sender.output(pages::game::GamePageMsg::UpdateGameState);
                     });
             }
             HandleGameInstallationMsg::StartPatch => {
@@ -155,6 +163,7 @@ impl Worker for HandleGameInstallation {
                         };
 
                         sender.output(pages::game::GamePageMsg::SetIsPatching(false));
+                        sender.output(pages::game::GamePageMsg::UpdateGameState);
                     });
             }
             HandleGameInstallationMsg::StartUpdate(progress_bar) => {
@@ -187,6 +196,7 @@ impl Worker for HandleGameInstallation {
                         };
 
                         sender.output(pages::game::GamePageMsg::SetIsDownloading(true));
+                        sender.output(pages::game::GamePageMsg::UpdateGameState);
                     });
             }
         }

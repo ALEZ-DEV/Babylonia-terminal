@@ -153,8 +153,8 @@ impl GameManager {
         game_dir: PathBuf,
         options: Option<String>,
         show_logs: bool,
-    ) {
-        let proton_version = proton.wine().version().unwrap();
+    ) -> anyhow::Result<()> {
+        let proton_version = proton.wine().version()?;
         let binary_path = game_dir
             .join(get_game_name())
             .join(get_game_name_with_executable());
@@ -162,16 +162,12 @@ impl GameManager {
         debug!("Wine version : {:?}", proton_version);
 
         let mut child = if let Some(custom_command) = options {
-            Self::run(proton, binary_path, Some(custom_command))
-                .await
-                .unwrap()
+            Self::run(proton, binary_path, Some(custom_command)).await?
         } else {
             if let Some(custom_command) = GameConfig::get_launch_options().await.unwrap() {
-                Self::run(proton, binary_path, Some(custom_command))
-                    .await
-                    .unwrap()
+                Self::run(proton, binary_path, Some(custom_command)).await?
             } else {
-                Self::run(proton, binary_path, None).await.unwrap()
+                Self::run(proton, binary_path, None).await?
             }
         };
 
@@ -274,6 +270,8 @@ impl GameManager {
             .write_all(to_write)
             .await
             .expect("Failed to write the output to the log file");
+
+        Ok(())
     }
 
     async fn run(

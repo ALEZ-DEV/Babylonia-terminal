@@ -80,6 +80,7 @@ impl SimpleAsyncComponent for GamePage {
                         set_hexpand: false,
                         set_width_request: 200,
 
+                        #[watch]
                         set_visible: model.game_state == GameState::GameNotInstalled,
 
                         #[watch]
@@ -96,6 +97,7 @@ impl SimpleAsyncComponent for GamePage {
                         set_hexpand: false,
                         set_width_request: 200,
 
+                        #[watch]
                         set_visible: model.game_state == GameState::GameNotPatched,
 
                         #[watch]
@@ -112,6 +114,7 @@ impl SimpleAsyncComponent for GamePage {
                         set_hexpand: false,
                         set_width_request: 200,
 
+                        #[watch]
                         set_visible: model.game_state == GameState::GameInstalled,
 
                         #[watch]
@@ -189,6 +192,7 @@ impl SimpleAsyncComponent for GamePage {
 
                 gtk::Box {
                     set_orientation: gtk::Orientation::Horizontal,
+                    set_halign: gtk::Align::Center,
 
                     gtk::Label {
                         set_label: "Patching game",

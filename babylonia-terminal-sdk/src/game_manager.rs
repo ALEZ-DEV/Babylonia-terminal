@@ -278,7 +278,7 @@ impl GameManager {
         proton: &Proton,
         binary_path: PathBuf,
         custom_command: Option<String>,
-    ) -> Result<Child, std::io::Error> {
+    ) -> anyhow::Result<Result<Child, std::io::Error>> {
         let mut command: Vec<&str> = vec![];
 
         let proton_path = GameConfig::get_config_directory()
@@ -298,10 +298,11 @@ impl GameManager {
             let tokens: Vec<&str> = launch_option.split_whitespace().collect();
 
             // position of the %command%
-            let index = tokens
-                .iter()
-                .position(|&s| s == "%command%")
-                .expect("You forget to put %command% in your custom launch command");
+            let index = if let Some(v) = tokens.iter().position(|&s| s == "%command%") {
+                v
+            } else {
+                anyhow::bail!("You forget to put %command% in your custom launch command");
+            };
 
             let start_command = tokens[0..index].to_vec();
             let mut end_command = tokens[(index + 1)..tokens.len()].to_vec();
@@ -316,14 +317,14 @@ impl GameManager {
 
         debug!("Command preview -> {}", command.join(" "));
 
-        Command::new(command[0])
+        Ok(Command::new(command[0])
             .args(&command[1..command.len()])
             .envs(proton.get_envs())
             .env("PROTON_LOG", "1")
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
-            .spawn()
+            .spawn())
     }
 }
 

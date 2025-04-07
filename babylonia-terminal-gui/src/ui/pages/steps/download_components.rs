@@ -6,6 +6,7 @@ use babylonia_terminal_sdk::{
         dxvk_component::{self, DXVKComponent},
         proton_component::{self, ProtonComponent},
     },
+    game_config::GameConfig,
     game_state::GameState,
     utils::{
         github_requester::{GithubRelease, GithubRequester},
@@ -60,6 +61,7 @@ pub struct DownloadComponentsPage {
     dxvk_versions: Vec<GithubRelease>,
     selected_proton_version: Option<GithubRelease>,
     selected_dxvk_version: Option<GithubRelease>,
+    game_config: GameConfig,
 
     //progress_bar
     progress_bar_reporter: std::sync::Arc<DownloadComponentProgressBarReporter>,
@@ -101,6 +103,7 @@ impl SimpleAsyncComponent for DownloadComponentsPage {
                 },
 
                 add = &adw::PreferencesGroup {
+                    set_width_request: 500,
                     set_valign: gtk::Align::Center,
                     set_vexpand: true,
 
@@ -150,6 +153,7 @@ impl SimpleAsyncComponent for DownloadComponentsPage {
                 set_visible: model.currently_installing != CurrentlyInstalling::None,
 
                 add = &adw::PreferencesGroup {
+                    set_width_request: 500,
                     set_valign: gtk::Align::Center,
                     set_vexpand: true,
 
@@ -172,7 +176,7 @@ impl SimpleAsyncComponent for DownloadComponentsPage {
                         },
 
                         #[watch]
-                        set_icon_name: if model.currently_installing == CurrentlyInstalling::Proton { Some("process-working") } else { Some("emblem-ok-symbolic") },
+                        set_icon_name: if model.currently_installing != CurrentlyInstalling::Proton && model.game_config.is_wine_installed { Some("emblem-ok-symbolic") } else { None },
 
                         add_prefix = &gtk::Spinner {
                             set_spinning: true,
@@ -191,7 +195,7 @@ impl SimpleAsyncComponent for DownloadComponentsPage {
                         },
 
                         #[watch]
-                        set_icon_name: if model.currently_installing == CurrentlyInstalling::DXVK { Some("process-working") } else { Some("emblem-ok-symbolic") },
+                        set_icon_name: if model.currently_installing != CurrentlyInstalling::DXVK && model.game_config.is_dxvk_installed { Some("emblem-ok-symbolic") } else { None },
 
                         add_prefix = &gtk::Spinner {
                             set_spinning: true,
@@ -207,7 +211,7 @@ impl SimpleAsyncComponent for DownloadComponentsPage {
                         set_subtitle: "Arial",
 
                         #[watch]
-                        set_icon_name: if model.currently_installing == CurrentlyInstalling::Fonts { Some("process-working") } else { Some("emblem-ok-symbolic") },
+                        set_icon_name: if model.currently_installing != CurrentlyInstalling::Fonts && model.game_config.is_font_installed { Some("emblem-ok-symbolic") } else { None },
 
                         add_prefix = &gtk::Spinner {
                             set_spinning: true,
@@ -219,11 +223,11 @@ impl SimpleAsyncComponent for DownloadComponentsPage {
 
                     adw::ActionRow {
                         #[watch]
-                        set_title: "vcrun2022",
-                        set_subtitle: "Denpendecies",
+                        set_title: "Denpendecies",
+                        set_subtitle: "vcrun2022",
 
                         #[watch]
-                        set_icon_name: if model.currently_installing == CurrentlyInstalling::Denpendecies { Some("process-working") } else { Some("emblem-ok-symbolic") },
+                        set_icon_name: if model.currently_installing != CurrentlyInstalling::Denpendecies && model.game_config.is_dependecies_installed { Some("emblem-ok-symbolic") } else { None },
 
                         add_prefix = &gtk::Spinner {
                             set_spinning: true,
@@ -301,6 +305,7 @@ impl SimpleAsyncComponent for DownloadComponentsPage {
             dxvk_versions: dxvk_releases,
             selected_proton_version: None,
             selected_dxvk_version: None,
+            game_config: GameConfig::get_config().await,
 
             progress_bar_reporter: DownloadComponentProgressBarReporter::create(sender.clone()),
             progress_bar_message: String::new(),
@@ -358,6 +363,8 @@ impl SimpleAsyncComponent for DownloadComponentsPage {
                 }
             }
             DownloadComponentsMsg::UpdateCurrentlyInstalling(currently_installing) => {
+                self.game_config = GameConfig::get_config().await;
+
                 self.currently_installing = currently_installing;
             }
             DownloadComponentsMsg::ShowError(message) => {

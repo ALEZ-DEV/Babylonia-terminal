@@ -47,6 +47,7 @@ impl SimpleAsyncComponent for ChooseGameDirectoryPage {
                 },
 
                 add = &adw::PreferencesGroup {
+                    set_width_request: 500,
                     set_valign: gtk::Align::Center,
                     set_vexpand: true,
 

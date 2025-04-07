@@ -1,0 +1,19 @@
+[package]
+name = "babylonia-terminal-gui"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+babylonia-terminal-sdk = { path = "./../babylonia-terminal-sdk" }
+anyhow = "1.0.94"
+log = "0.4.22"
+relm4-components = "0.9.1"
+wincompatlib = "0.7.5"
+relm4 = { version = "0.9.1", features = ["libadwaita"] }
+libadwaita = { version = "0.7.1", features = ["v1_4"] }
+downloader = { git = "https://github.com/ALEZ-DEV/downloader" }   # version = "0.2.7",
+rfd = "0.15.2"
+arboard = { version = "3.4.1", features = ["wayland-data-control"] }
+
+[build-dependencies]
+glib-build-tools = "0.20.0"

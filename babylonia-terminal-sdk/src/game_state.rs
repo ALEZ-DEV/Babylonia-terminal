@@ -1,6 +1,6 @@
 use crate::{game_config::GameConfig, utils::kuro_prod_api::GameInfo};
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub enum GameState {
     ProtonNotInstalled,
     DXVKNotInstalled,
@@ -45,5 +45,12 @@ impl GameState {
         }
 
         Ok(GameState::GameInstalled)
+    }
+
+    pub fn is_environment_ready(&self) -> bool {
+        self == &GameState::GameNotInstalled
+            || self == &GameState::GameNeedUpdate
+            || self == &GameState::GameNotPatched
+            || self == &GameState::GameInstalled
     }
 }

@@ -153,8 +153,8 @@ impl GameManager {
         game_dir: PathBuf,
         options: Option<String>,
         show_logs: bool,
-    ) {
-        let proton_version = proton.wine().version().unwrap();
+    ) -> anyhow::Result<()> {
+        let proton_version = proton.wine().version()?;
         let binary_path = game_dir
             .join(get_game_name())
             .join(get_game_name_with_executable());
@@ -162,16 +162,12 @@ impl GameManager {
         debug!("Wine version : {:?}", proton_version);
 
         let mut child = if let Some(custom_command) = options {
-            Self::run(proton, binary_path, Some(custom_command))
-                .await
-                .unwrap()
+            Self::run(proton, binary_path, Some(custom_command)).await?
         } else {
             if let Some(custom_command) = GameConfig::get_launch_options().await.unwrap() {
-                Self::run(proton, binary_path, Some(custom_command))
-                    .await
-                    .unwrap()
+                Self::run(proton, binary_path, Some(custom_command)).await?
             } else {
-                Self::run(proton, binary_path, None).await.unwrap()
+                Self::run(proton, binary_path, None).await?
             }
         };
 
@@ -274,13 +270,15 @@ impl GameManager {
             .write_all(to_write)
             .await
             .expect("Failed to write the output to the log file");
+
+        Ok(())
     }
 
     async fn run(
         proton: &Proton,
         binary_path: PathBuf,
         custom_command: Option<String>,
-    ) -> Result<Child, std::io::Error> {
+    ) -> anyhow::Result<Result<Child, std::io::Error>> {
         let mut command: Vec<&str> = vec![];
 
         let proton_path = GameConfig::get_config_directory()
@@ -300,10 +298,11 @@ impl GameManager {
             let tokens: Vec<&str> = launch_option.split_whitespace().collect();
 
             // position of the %command%
-            let index = tokens
-                .iter()
-                .position(|&s| s == "%command%")
-                .expect("You forget to put %command% in your custom launch command");
+            let index = if let Some(v) = tokens.iter().position(|&s| s == "%command%") {
+                v
+            } else {
+                anyhow::bail!("You forget to put %command% in your custom launch command");
+            };
 
             let start_command = tokens[0..index].to_vec();
             let mut end_command = tokens[(index + 1)..tokens.len()].to_vec();
@@ -318,14 +317,14 @@ impl GameManager {
 
         debug!("Command preview -> {}", command.join(" "));
 
-        Command::new(command[0])
+        Ok(Command::new(command[0])
             .args(&command[1..command.len()])
             .envs(proton.get_envs())
             .env("PROTON_LOG", "1")
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
-            .spawn()
+            .spawn())
     }
 }
 

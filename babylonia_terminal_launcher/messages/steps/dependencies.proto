@@ -1,8 +1,0 @@
-syntax = "proto3";
-package dependencies;
-
-// [RINF:DART-SIGNAL]
-message StartDependenciesInstallation {}
-
-// [RINF:RUST-SIGNAL]
-message NotifyDependenciesSuccessfullyInstalled {}

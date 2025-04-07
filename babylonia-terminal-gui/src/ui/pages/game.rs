@@ -131,6 +131,7 @@ impl SimpleAsyncComponent for GamePage {
                         set_hexpand: false,
                         set_width_request: 200,
 
+                        #[watch]
                         set_visible: model.game_state == GameState::GameNeedUpdate,
 
                         #[watch]

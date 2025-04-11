@@ -169,7 +169,7 @@ impl GameManager {
             } else {
                 Self::run(proton, binary_path, None).await?
             }
-        };
+        }?;
 
         let log_stdout = Arc::new(Mutex::new(None));
         let log_stderr = Arc::new(Mutex::new(None));

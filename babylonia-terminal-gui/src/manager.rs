@@ -25,22 +25,26 @@ use crate::ui::{
 
 static PROTON: OnceCell<Proton> = OnceCell::const_new();
 
-pub async fn get_proton() -> Proton {
-    PROTON
-        .get_or_init(|| async {
-            let proton_component = ProtonComponent::new(GameConfig::get_config().await.config_dir);
-            let proton = proton_component.init_proton();
-            if let Err(ref e) = proton {
-                error!("Failed to initialize proton : {}", e);
-            }
-            proton.unwrap()
-        })
-        .await
-        .clone()
+pub async fn get_proton() -> anyhow::Result<Proton> {
+    if !PROTON.initialized() {
+        let proton_component = ProtonComponent::new(GameConfig::get_config().await.config_dir);
+        let proton = proton_component.init_proton();
+
+        if let Err(ref e) = proton {
+            anyhow::bail!("Failed to initialize proton : {}", e);
+        }
+
+        Ok(PROTON
+            .get_or_init(|| async { proton.unwrap() })
+            .await
+            .clone())
+    } else {
+        Ok(PROTON.get().unwrap().clone())
+    }
 }
 
 pub async fn run_game() -> anyhow::Result<()> {
-    let proton = get_proton().await;
+    let proton = get_proton().await?;
     let game_dir = GameConfig::get_config().await.game_dir;
     if game_dir.is_none() {
         anyhow::bail!("Failed to start game, the game directory was not found");
@@ -277,7 +281,15 @@ impl Worker for HandleComponentInstallation {
 
                         let _ = sender.output(download_components::DownloadComponentsMsg::UpdateDownloadedComponentName(String::from("DXVK")));
 
-                        if let Err(error) = GameManager::install_dxvk(&get_proton().await, game_dir, dxvk_release, Some(progress_bar.clone())).await {
+                        let proton = match get_proton().await {
+                            Ok(p) => p,
+                            Err(e) => {
+                                sender.output(download_components::DownloadComponentsMsg::ShowError(format!("Failed to initialize proton : {:?}", e))).unwrap();
+                                return;
+                            }
+                        };
+
+                        if let Err(error) = GameManager::install_dxvk(&proton, game_dir, dxvk_release, Some(progress_bar.clone())).await {
                             sender.output(download_components::DownloadComponentsMsg::ShowError(format!("Failed to install DXVK : {}", error))).unwrap();
                             return;
                         }
@@ -289,7 +301,7 @@ impl Worker for HandleComponentInstallation {
 
                         let _ = sender.output(download_components::DownloadComponentsMsg::UpdateDownloadedComponentName(String::from("fonts")));
 
-                        if let Err(error) = GameManager::install_font(&get_proton().await, Some(progress_bar.clone())).await {
+                        if let Err(error) = GameManager::install_font(&proton, Some(progress_bar.clone())).await {
                             sender.output(download_components::DownloadComponentsMsg::ShowError(format!("Failed to install fonts : {}", error))).unwrap();
                             return;
                         }
@@ -301,7 +313,7 @@ impl Worker for HandleComponentInstallation {
 
                         let _ = sender.output(download_components::DownloadComponentsMsg::UpdateDownloadedComponentName(String::from("denpendecies")));
 
-                        if let Err(error) = GameManager::install_dependencies(&get_proton().await).await {
+                        if let Err(error) = GameManager::install_dependencies(&proton).await {
                             sender.output(download_components::DownloadComponentsMsg::ShowError(format!("Failed to install dependencies : {}", error))).unwrap();
                             return;
                         }

@@ -162,12 +162,12 @@ impl GameManager {
         debug!("Wine version : {:?}", proton_version);
 
         let mut child = if let Some(custom_command) = options {
-            Self::run(proton, binary_path, Some(custom_command)).await?
+            Self::run(proton, binary_path, Some(custom_command)).await??
         } else {
             if let Some(custom_command) = GameConfig::get_launch_options().await.unwrap() {
-                Self::run(proton, binary_path, Some(custom_command)).await?
+                Self::run(proton, binary_path, Some(custom_command)).await??
             } else {
-                Self::run(proton, binary_path, None).await?
+                Self::run(proton, binary_path, None).await??
             }
         }?;
 

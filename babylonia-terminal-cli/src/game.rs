@@ -6,7 +6,7 @@ use babylonia_terminal_sdk::{
         proton_component::{ProtonComponent, PROTON_DEV, PROTON_REPO},
     },
     game_config::GameConfig,
-    game_manager::GameManager,
+    game_manager::{EnvironmentVariable, GameManager},
     game_state::GameState,
 };
 
@@ -16,7 +16,11 @@ use wincompatlib::prelude::*;
 
 use crate::{reporter::DownloadReporter, utils};
 
-pub async fn run(launch_options: Option<String>, show_logs: bool) {
+pub async fn run(
+    launch_options: Option<String>,
+    env_vars: Vec<EnvironmentVariable>,
+    show_logs: bool,
+) {
     let mut proton_component: Option<ProtonComponent> = None;
     let mut proton: Option<Proton> = None;
 
@@ -170,6 +174,7 @@ pub async fn run(launch_options: Option<String>, show_logs: bool) {
             .await
             .expect("Failed to start game, the game directory was not found"),
         launch_options,
+        env_vars,
         show_logs,
     )
     .await;

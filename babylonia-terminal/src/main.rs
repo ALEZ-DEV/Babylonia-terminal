@@ -1,5 +1,5 @@
 use clap::Parser;
-use log::{info, LevelFilter};
+use log::{debug, info, LevelFilter};
 use simple_logger::SimpleLogger;
 
 fn main() {

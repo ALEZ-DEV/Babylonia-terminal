@@ -13,6 +13,10 @@ pub struct Args {
     #[arg(long)]
     pub set_options: Option<String>,
 
+    /// Pass environment variables to tinker the behavior of the game
+    #[arg(long, value_name = "VALUE", action = clap::ArgAction::Append)]
+    pub add_env_var: Vec<String>,
+
     /// Show the logs direcly to the stdout of your terminal
     #[arg(long, default_value = "false")]
     pub logs: bool,

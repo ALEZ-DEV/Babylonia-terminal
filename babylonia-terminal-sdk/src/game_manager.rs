@@ -23,6 +23,22 @@ use crate::{
     utils::{get_game_name, get_game_name_with_executable, github_requester::GithubRequester},
 };
 
+pub struct EnvironmentVariable {
+    name: String,
+    value: String,
+}
+
+impl EnvironmentVariable {
+    pub fn parse(variable: &str) -> Self {
+        let split: Vec<&str> = variable.split('=').collect();
+
+        Self {
+            name: split[0].to_string(),
+            value: split[1].to_string(),
+        }
+    }
+}
+
 pub struct GameManager;
 
 impl GameManager {
@@ -152,6 +168,7 @@ impl GameManager {
         proton: &Proton,
         game_dir: PathBuf,
         options: Option<String>,
+        env_variables: Vec<EnvironmentVariable>,
         show_logs: bool,
     ) -> anyhow::Result<()> {
         let proton_version = proton.wine().version()?;
@@ -162,12 +179,12 @@ impl GameManager {
         debug!("Wine version : {:?}", proton_version);
 
         let mut child = if let Some(custom_command) = options {
-            Self::run(proton, binary_path, Some(custom_command)).await?
+            Self::run(proton, binary_path, Some(custom_command), env_variables).await?
         } else {
             if let Some(custom_command) = GameConfig::get_launch_options().await.unwrap() {
-                Self::run(proton, binary_path, Some(custom_command)).await?
+                Self::run(proton, binary_path, Some(custom_command), env_variables).await?
             } else {
-                Self::run(proton, binary_path, None).await?
+                Self::run(proton, binary_path, None, env_variables).await?
             }
         }?;
 
@@ -278,6 +295,7 @@ impl GameManager {
         proton: &Proton,
         binary_path: PathBuf,
         custom_command: Option<String>,
+        env_variables: Vec<EnvironmentVariable>,
     ) -> anyhow::Result<Result<Child, std::io::Error>> {
         let mut command: Vec<&str> = vec![];
 

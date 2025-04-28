@@ -31,6 +31,7 @@ pub async fn get_proton() -> anyhow::Result<Proton> {
         let proton = proton_component.init_proton();
 
         if let Err(ref e) = proton {
+            error!("Failed to initialize proton : {}", e);
             anyhow::bail!("Failed to initialize proton : {}", e);
         }
 
@@ -47,6 +48,7 @@ pub async fn run_game() -> anyhow::Result<()> {
     let proton = get_proton().await?;
     let game_dir = GameConfig::get_config().await.game_dir;
     if game_dir.is_none() {
+        error!("Failed to start game, the game directory was not found");
         anyhow::bail!("Failed to start game, the game directory was not found");
     }
 

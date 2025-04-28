@@ -20,4 +20,8 @@ pub struct Args {
     /// Launch the GUI version
     #[arg(long, default_value = "false")]
     pub gui: bool,
+
+    /// Enable debug messages
+    #[arg(long, default_value = "false")]
+    pub debug: bool,
 }

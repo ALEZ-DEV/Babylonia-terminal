@@ -52,7 +52,7 @@ pub async fn run_game() -> anyhow::Result<()> {
         anyhow::bail!("Failed to start game, the game directory was not found");
     }
 
-    GameManager::start_game(&proton, game_dir.unwrap(), None, false).await?;
+    GameManager::start_game(&proton, game_dir.unwrap(), None, vec![], false).await?;
 
     Ok(())
 }

@@ -110,6 +110,9 @@ impl ProtonComponent {
         let mut proton =
             wincompatlib::prelude::Proton::new(self.path.clone(), Some(prefix.clone()));
         let steam_location = Self::get_steam_location()?;
+
+        debug!("Steam location used -> {:?}", steam_location);
+
         proton.steam_client_path = Some(steam_location);
         proton.init_prefix(Some(prefix)).unwrap();
 
@@ -117,11 +120,16 @@ impl ProtonComponent {
     }
 
     fn get_steam_location() -> Result<PathBuf, String> {
+        let specified_steam_location = std::env::var("BT_STEAM_CLIENT_PATH");
+        if let Ok(location) = specified_steam_location {
+            return Ok(PathBuf::from(location));
+        }
+
         let location_to_check = [
             dirs::home_dir().unwrap().join(".steam/steam"),
             dirs::home_dir()
                 .unwrap()
-                .join("/.var/app/com.valvesoftware.Steam/steam"), // for the flatpak version of steam
+                .join(".var/app/com.valvesoftware.Steam/steam"), // for the flatpak version of steam
         ];
 
         for location in location_to_check {

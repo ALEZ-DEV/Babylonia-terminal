@@ -1,5 +1,5 @@
 use arboard::Clipboard;
-use babylonia_terminal_sdk::game_config::GameConfig;
+use babylonia_terminal_sdk::{game_config::GameConfig, game_manager::EnvironmentVariable};
 use log::error;
 use relm4::{
     gtk::{
@@ -61,6 +61,13 @@ impl SimpleAsyncComponent for SettingsPage {
                             }
                         }
                     }
+                },
+
+                add = &adw::PreferencesGroup {
+                    set_width_request: 500,
+                    set_title: "Environment variables",
+                    set_description: Some("Pass environment variables to tinker the behavior of the game"),
+
                 }
             }
         }
@@ -119,4 +126,8 @@ impl SimpleAsyncComponent for SettingsPage {
             }
         }
     }
+}
+
+struct EnvVarWidget {
+    env_var: EnvironmentVariable,
 }

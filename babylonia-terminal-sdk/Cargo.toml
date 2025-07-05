@@ -15,7 +15,7 @@ anyhow = "1.0.81"
 chksum-md5 = { version = "0.0.0", features = ["reader"] }
 dirs = "5.0.1"
 dotenv = "0.15.0"
-downloader = { git = "https://github.com/ALEZ-DEV/downloader" } # version = "0.2.7",
+downloader = { workspace = true }
 flate2 = "1.0.28"
 fs_extra = "1.3.0"
 futures = "0.3.30"

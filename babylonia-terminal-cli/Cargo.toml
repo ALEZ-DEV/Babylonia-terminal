@@ -16,7 +16,7 @@ babylonia-terminal-sdk = { path = "./../babylonia-terminal-sdk" }
 clap = { version = "4.5.7", features = ["derive"] }
 derive = "1.0.0"
 dialoguer = "0.11.0"
-downloader = { git = "https://github.com/ALEZ-DEV/downloader" }   # version = "0.2.7",
+downloader = { workspace = true }
 indicatif = "0.17.8"
 log = "0.4.21"
 simple_logger = "4.3.3"

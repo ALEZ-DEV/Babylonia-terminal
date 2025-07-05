@@ -6,3 +6,6 @@ members = [
   "babylonia-terminal-gui",
   "babylonia-terminal-sdk",
 ]
+
+[workspace.dependencies]
+downloader = { git = "https://github.com/ALEZ-DEV/downloader" } # version = "0.2.7",

@@ -2,6 +2,7 @@ use std::path::PathBuf;
 
 use serde::Deserialize;
 use serde::Serialize;
+use serde_json::Value;
 use tokio::fs::read_to_string;
 use tokio::io::AsyncWriteExt;
 
@@ -12,22 +13,36 @@ use crate::game_config::GameConfig;
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GameInfo {
+    pub chunk_download_switch: i64,
+    pub key_file_check_switch: i64,
     pub default: Default,
+    #[serde(rename = "RHIOptionSwitch")]
+    pub rhioption_switch: i64,
+    pub resources_login: ResourcesLogin,
+    pub predownload_switch: i64,
+    #[serde(rename = "RHIOptionList")]
+    pub rhioption_list: Vec<Value>,
+    pub experiment: Experiment,
+    pub check_exe_is_running: i64,
     pub hash_cache_check_acc_switch: i64,
+    pub key_file_check_list: Vec<String>,
+    pub fingerprints: Vec<String>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Default {
+    pub sample_hash_switch: i64,
     pub cdn_list: Vec<CdnList>,
+    pub resources_base_path: String,
     pub changelog: Changelog,
     pub resources: String,
-    pub resources_base_path: String,
+    pub resources_exclude_path_need_update: Vec<String>,
+    pub config: Config,
     pub resources_diff: ResourcesDiff,
     pub resources_exclude_path: Vec<String>,
-    pub resources_exclude_path_need_update: Vec<String>,
-    pub sample_hash_switch: i64,
     pub version: String,
+    pub changelog_visible: i64,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -44,10 +59,58 @@ pub struct CdnList {
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Changelog {
-    #[serde(rename = "zh-Hans")]
-    pub zh_hans: String,
-    pub en: String,
+pub struct Changelog {}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Config {
+    pub index_file_md5: String,
+    pub un_compress_size: i64,
+    pub base_url: String,
+    pub size: i64,
+    pub patch_type: String,
+    pub zip_config: ZipConfig,
+    pub index_file: String,
+    pub resources_exclude_path_need_update: Vec<String>,
+    pub version: String,
+    pub resources_exclude_path: Vec<String>,
+    pub patch_config: Vec<PatchConfig>,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ZipConfig {
+    pub index_file_md5: String,
+    pub un_compress_size: i64,
+    pub ext: Ext,
+    pub base_url: String,
+    pub size: i64,
+    pub index_file: String,
+    pub version: String,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Ext {
+    pub max_file_size: i64,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PatchConfig {
+    pub index_file_md5: String,
+    pub un_compress_size: i64,
+    pub ext: Ext2,
+    pub base_url: String,
+    pub size: i64,
+    pub index_file: String,
+    pub version: String,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Ext2 {
+    pub max_file_size: i64,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -61,16 +124,47 @@ pub struct ResourcesDiff {
 #[serde(rename_all = "camelCase")]
 pub struct CurrentGameInfo {
     pub file_name: String,
-    pub md5: String,
     pub version: String,
+    pub md5: String,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PreviousGameInfo {
     pub file_name: String,
-    pub md5: String,
     pub version: String,
+    pub md5: String,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ResourcesLogin {
+    pub host: String,
+    pub login_switch: i64,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Experiment {
+    pub download: Download,
+    #[serde(rename = "res_check")]
+    pub res_check: ResCheck,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Download {
+    pub download_cdn_select_test_duration: String,
+    pub download_read_block_timeout: String,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ResCheck {
+    pub file_chunk_check_switch: String,
+    pub file_size_check_switch: String,
+    pub res_valid_check_time_out: String,
+    pub file_check_white_list_config: String,
 }
 
 // Resources ---------------------------------------------------------------------
@@ -79,7 +173,6 @@ pub struct PreviousGameInfo {
 #[serde(rename_all = "camelCase")]
 pub struct Resources {
     pub resource: Vec<Resource>,
-    pub sample_hash_info: SampleHashInfo,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -99,12 +192,11 @@ pub struct SampleHashInfo {
 }
 
 // end data ---------------------------------------------------------------------
-
 static URL: &str = concat!(
     "https://prod-alicdn-gamestarter.k",
     "uro",
     "gam",
-    "e.com/pcstarter/prod/game/G143/4/index.json"
+    "e.com/launcher/game/G143/50015_LWdk9D2Ep9mpJmqBZZkcPBU2YNraEWBQ/index.json"
 );
 
 impl GameInfo {
@@ -137,7 +229,9 @@ impl GameInfo {
     }
 
     pub fn get_resource_base_path(&self) -> String {
-        self.default.resources_base_path.clone()
+        let mut result = self.default.resources_base_path.clone();
+        result.push('/');
+        result
     }
 
     pub async fn fetch_resources(&self) -> anyhow::Result<Resources> {

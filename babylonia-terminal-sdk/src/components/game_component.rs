@@ -54,8 +54,7 @@ impl GameComponent {
                 let _permit = semaphore.acquire().await;
 
                 for resource_to_check in cloned_resources {
-                    let file_path =
-                        game_dir.join(resource_to_check.dest.clone().strip_prefix("/").unwrap());
+                    let file_path = game_dir.join(resource_to_check.dest.clone());
 
                     if file_path.try_exists().unwrap() {
                         let blocking_file_path = file_path.clone();
@@ -145,7 +144,7 @@ impl ComponentDownloader for GameComponent {
                 .iter()
                 .map(|r| {
                     output_dir
-                        .join(r.dest.strip_prefix("/").unwrap())
+                        .join(r.dest.clone())
                         .parent()
                         .unwrap()
                         .to_path_buf()

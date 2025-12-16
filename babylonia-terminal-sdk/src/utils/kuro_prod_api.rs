@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 
+use log::debug;
 use serde::Deserialize;
 use serde::Serialize;
 use serde_json::Value;
@@ -15,45 +16,51 @@ use crate::game_config::GameConfig;
 pub struct GameInfo {
     pub chunk_download_switch: i64,
     pub key_file_check_switch: i64,
+    pub resources_login: ResourcesLogin,
+    pub check_exe_is_running: i64,
+    pub hash_cache_check_acc_switch: i64,
+    pub fingerprints: Vec<String>,
     pub default: Default,
     #[serde(rename = "RHIOptionSwitch")]
     pub rhioption_switch: i64,
-    pub resources_login: ResourcesLogin,
     pub predownload_switch: i64,
     #[serde(rename = "RHIOptionList")]
     pub rhioption_list: Vec<Value>,
     pub experiment: Experiment,
-    pub check_exe_is_running: i64,
-    pub hash_cache_check_acc_switch: i64,
     pub key_file_check_list: Vec<String>,
-    pub fingerprints: Vec<String>,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ResourcesLogin {
+    pub host: String,
+    pub login_switch: i64,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Default {
-    pub sample_hash_switch: i64,
     pub cdn_list: Vec<CdnList>,
-    pub resources_base_path: String,
     pub changelog: Changelog,
-    pub resources: String,
-    pub resources_exclude_path_need_update: Vec<String>,
+    pub changelog_visible: i64,
     pub config: Config,
+    pub resources: String,
+    pub resources_base_path: String,
     pub resources_diff: ResourcesDiff,
     pub resources_exclude_path: Vec<String>,
+    pub resources_exclude_path_need_update: Vec<String>,
     pub version: String,
-    pub changelog_visible: i64,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CdnList {
+    #[serde(rename = "P")]
+    pub p: i64,
     #[serde(rename = "K1")]
     pub k1: i64,
     #[serde(rename = "K2")]
     pub k2: i64,
-    #[serde(rename = "P")]
-    pub p: i64,
     pub url: String,
 }
 
@@ -124,23 +131,16 @@ pub struct ResourcesDiff {
 #[serde(rename_all = "camelCase")]
 pub struct CurrentGameInfo {
     pub file_name: String,
-    pub version: String,
     pub md5: String,
+    pub version: String,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PreviousGameInfo {
     pub file_name: String,
-    pub version: String,
     pub md5: String,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ResourcesLogin {
-    pub host: String,
-    pub login_switch: i64,
+    pub version: String,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -180,7 +180,6 @@ pub struct Resources {
 pub struct Resource {
     pub dest: String,
     pub md5: String,
-    pub sample_hash: String,
     pub size: i64,
 }
 
@@ -238,6 +237,7 @@ impl GameInfo {
         let resources_base_url = self.get_first_cdn();
         let resources_path_url = &self.default.resources;
         let resources_url = format!("{}{}", resources_base_url, resources_path_url);
+        debug!("{}", &resources_url);
 
         let response = reqwest::get(&resources_url).await?;
         let body = response.text().await?;

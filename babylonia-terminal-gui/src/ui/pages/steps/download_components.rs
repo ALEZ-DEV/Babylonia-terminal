@@ -4,7 +4,7 @@ use arboard::Clipboard;
 use babylonia_terminal_sdk::{
     components::{
         dxvk_component::{self, DXVKComponent},
-        proton_component::{self, ProtonComponent},
+        wine_component::{self, WineComponent},
     },
     game_config::GameConfig,
     game_state::GameState,
@@ -43,7 +43,7 @@ pub enum DownloadComponentsMsg {
 #[derive(Debug, PartialEq, Eq)]
 pub enum CurrentlyInstalling {
     None,
-    Proton,
+    Wine,
     DXVK,
     Fonts,
     Denpendecies,
@@ -52,14 +52,14 @@ pub enum CurrentlyInstalling {
 #[derive(Debug)]
 pub struct DownloadComponentsPage {
     // widgets
-    proton_combo: adw::ComboRow,
+    wine_combo: adw::ComboRow,
     dxvk_combo: adw::ComboRow,
     //error_dialog: Controller<CopyDialog>,
 
     // values
-    proton_versions: Vec<GithubRelease>,
+    wine_versions: Vec<GithubRelease>,
     dxvk_versions: Vec<GithubRelease>,
-    selected_proton_version: Option<GithubRelease>,
+    selected_wine_version: Option<GithubRelease>,
     selected_dxvk_version: Option<GithubRelease>,
     game_config: GameConfig,
 
@@ -108,11 +108,11 @@ impl SimpleAsyncComponent for DownloadComponentsPage {
                     set_vexpand: true,
 
                     #[local_ref]
-                    proton_combo -> adw::ComboRow {
-                        set_title: "proton version",
+                    wine_combo -> adw::ComboRow {
+                        set_title: "Wine version",
 
                         set_model: Some(&gtk::StringList::new(model
-                            .proton_versions
+                            .wine_versions
                             .iter()
                             .map(|r| r.tag_name.as_str())
                             .collect::<Vec<&str>>()
@@ -142,7 +142,7 @@ impl SimpleAsyncComponent for DownloadComponentsPage {
                         set_hexpand: false,
                         set_width_request: 200,
 
-                        connect_clicked => DownloadComponentsMsg::UpdateCurrentlyInstalling(CurrentlyInstalling::Proton),
+                        connect_clicked => DownloadComponentsMsg::UpdateCurrentlyInstalling(CurrentlyInstalling::Wine),
                     },
                 },
             },
@@ -168,21 +168,21 @@ impl SimpleAsyncComponent for DownloadComponentsPage {
                     set_vexpand: true,
 
                     adw::ActionRow {
-                        set_title: "Proton",
+                        set_title: "Wine",
                         #[watch]
-                        set_subtitle: match &model.selected_proton_version {
+                        set_subtitle: match &model.selected_wine_version {
                             Some(release) => &release.tag_name,
-                            None => "WTF??!! there's no proton version found ????",
+                            None => "WTF??!! there's no wine version found ????",
                         },
 
                         #[watch]
-                        set_icon_name: if model.currently_installing != CurrentlyInstalling::Proton && model.game_config.is_wine_installed { Some("emblem-ok-symbolic") } else { None },
+                        set_icon_name: if model.currently_installing != CurrentlyInstalling::Wine && model.game_config.is_wine_installed { Some("emblem-ok-symbolic") } else { None },
 
                         add_prefix = &gtk::Spinner {
                             set_spinning: true,
 
                             #[watch]
-                            set_visible: model.currently_installing == CurrentlyInstalling::Proton,
+                            set_visible: model.currently_installing == CurrentlyInstalling::Wine,
                         }
                     },
 
@@ -191,7 +191,7 @@ impl SimpleAsyncComponent for DownloadComponentsPage {
                         #[watch]
                         set_subtitle: match &model.selected_dxvk_version {
                             Some(release) => &release.tag_name,
-                            None => "WTF??!! there's no proton version found ????",
+                            None => "WTF??!! there's no wine version found ????",
                         },
 
                         #[watch]
@@ -285,12 +285,10 @@ impl SimpleAsyncComponent for DownloadComponentsPage {
         root: Self::Root,
         sender: AsyncComponentSender<Self>,
     ) -> AsyncComponentParts<Self> {
-        let proton_releases = ProtonComponent::get_github_releases(
-            proton_component::PROTON_DEV,
-            proton_component::PROTON_REPO,
-        )
-        .await
-        .unwrap(); //TODO: remove unwrap()
+        let wine_releases =
+            WineComponent::get_github_releases(wine_component::WINE_DEV, wine_component::WINE_REPO)
+                .await
+                .unwrap(); //TODO: remove unwrap()
 
         let dxvk_releases =
             DXVKComponent::get_github_releases(dxvk_component::DXVK_DEV, dxvk_component::DXVK_REPO)
@@ -298,12 +296,12 @@ impl SimpleAsyncComponent for DownloadComponentsPage {
                 .unwrap(); //TODO: remove unwrap()
 
         let model = DownloadComponentsPage {
-            proton_combo: adw::ComboRow::new(),
+            wine_combo: adw::ComboRow::new(),
             dxvk_combo: adw::ComboRow::new(),
 
-            proton_versions: proton_releases,
+            wine_versions: wine_releases,
             dxvk_versions: dxvk_releases,
-            selected_proton_version: None,
+            selected_wine_version: None,
             selected_dxvk_version: None,
             game_config: GameConfig::get_config().await,
 
@@ -320,7 +318,7 @@ impl SimpleAsyncComponent for DownloadComponentsPage {
             msg_when_done: None,
         };
 
-        let proton_combo = &model.proton_combo;
+        let wine_combo = &model.wine_combo;
         let dxvk_combo = &model.dxvk_combo;
 
         let widgets = view_output!();
@@ -395,21 +393,21 @@ impl SimpleAsyncComponent for DownloadComponentsPage {
             DownloadComponentsMsg::Quit => relm4::main_application().quit(),
         }
 
-        if self.selected_proton_version.is_none()
+        if self.selected_wine_version.is_none()
             && self.selected_dxvk_version.is_none()
             && self.currently_installing != CurrentlyInstalling::None
         {
-            let proton_index = self.proton_combo.selected() as usize;
+            let wine_index = self.wine_combo.selected() as usize;
             let dxvk_index = self.dxvk_combo.selected() as usize;
 
-            let proton_release = self.proton_versions[proton_index].clone();
+            let wine_release = self.wine_versions[wine_index].clone();
             let dxvk_release = self.dxvk_versions[dxvk_index].clone();
 
-            self.selected_proton_version = Some(proton_release);
+            self.selected_wine_version = Some(wine_release);
             self.selected_dxvk_version = Some(dxvk_release);
             let _ = self.installation_handler.sender().send(
                 manager::HandleComponentInstallationMsg::StartInstallation((
-                    proton_index,
+                    wine_index,
                     dxvk_index,
                     self.progress_bar_reporter.clone(),
                 )),

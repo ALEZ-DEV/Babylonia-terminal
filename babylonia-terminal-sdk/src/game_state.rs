@@ -2,7 +2,7 @@ use crate::{game_config::GameConfig, utils::kuro_prod_api::GameInfo};
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum GameState {
-    ProtonNotInstalled,
+    WineNotInstalled,
     DXVKNotInstalled,
     FontNotInstalled,
     DependecieNotInstalled,
@@ -17,7 +17,7 @@ impl GameState {
         let config = GameConfig::get_config().await;
 
         if !config.is_wine_installed {
-            return Ok(GameState::ProtonNotInstalled);
+            return Ok(GameState::WineNotInstalled);
         }
 
         if !config.is_dxvk_installed {

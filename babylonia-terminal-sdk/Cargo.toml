@@ -30,7 +30,7 @@ tokio = { version = "1.37.0", features = ["fs"] }
 wincompatlib = { version = "0.7.5", features = [
     "dxvk",
     "wine-bundles",
-    "wine-proton",
     "wine-fonts",
     "winetricks",
 ] }
+xz2 = "0.1.7"

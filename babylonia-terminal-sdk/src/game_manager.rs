@@ -87,10 +87,6 @@ impl GameManager {
     where
         P: Reporter + 'static,
     {
-        let wine_prefix = wine // wine take the data/wine/pfx prefix, but we want the data/wine prefix
-            .clone()
-            .with_prefix(wine.prefix.parent().unwrap());
-
         let max = 1;
 
         if let Some(p) = &progress {
@@ -99,7 +95,7 @@ impl GameManager {
 
         notify_fonts_progress(0, max, &progress);
 
-        wine_prefix.install_font(Font::Arial)?;
+        wine.install_font(Font::Arial)?;
         notify_fonts_progress(1, max, &progress);
 
         let mut config = GameConfig::get_config().await;
@@ -110,11 +106,7 @@ impl GameManager {
     }
 
     pub async fn install_dependencies(wine: &Wine) -> anyhow::Result<()> {
-        let wine_prefix = wine // wine take the data/wine/pfx prefix, but we want the data/wine prefix
-            .clone()
-            .with_prefix(wine.prefix.parent().unwrap());
-
-        let winetricks = Winetricks::from_wine("/bin/winetricks", wine_prefix);
+        let winetricks = Winetricks::from_wine("/bin/winetricks", wine);
         //winetricks.install("corefonts")?;
         let mut child = winetricks.install("vcrun2022")?;
 

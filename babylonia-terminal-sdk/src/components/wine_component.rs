@@ -87,7 +87,6 @@ impl ComponentDownloader for WineComponent {
                 file.to_str().unwrap().strip_suffix(".tar.xz").unwrap(),
                 new_directory_name,
             )?;
-            debug!("???5");
 
             Ok::<(), anyhow::Error>(())
         })

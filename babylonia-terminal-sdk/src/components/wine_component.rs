@@ -111,6 +111,7 @@ impl WineComponent {
         debug!("Wine binary path : {:?}", wine_bin_location);
 
         let mut wine = wincompatlib::prelude::Wine::from_binary(wine_bin_location);
+        wine.prefix = prefix.clone();
 
         wine.init_prefix(Some(prefix)).unwrap();
 

@@ -374,6 +374,7 @@ dependencies = [
  "serde_json",
  "tar",
  "tokio",
+ "whatadistro",
  "wincompatlib",
  "xz2",
 ]
@@ -3962,6 +3963,12 @@ name = "weezl"
 version = "0.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "53a85b86a771b1c87058196170769dd264f66c0782acf1ae6cc51bfd64b39082"
+
+[[package]]
+name = "whatadistro"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1c97ebad4f59809511083f2161587445631bff21bb78d9e046b9ca5b2d05d913"
 
 [[package]]
 name = "winapi"

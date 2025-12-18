@@ -292,11 +292,21 @@ impl GameManager {
         let wine_path = GameConfig::get_config_directory()
             .await
             .join("wine")
+            .join("bin")
             .join("wine");
+        let mut wine_path = wine_path.to_str().unwrap();
+
+        if let Some(distro) = whatadistro::identify() {
+            if distro.is_similar("nixos") {
+                wine_path = "wine";
+
+                info!("Nixos detected, using system Wine...");
+            };
+        };
 
         //command.push(wine.python.to_str().unwrap());
-        command.push(wine_path.to_str().unwrap());
-        command.push("run");
+        command.push(wine_path);
+        //command.push("run");
         command.push(binary_path.to_str().unwrap());
 
         let launch_option;
@@ -324,11 +334,14 @@ impl GameManager {
         }
 
         debug!("Command preview -> {}", command.join(" "));
+        debug!(
+            "Command envs -> {:?}",
+            wine.get_envs()["WINEPREFIX"].clone()
+        );
 
         Ok(Command::new(command[0])
             .args(&command[1..command.len()])
-            .envs(wine.get_envs())
-            .env("Wine_LOG", "1")
+            .env("WINE_PREFIX", wine.get_envs()["WINEPREFIX"].clone())
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())

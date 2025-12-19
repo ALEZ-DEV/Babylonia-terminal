@@ -3,7 +3,7 @@ use std::{path::PathBuf, str::FromStr, sync::Arc};
 use babylonia_terminal_sdk::{
     components::{
         dxvk_component::{DXVK_DEV, DXVK_REPO},
-        proton_component::{ProtonComponent, PROTON_DEV, PROTON_REPO},
+        wine_component::{WineComponent, WINE_DEV, WINE_REPO},
     },
     game_config::GameConfig,
     game_manager::{EnvironmentVariable, GameManager},
@@ -21,8 +21,32 @@ pub async fn run(
     env_vars: Vec<EnvironmentVariable>,
     show_logs: bool,
 ) {
-    let mut proton_component: Option<ProtonComponent> = None;
-    let mut proton: Option<Proton> = None;
+    let mut wine_component: Option<WineComponent> = None;
+    let mut wine: Option<Wine> = None;
+
+    // Deleting old setup
+    if None == GameConfig::get_config().await.launcher_version {
+        info!("You seem to have the old setup to play the game.");
+        info!("do you want to delete it to setup the new one ? (y/n) (default - yes): ");
+
+        let input = BufReader::new(tokio::io::stdin())
+            .lines()
+            .next_line()
+            .await
+            .unwrap();
+
+        if None == input
+            || Some("".to_string()) == input
+            || Some("y".to_string()) == input
+            || Some("yes".to_string()) == input
+        {
+            info!("Deleting old setup...");
+            babylonia_terminal_sdk::utils::remove_setup().await;
+            info!("done!");
+        } else {
+            info!("Keeping old setup...");
+        }
+    }
 
     loop {
         let state_result = GameState::get_current_state().await;
@@ -32,40 +56,42 @@ pub async fn run(
         }
         let state = state_result.unwrap();
 
-        if state != GameState::ProtonNotInstalled && proton == None {
-            let proton_component = ProtonComponent::new(GameConfig::get_config_directory().await);
-            match proton_component.init_proton() {
-                Ok(p) => proton = Some(p),
+        if state != GameState::WineNotInstalled && wine == None {
+            let wine_component = WineComponent::new(GameConfig::get_config_directory().await);
+            match wine_component.init_wine() {
+                Ok(p) => wine = Some(p),
                 Err(err) => panic!("{}", err),
             };
         }
 
         match state {
-            GameState::ProtonNotInstalled => {
+            GameState::WineNotInstalled => {
                 let release;
-                if utils::use_latest("Do you want to install latest version of Proton GE or a specific version of it?") {
-                        release = 0;
-                    } else {
-                        release = utils::choose_release_version(
-                            PROTON_DEV,
-                            PROTON_REPO,
-                            "Please, select a version of Proton GE to install.",
-                        )
-                        .await
-                        .expect("Failed to fetch proton version!");
-                    }
+                if utils::use_latest(
+                    "Do you want to install latest version of wine GE or a specific version of it?",
+                ) {
+                    release = 0;
+                } else {
+                    release = utils::choose_release_version(
+                        WINE_DEV,
+                        WINE_REPO,
+                        "Please, select a version of wine GE to install.",
+                    )
+                    .await
+                    .expect("Failed to fetch wine version!");
+                }
 
-                info!("Proton not installed, installing it...");
-                proton_component = Some(
+                info!("Wine not installed, installing it...");
+                wine_component = Some(
                     GameManager::install_wine(
                         GameConfig::get_config_directory().await,
                         release,
                         Some(DownloadReporter::create(false)),
                     )
                     .await
-                    .expect("Failed to install Wine"),
+                    .expect("Failed to install wine"),
                 );
-                info!("Proton installed");
+                info!("wine installed");
             }
             GameState::DXVKNotInstalled => {
                 let release;
@@ -84,9 +110,9 @@ pub async fn run(
                 }
 
                 info!("DXVK not installed, installing it...");
-                debug!("{:?}", proton_component);
+                debug!("{:?}", wine_component);
                 GameManager::install_dxvk(
-                    &proton.clone().unwrap(),
+                    &wine.clone().unwrap(),
                     GameConfig::get_config_directory().await,
                     release,
                     Some(DownloadReporter::create(false)),
@@ -97,14 +123,14 @@ pub async fn run(
             }
             GameState::FontNotInstalled => {
                 info!("Fonts not installed, installing it...");
-                GameManager::install_font(&proton.clone().unwrap(), None::<Arc<DownloadReporter>>)
+                GameManager::install_font(&wine.clone().unwrap(), None::<Arc<DownloadReporter>>)
                     .await
                     .expect("Failed to install fonts");
                 info!("Fonts installed");
             }
             GameState::DependecieNotInstalled => {
                 info!("Dependecies not installed, installing it...");
-                GameManager::install_dependencies(&proton.clone().unwrap())
+                GameManager::install_dependencies(&wine.clone().unwrap())
                     .await
                     .expect("Failed to install dependecies");
                 info!("Dependecies installed");
@@ -167,9 +193,9 @@ pub async fn run(
     }
 
     info!("Starting game...");
-    debug!("{:?}", proton);
+    debug!("{:?}", wine);
     GameManager::start_game(
-        &proton.unwrap(),
+        &wine.unwrap(),
         GameConfig::get_game_dir()
             .await
             .expect("Failed to start game, the game directory was not found"),

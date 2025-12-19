@@ -55,12 +55,7 @@ impl<'a> ComponentDownloader for DXVKComponent<'a> {
 
         Self::uncompress(file_output.clone(), self.path.clone()).await?;
 
-        let wine_with_proton_prefix = self // wine take the data/wine/pfx prefix, but we want the data/wine prefix
-            .wine
-            .clone()
-            .with_prefix(self.wine.prefix.parent().unwrap());
-
-        wine_with_proton_prefix
+        self.wine
             .install_dxvk(self.path.clone(), InstallParams::default())
             .expect("Failed to installed DXVK");
 

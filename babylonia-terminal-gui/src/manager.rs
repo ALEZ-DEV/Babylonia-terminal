@@ -1,8 +1,8 @@
 use std::{ops::Deref, sync::Arc};
 
 use babylonia_terminal_sdk::{
-    components::proton_component::ProtonComponent, game_config::GameConfig,
-    game_manager::GameManager, utils::github_requester::GithubRelease,
+    components::wine_component::WineComponent, game_config::GameConfig, game_manager::GameManager,
+    utils::github_requester::GithubRelease,
 };
 use downloader::download;
 use log::{debug, error};
@@ -10,7 +10,7 @@ use relm4::{
     tokio::{self, sync::OnceCell},
     Worker,
 };
-use wincompatlib::prelude::Proton;
+use wincompatlib::prelude::Wine;
 
 use crate::ui::{
     self,
@@ -23,36 +23,33 @@ use crate::ui::{
     },
 };
 
-static PROTON: OnceCell<Proton> = OnceCell::const_new();
+static WINE: OnceCell<Wine> = OnceCell::const_new();
 
-pub async fn get_proton() -> anyhow::Result<Proton> {
-    if !PROTON.initialized() {
-        let proton_component = ProtonComponent::new(GameConfig::get_config().await.config_dir);
-        let proton = proton_component.init_proton();
+pub async fn get_wine() -> anyhow::Result<Wine> {
+    if !WINE.initialized() {
+        let wine_component = WineComponent::new(GameConfig::get_config().await.config_dir);
+        let wine = wine_component.init_wine();
 
-        if let Err(ref e) = proton {
-            error!("Failed to initialize proton : {}", e);
-            anyhow::bail!("Failed to initialize proton : {}", e);
+        if let Err(ref e) = wine {
+            error!("Failed to initialize wine : {}", e);
+            anyhow::bail!("Failed to initialize wine : {}", e);
         }
 
-        Ok(PROTON
-            .get_or_init(|| async { proton.unwrap() })
-            .await
-            .clone())
+        Ok(WINE.get_or_init(|| async { wine.unwrap() }).await.clone())
     } else {
-        Ok(PROTON.get().unwrap().clone())
+        Ok(WINE.get().unwrap().clone())
     }
 }
 
 pub async fn run_game() -> anyhow::Result<()> {
-    let proton = get_proton().await?;
+    let wine = get_wine().await?;
     let game_dir = GameConfig::get_config().await.game_dir;
     if game_dir.is_none() {
         error!("Failed to start game, the game directory was not found");
         anyhow::bail!("Failed to start game, the game directory was not found");
     }
 
-    GameManager::start_game(&proton, game_dir.unwrap(), None, vec![], false).await?;
+    GameManager::start_game(&wine, game_dir.unwrap(), None, vec![], false).await?;
 
     Ok(())
 }
@@ -217,7 +214,7 @@ pub enum HandleComponentInstallationMsg {
             usize,
             Arc<download_components::DownloadComponentProgressBarReporter>,
         ),
-    ), // proton release and dxvk release
+    ), // wine release and dxvk release
 }
 
 #[derive(Debug)]
@@ -237,7 +234,7 @@ impl Worker for HandleComponentInstallation {
     fn update(&mut self, message: Self::Input, sender: relm4::ComponentSender<Self>) {
         match message {
             HandleComponentInstallationMsg::StartInstallation((
-                proton_release,
+                wine_release,
                 dxvk_release,
                 progress_bar,
             )) => {
@@ -248,20 +245,20 @@ impl Worker for HandleComponentInstallation {
                     .block_on(async {
                         let _ = sender.output(
                             download_components::DownloadComponentsMsg::UpdateProgressBarMsg(
-                                String::from("Starting download for proton"),
-                                Some(String::from("Unpacking and initializing proton")),
+                                String::from("Starting download for wine"),
+                                Some(String::from("Unpacking and initializing wine")),
                             ),
                         );
 
                         let _ = sender.output(
                             download_components::DownloadComponentsMsg::UpdateCurrentlyInstalling(
-                                download_components::CurrentlyInstalling::Proton,
+                                download_components::CurrentlyInstalling::Wine,
                             ),
                         );
 
                         let _ = sender.output(
                             download_components::DownloadComponentsMsg::UpdateDownloadedComponentName(
-                                String::from("proton"),
+                                String::from("wine"),
                             ),
                         );
 
@@ -271,8 +268,8 @@ impl Worker for HandleComponentInstallation {
                             GameConfig::get_config_directory().await
                         };
 
-                        if let Err(error) = GameManager::install_wine(game_dir.clone(), proton_release, Some(progress_bar.clone())).await {
-                            sender.output(download_components::DownloadComponentsMsg::ShowError(format!("Failed to install proton : {}", error))).unwrap();
+                        if let Err(error) = GameManager::install_wine(game_dir.clone(), wine_release, Some(progress_bar.clone())).await {
+                            sender.output(download_components::DownloadComponentsMsg::ShowError(format!("Failed to install wine : {}", error))).unwrap();
                             return;
                         }
 
@@ -283,15 +280,15 @@ impl Worker for HandleComponentInstallation {
 
                         let _ = sender.output(download_components::DownloadComponentsMsg::UpdateDownloadedComponentName(String::from("DXVK")));
 
-                        let proton = match get_proton().await {
+                        let wine = match get_wine().await {
                             Ok(p) => p,
                             Err(e) => {
-                                sender.output(download_components::DownloadComponentsMsg::ShowError(format!("Failed to initialize proton : {:?}", e))).unwrap();
+                                sender.output(download_components::DownloadComponentsMsg::ShowError(format!("Failed to initialize wine : {:?}", e))).unwrap();
                                 return;
                             }
                         };
 
-                        if let Err(error) = GameManager::install_dxvk(&proton, game_dir, dxvk_release, Some(progress_bar.clone())).await {
+                        if let Err(error) = GameManager::install_dxvk(&wine, game_dir, dxvk_release, Some(progress_bar.clone())).await {
                             sender.output(download_components::DownloadComponentsMsg::ShowError(format!("Failed to install DXVK : {}", error))).unwrap();
                             return;
                         }
@@ -303,7 +300,7 @@ impl Worker for HandleComponentInstallation {
 
                         let _ = sender.output(download_components::DownloadComponentsMsg::UpdateDownloadedComponentName(String::from("fonts")));
 
-                        if let Err(error) = GameManager::install_font(&proton, Some(progress_bar.clone())).await {
+                        if let Err(error) = GameManager::install_font(&wine, Some(progress_bar.clone())).await {
                             sender.output(download_components::DownloadComponentsMsg::ShowError(format!("Failed to install fonts : {}", error))).unwrap();
                             return;
                         }
@@ -315,7 +312,7 @@ impl Worker for HandleComponentInstallation {
 
                         let _ = sender.output(download_components::DownloadComponentsMsg::UpdateDownloadedComponentName(String::from("denpendecies")));
 
-                        if let Err(error) = GameManager::install_dependencies(&proton).await {
+                        if let Err(error) = GameManager::install_dependencies(&wine).await {
                             sender.output(download_components::DownloadComponentsMsg::ShowError(format!("Failed to install dependencies : {}", error))).unwrap();
                             return;
                         }

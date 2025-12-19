@@ -16,7 +16,7 @@ use wincompatlib::prelude::*;
 use crate::{
     components::{
         component_downloader::ComponentDownloader, dxvk_component::DXVKComponent,
-        game_component::GameComponent, proton_component::ProtonComponent,
+        game_component::GameComponent, wine_component::WineComponent,
     },
     game_config::GameConfig,
     game_patcher,
@@ -46,11 +46,11 @@ impl GameManager {
         config_dir: PathBuf,
         release_index: usize,
         progress: Option<Arc<P>>,
-    ) -> anyhow::Result<ProtonComponent>
+    ) -> anyhow::Result<WineComponent>
     where
         P: Reporter + 'static,
     {
-        let mut wine_component = ProtonComponent::new(config_dir);
+        let mut wine_component = WineComponent::new(config_dir);
         wine_component.set_github_release_index(release_index);
 
         wine_component.install(progress).await?;
@@ -63,7 +63,7 @@ impl GameManager {
     }
 
     pub async fn install_dxvk<P>(
-        proton: &Proton,
+        wine: &Wine,
         config_dir: PathBuf,
         release_index: usize,
         progress: Option<Arc<P>>,
@@ -71,7 +71,7 @@ impl GameManager {
     where
         P: Reporter + 'static,
     {
-        let mut dxvk_component = DXVKComponent::from_wine(proton.wine(), config_dir);
+        let mut dxvk_component = DXVKComponent::from_wine(wine, config_dir);
         dxvk_component.set_github_release_index(release_index);
 
         dxvk_component.install(progress).await?;
@@ -83,15 +83,10 @@ impl GameManager {
         Ok(())
     }
 
-    pub async fn install_font<P>(proton: &Proton, progress: Option<Arc<P>>) -> anyhow::Result<()>
+    pub async fn install_font<P>(wine: &Wine, progress: Option<Arc<P>>) -> anyhow::Result<()>
     where
         P: Reporter + 'static,
     {
-        let wine_with_proton_prefix = proton // wine take the data/wine/pfx prefix, but we want the data/wine prefix
-            .wine()
-            .clone()
-            .with_prefix(proton.wine().prefix.parent().unwrap());
-
         let max = 1;
 
         if let Some(p) = &progress {
@@ -100,7 +95,7 @@ impl GameManager {
 
         notify_fonts_progress(0, max, &progress);
 
-        wine_with_proton_prefix.install_font(Font::Arial)?;
+        wine.install_font(Font::Arial)?;
         notify_fonts_progress(1, max, &progress);
 
         let mut config = GameConfig::get_config().await;
@@ -110,13 +105,8 @@ impl GameManager {
         Ok(())
     }
 
-    pub async fn install_dependencies(proton: &Proton) -> anyhow::Result<()> {
-        let wine_with_proton_prefix = proton // wine take the data/wine/pfx prefix, but we want the data/wine prefix
-            .wine()
-            .clone()
-            .with_prefix(proton.wine().prefix.parent().unwrap());
-
-        let winetricks = Winetricks::from_wine("/bin/winetricks", wine_with_proton_prefix);
+    pub async fn install_dependencies(wine: &Wine) -> anyhow::Result<()> {
+        let winetricks = Winetricks::from_wine("/bin/winetricks", wine);
         //winetricks.install("corefonts")?;
         let mut child = winetricks.install("vcrun2022")?;
 
@@ -165,26 +155,26 @@ impl GameManager {
     }
 
     pub async fn start_game(
-        proton: &Proton,
+        wine: &Wine,
         game_dir: PathBuf,
         options: Option<String>,
         env_variables: Vec<EnvironmentVariable>,
         show_logs: bool,
     ) -> anyhow::Result<()> {
-        let proton_version = proton.wine().version()?;
+        let wine_version = wine.version()?;
         let binary_path = game_dir
             .join(get_game_name())
             .join(get_game_name_with_executable());
 
-        debug!("Wine version : {:?}", proton_version);
+        debug!("wine version : {:?}", wine_version);
 
         let mut child = if let Some(custom_command) = options {
-            Self::run(proton, binary_path, Some(custom_command), env_variables).await?
+            Self::run(wine, binary_path, Some(custom_command), env_variables).await?
         } else {
             if let Some(custom_command) = GameConfig::get_launch_options().await.unwrap() {
-                Self::run(proton, binary_path, Some(custom_command), env_variables).await?
+                Self::run(wine, binary_path, Some(custom_command), env_variables).await?
             } else {
-                Self::run(proton, binary_path, None, env_variables).await?
+                Self::run(wine, binary_path, None, env_variables).await?
             }
         }?;
 
@@ -205,7 +195,7 @@ impl GameManager {
                     .lines()
                     .inspect(|s| {
                         if let Ok(str) = s {
-                            info!("[Proton] > {}", str);
+                            info!("[wine] > {}", str);
                             stdout_save.push_str(str);
                         }
                     })
@@ -219,7 +209,7 @@ impl GameManager {
                     .lines()
                     .inspect(|s| {
                         if let Ok(str) = s {
-                            info!("[Proton] > {}", str);
+                            info!("[wine] > {}", str);
                             stderr_save.push_str(str);
                         }
                     })
@@ -292,21 +282,31 @@ impl GameManager {
     }
 
     async fn run(
-        proton: &Proton,
+        wine: &Wine,
         binary_path: PathBuf,
         custom_command: Option<String>,
         env_variables: Vec<EnvironmentVariable>,
     ) -> anyhow::Result<Result<Child, std::io::Error>> {
         let mut command: Vec<&str> = vec![];
 
-        let proton_path = GameConfig::get_config_directory()
+        let wine_path = GameConfig::get_config_directory()
             .await
-            .join("proton")
-            .join("proton");
+            .join("wine")
+            .join("bin")
+            .join("wine");
+        let mut wine_path = wine_path.to_str().unwrap();
 
-        command.push(proton.python.to_str().unwrap());
-        command.push(proton_path.to_str().unwrap());
-        command.push("run");
+        if let Some(distro) = whatadistro::identify() {
+            if distro.is_similar("nixos") {
+                wine_path = "wine";
+
+                info!("Nixos detected, using system Wine...");
+            };
+        };
+
+        //command.push(wine.python.to_str().unwrap());
+        command.push(wine_path);
+        //command.push("run");
         command.push(binary_path.to_str().unwrap());
 
         let launch_option;
@@ -334,11 +334,14 @@ impl GameManager {
         }
 
         debug!("Command preview -> {}", command.join(" "));
+        debug!(
+            "Command envs -> {:?}",
+            wine.get_envs()["WINEPREFIX"].clone()
+        );
 
         Ok(Command::new(command[0])
             .args(&command[1..command.len()])
-            .envs(proton.get_envs())
-            .env("PROTON_LOG", "1")
+            .env("WINE_PREFIX", wine.get_envs()["WINEPREFIX"].clone())
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())

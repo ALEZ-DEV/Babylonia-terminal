@@ -58,29 +58,29 @@ pub async fn patch_game(game_dir: PathBuf) -> anyhow::Result<()> {
 
     // section to replace the executable with the patched one
 
-    let executable_path = game_dir
-        .join(get_game_name())
-        .join(get_game_name_with_executable());
+    //let executable_path = game_dir
+    //    .join(get_game_name())
+    //    .join(get_game_name_with_executable());
 
-    debug!("{:?}", executable_path);
+    //debug!("{:?}", executable_path);
 
-    if executable_path.exists() {
-        remove_file(executable_path.clone()).await?;
-    }
+    //if executable_path.exists() {
+    //    remove_file(executable_path.clone()).await?;
+    //}
 
-    match PatchedGameExecutable::get_exectable() {
-        Some(exe) => {
-            let mut file = File::create(executable_path).await?;
+    //match PatchedGameExecutable::get_exectable() {
+    //    Some(exe) => {
+    //        let mut file = File::create(executable_path).await?;
 
-            let data: Result<Vec<_>, _> = exe.data.bytes().collect();
-            let data = data.expect("Unable to read executable data");
+    //        let data: Result<Vec<_>, _> = exe.data.bytes().collect();
+    //        let data = data.expect("Unable to read executable data");
 
-            file.write_all(&data).await?;
-        }
-        None => anyhow::bail!(
-            "Game executable not included in the binary! Please report this to the developer!"
-        ),
-    }
+    //        file.write_all(&data).await?;
+    //    }
+    //    None => anyhow::bail!(
+    //        "Game executable not included in the binary! Please report this to the developer!"
+    //    ),
+    //}
 
     let mut config = GameConfig::get_config().await;
     config.is_game_patched = true;

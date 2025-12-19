@@ -6,37 +6,37 @@ use std::{
 };
 
 use downloader::{progress::Reporter, Downloader};
-use flate2::read::GzDecoder;
 use log::debug;
 use tar::Archive;
 use wincompatlib::wine::ext::WineBootExt;
+use xz2::read::XzDecoder;
 
 use super::component_downloader::ComponentDownloader;
 use crate::utils::github_requester::GithubRequester;
 
-pub static PROTON_DEV: &str = "GloriousEggroll";
-pub static PROTON_REPO: &str = "proton-ge-custom";
+pub static WINE_DEV: &str = "Kron4ek";
+pub static WINE_REPO: &str = "Wine-Builds";
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct ProtonComponent {
+pub struct WineComponent {
     path: PathBuf,
     github_release_index: usize,
 }
 
-impl GithubRequester for ProtonComponent {
+impl GithubRequester for WineComponent {
     fn set_github_release_index(&mut self, new_release_index: usize) {
         self.github_release_index = new_release_index;
     }
 }
 
-impl ComponentDownloader for ProtonComponent {
+impl ComponentDownloader for WineComponent {
     async fn install<P: Reporter + 'static>(&self, progress: Option<Arc<P>>) -> anyhow::Result<()> {
         let file_output = self
             .download(
                 &self
                     .path
                     .parent()
-                    .expect("Failed to get the parent directory of Wine")
+                    .expect("Failed to get the parent directory of wine")
                     .to_path_buf(),
                 progress,
             )
@@ -52,7 +52,7 @@ impl ComponentDownloader for ProtonComponent {
         progress: Option<Arc<P>>,
     ) -> anyhow::Result<PathBuf> {
         let release =
-            Self::get_github_release_version(PROTON_DEV, PROTON_REPO, self.github_release_index)
+            Self::get_github_release_version(WINE_DEV, WINE_REPO, self.github_release_index)
                 .await?;
 
         let asset = release
@@ -79,12 +79,12 @@ impl ComponentDownloader for ProtonComponent {
     async fn uncompress(file: PathBuf, new_directory_name: PathBuf) -> anyhow::Result<()> {
         tokio::task::spawn_blocking(move || {
             let tar_xz = File::open(file.clone()).unwrap();
-            let tar = GzDecoder::new(tar_xz);
+            let tar = XzDecoder::new(tar_xz);
             let mut archive = Archive::new(tar);
             archive.unpack(new_directory_name.parent().unwrap())?;
             remove_file(file.clone())?;
             rename(
-                file.to_str().unwrap().strip_suffix(".tar.gz").unwrap(),
+                file.to_str().unwrap().strip_suffix(".tar.xz").unwrap(),
                 new_directory_name,
             )?;
 
@@ -96,49 +96,48 @@ impl ComponentDownloader for ProtonComponent {
     }
 }
 
-impl ProtonComponent {
+impl WineComponent {
     pub fn new(path: PathBuf) -> Self {
-        ProtonComponent {
-            path: path.join("proton"),
+        WineComponent {
+            path: path.join("wine"),
             github_release_index: 0,
         }
     }
 
-    pub fn init_proton(&self) -> Result<wincompatlib::prelude::Proton, String> {
+    pub fn init_wine(&self) -> Result<wincompatlib::prelude::Wine, String> {
         let prefix = self.path.parent().unwrap().join("data");
+        let wine_bin_location = self.path.join("bin/wine");
+        debug!("Initializing prefix with -> {:?}", prefix);
+        debug!("Wine binary path : {:?}", wine_bin_location);
 
-        let mut proton =
-            wincompatlib::prelude::Proton::new(self.path.clone(), Some(prefix.clone()));
-        let steam_location = Self::get_steam_location()?;
+        let mut wine = wincompatlib::prelude::Wine::from_binary(wine_bin_location);
+        wine.prefix = prefix.clone();
 
-        debug!("Steam location used -> {:?}", steam_location);
+        wine.init_prefix(Some(prefix)).unwrap();
 
-        proton.steam_client_path = Some(steam_location);
-        proton.init_prefix(Some(prefix)).unwrap();
-
-        Ok(proton)
+        Ok(wine)
     }
 
-    fn get_steam_location() -> Result<PathBuf, String> {
-        let specified_steam_location = std::env::var("BT_STEAM_CLIENT_PATH");
-        if let Ok(location) = specified_steam_location {
-            return Ok(PathBuf::from(location));
-        }
+    //fn get_steam_location() -> Result<PathBuf, String> {
+    //    let specified_steam_location = std::env::var("BT_STEAM_CLIENT_PATH");
+    //    if let Ok(location) = specified_steam_location {
+    //        return Ok(PathBuf::from(location));
+    //    }
 
-        let location_to_check = [
-            dirs::home_dir().unwrap().join(".steam/steam"),
-            dirs::home_dir()
-                .unwrap()
-                .join(".var/app/com.valvesoftware.Steam/steam"), // for the flatpak version of steam
-        ];
+    //    let location_to_check = [
+    //        dirs::home_dir().unwrap().join(".steam/steam"),
+    //        dirs::home_dir()
+    //            .unwrap()
+    //            .join(".var/app/com.valvesoftware.Steam/steam"), // for the flatpak version of steam
+    //    ];
 
-        for location in location_to_check {
-            if location.exists() {
-                return Ok(location);
-            }
-        }
+    //    for location in location_to_check {
+    //        if location.exists() {
+    //            return Ok(location);
+    //        }
+    //    }
 
-        debug!("Can't find steam installation");
-        Err(String::from_str("We can't find your steam installation, please install steam in '~/.steam/steam' or specify your steam installation").unwrap())
-    }
+    //    debug!("Can't find steam installation");
+    //    Err(String::from_str("We can't find your steam installation, please install steam in '~/.steam/steam' or specify your steam installation").unwrap())
+    //}
 }

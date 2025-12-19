@@ -18,6 +18,7 @@ pub struct GameConfig {
     pub is_game_installed: bool,
     pub is_game_patched: bool,
     pub launch_options: Option<String>,
+    pub launcher_version: Option<String>,
 }
 
 impl GameConfig {
@@ -100,6 +101,7 @@ impl Default for GameConfig {
             is_game_installed: false,
             is_game_patched: false,
             launch_options: None,
+            launcher_version: Some(env!("CARGO_PKG_VERSION").to_string()),
         }
     }
 }

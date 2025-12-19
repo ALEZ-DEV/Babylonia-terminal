@@ -24,6 +24,30 @@ pub async fn run(
     let mut wine_component: Option<WineComponent> = None;
     let mut wine: Option<Wine> = None;
 
+    // Deleting old setup
+    if None == GameConfig::get_config().await.launcher_version {
+        info!("You seem to have the old setup to play the game.");
+        info!("do you want to delete it to setup the new one ? (y/n) (default - yes): ");
+
+        let input = BufReader::new(tokio::io::stdin())
+            .lines()
+            .next_line()
+            .await
+            .unwrap();
+
+        if None == input
+            || Some("".to_string()) == input
+            || Some("y".to_string()) == input
+            || Some("yes".to_string()) == input
+        {
+            info!("Deleting old setup...");
+            babylonia_terminal_sdk::utils::remove_setup().await;
+            info!("done!");
+        } else {
+            info!("Keeping old setup...");
+        }
+    }
+
     loop {
         let state_result = GameState::get_current_state().await;
         if let Err(error) = state_result {

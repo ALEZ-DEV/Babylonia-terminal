@@ -1,9 +1,9 @@
-use std::{convert::identity, fmt::format};
+use std::{convert::identity, fmt::format, process::Command};
 
 use arboard::Clipboard;
-use babylonia_terminal_sdk::game_state::GameState;
-use libadwaita::prelude::{MessageDialogExt, PreferencesPageExt};
-use log::error;
+use babylonia_terminal_sdk::{game_config::GameConfig, game_state::GameState, utils};
+use libadwaita::prelude::{ApplicationExt, MessageDialogExt, PreferencesPageExt};
+use log::{debug, error};
 use relm4::{
     adw,
     gtk::{
@@ -11,7 +11,7 @@ use relm4::{
         prelude::{ButtonExt, GtkWindowExt, OrientableExt, WidgetExt},
     },
     prelude::{AsyncComponentParts, SimpleAsyncComponent},
-    Component, RelmWidgetExt, WorkerController,
+    tokio, Component, RelmWidgetExt, WorkerController,
 };
 
 use crate::{
@@ -31,6 +31,7 @@ pub struct GamePage {
     progress_bar_reporter: std::sync::Arc<ProgressBarGameInstallationReporter>,
     progress_bar_message: String,
     fraction: f64,
+    delete_old_setup_manager: DeleteOldSetupManager,
 }
 
 #[derive(Debug)]
@@ -41,6 +42,7 @@ pub enum GamePageMsg {
     UpdateGameState,
     UpdateProgressBar(u64, u64),
     ShowError(String),
+    DeleteOldSetup,
 }
 
 #[relm4::component(pub, async)]
@@ -222,6 +224,7 @@ impl SimpleAsyncComponent for GamePage {
     ) -> relm4::prelude::AsyncComponentParts<Self> {
         let model = GamePage {
             progress_bar_reporter: ProgressBarGameInstallationReporter::create(sender.clone()),
+            delete_old_setup_manager: DeleteOldSetupManager::new(sender.clone()),
             game_state,
             game_handler: manager::HandleGameProcess::builder()
                 .detach_worker(())
@@ -238,10 +241,18 @@ impl SimpleAsyncComponent for GamePage {
 
         let widgets = view_output!();
 
+        if None == GameConfig::get_config().await.launcher_version {
+            sender.input(GamePageMsg::DeleteOldSetup);
+        }
+
         AsyncComponentParts { model, widgets }
     }
 
-    async fn update(&mut self, message: Self::Input, _: relm4::AsyncComponentSender<Self>) -> () {
+    async fn update(
+        &mut self,
+        message: Self::Input,
+        sender: relm4::AsyncComponentSender<Self>,
+    ) -> () {
         match message {
             GamePageMsg::SetIsGameRunning(value) => self.is_game_running = value,
             GamePageMsg::SetIsDownloading(value) => self.is_downloading = value,
@@ -285,6 +296,32 @@ impl SimpleAsyncComponent for GamePage {
                     if let Err(err) = Clipboard::new().unwrap().set_text(&message.clone()) {
                         error!("Failed to copy the error to the clipboard : {}", err);
                     }
+                });
+
+                dialog.present();
+            }
+            GamePageMsg::DeleteOldSetup => {
+                let dialog = unsafe {
+                    adw::MessageDialog::new(
+                        MAIN_WINDOW.as_ref(),
+                        Some("Remove old setup"),
+                        Some("You seem to have a old environment. You need to delete it if you want to continue to play."),
+                    )
+                };
+
+                dialog.add_response("remove", "Remove setup and restart");
+                dialog.set_response_appearance("remove", adw::ResponseAppearance::Suggested);
+
+                let remove_old_setup_manager = self.delete_old_setup_manager.clone();
+
+                dialog.connect_response(Some("remove"), move |_, _| {
+                    tokio::runtime::Builder::new_current_thread()
+                        .enable_all()
+                        .build()
+                        .unwrap()
+                        .block_on(async {
+                            remove_old_setup_manager.delete_old_setup().await;
+                        });
                 });
 
                 dialog.present();
@@ -335,5 +372,27 @@ impl downloader::progress::Reporter for ProgressBarGameInstallationReporter {
     fn done(&self) {
         let mut guard = self.private.lock().unwrap();
         *guard = None;
+    }
+}
+
+#[derive(Debug, Clone)]
+struct DeleteOldSetupManager {
+    sender: relm4::AsyncComponentSender<GamePage>,
+}
+
+impl DeleteOldSetupManager {
+    pub fn new(sender: relm4::AsyncComponentSender<GamePage>) -> Self {
+        Self { sender }
+    }
+
+    pub async fn delete_old_setup(&self) {
+        if let Err(e) = utils::remove_setup().await {
+            self.sender.input(GamePageMsg::ShowError(e.to_string()));
+        } else {
+            if let Ok(bin_path) = std::env::current_exe() {
+                let _ = Command::new(bin_path).arg("--gui").spawn();
+            };
+            relm4::main_application().quit();
+        }
     }
 }
